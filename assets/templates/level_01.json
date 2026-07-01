@@ -1,0 +1,9 @@
+{
+  "id": "level_01",
+  "title": "First Steps",
+  "gridSize": 5,
+  "start": { "x": 0, "y": 0 },
+  "target": { "x": 3, "y": 3 },
+  "allowedCommands": ["move.right()", "move.down()", "move.left()", "move.up()"],
+  "hint": "Move right three times, then down three times."
+}

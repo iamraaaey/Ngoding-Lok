@@ -1,0 +1,8 @@
+{
+  "app_title": "NgeCode Juh!",
+  "run_button": "Compile & Run Logic",
+  "console_start": "Starting execution loop...",
+  "console_success": "Success! Goal reached successfully.",
+  "console_out_of_bounds": "Error - Out of bounds",
+  "console_syntax_error": "Syntax Error - Unknown command"
+}
