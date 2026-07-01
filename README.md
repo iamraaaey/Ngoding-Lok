@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="doc/assets/banner.svg" alt="NgeCode Juh! — learn to code, one command at a time" width="100%">
+</p>
+
 # NgeCode Juh!
 
 > An AI-assisted, gamified platform for teaching foundational programming concepts.
