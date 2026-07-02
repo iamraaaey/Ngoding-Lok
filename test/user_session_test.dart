@@ -8,6 +8,28 @@ void main() {
       expect(user.displayName, 'student');
     });
 
+    test('displayName prefers the Google profile name when present', () {
+      const user = UserSession(email: 'student@school.edu', name: 'Raynold Kabai');
+      expect(user.displayName, 'Raynold Kabai');
+    });
+
+    test('displayName falls back to email when the profile name is blank', () {
+      const user = UserSession(email: 'student@school.edu', name: '  ');
+      expect(user.displayName, 'student');
+    });
+
+    test('withModuleCompleted preserves the Google identity fields', () {
+      const user = UserSession(
+        email: 'a@b.com',
+        name: 'Ray',
+        photoUrl: 'https://example.com/p.png',
+      );
+      final updated = user.withModuleCompleted('m1', 100);
+
+      expect(updated.name, 'Ray');
+      expect(updated.photoUrl, 'https://example.com/p.png');
+    });
+
     test('withModuleCompleted adds XP and records the module id', () {
       const user = UserSession(email: 'a@b.com', xp: 10);
       final updated = user.withModuleCompleted('m1', 90);

@@ -38,6 +38,10 @@ dependencies:
   # HTTP client for calling the Socratic Hint Engine backend.
   http: ^1.2.2
 
+  # Real Google OAuth sign-in (web). Uses only the public client ID —
+  # see lib/core/config/google_auth_config.dart.
+  google_sign_in: ^6.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

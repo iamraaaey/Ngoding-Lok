@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import '../../core/session/google_auth_service.dart';
 import '../theme/doodle.dart';
 
-/// Dummy "Join the Quest" auth card: Google button, email/password fields,
-/// and a primary CTA. None of it validates anything — every affordance
-/// (Google, "Let's Go!", "Create an account") signs the student in under
-/// the same simulated session, matching the prototype's fake-SSO behavior.
+/// "Join the Quest" auth card. The Google button performs a real OAuth
+/// sign-in via [GoogleAuthService]; when that is cancelled or unavailable
+/// (unsupported platform, unconfigured origin), the email/password path
+/// still signs the student in under the simulated session, matching the
+/// prototype's fake-SSO behavior.
 class AuthScreen extends StatefulWidget {
-  final void Function(String email) onLogin;
+  final void Function(String email, {String? name, String? photoUrl}) onLogin;
   final VoidCallback onBack;
 
   const AuthScreen({super.key, required this.onLogin, required this.onBack});
@@ -19,6 +21,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   late final AnimationController _entrance;
+  bool _googleBusy = false;
 
   @override
   void initState() {
@@ -40,6 +43,25 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   void _submit() {
     final email = _emailController.text.trim();
     widget.onLogin(email.isNotEmpty ? email : 'student@school.edu');
+  }
+
+  Future<void> _signInWithGoogle() async {
+    if (_googleBusy) return;
+    setState(() => _googleBusy = true);
+
+    final result = await GoogleAuthService.signIn();
+    if (!mounted) return;
+    setState(() => _googleBusy = false);
+
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Google sign-in was cancelled or is unavailable here — you can use the email option below.'),
+        ),
+      );
+      return;
+    }
+    widget.onLogin(result.email, name: result.name, photoUrl: result.photoUrl);
   }
 
   @override
@@ -82,10 +104,10 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                 ),
                                 const SizedBox(height: 24),
                                 DoodleButton(
-                                  label: 'Continue with Google',
+                                  label: _googleBusy ? 'Connecting…' : 'Continue with Google',
                                   color: Colors.white,
                                   icon: Icons.g_mobiledata_rounded,
-                                  onPressed: _submit,
+                                  onPressed: _signInWithGoogle,
                                   dense: dense,
                                 ),
                                 const SizedBox(height: 20),

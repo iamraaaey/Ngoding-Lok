@@ -55,6 +55,9 @@ backend is unavailable.
   module's static hint text with no loss of functionality.
 - **Gamification layer** — XP rewards, a leaderboard, per-module timers, and a
   hint-unlock flow (with simulated rewarded/interstitial ad placeholders).
+- **Google Sign-In (web)** — real OAuth identity (name, email, avatar) on the
+  auth screen, with a graceful fallback to the simulated email login when
+  sign-in is cancelled or unavailable. Progress/XP remain in-memory.
 - **Single codebase, multiple targets** — Web, Windows, and Android from one
   Flutter project.
 - **CI on every push/PR** — GitHub Actions runs `analyze`, `test`, and a
@@ -194,6 +197,28 @@ flutter run -d chrome     # or: -d windows / -d android
 
 The app runs fully client-side out of the box. Hints fall back to static text
 until you deploy and configure the backend (below).
+
+### Google Sign-In (web)
+
+"Continue with Google" performs a real OAuth sign-in using the **public**
+web client ID in
+[lib/core/config/google_auth_config.dart](lib/core/config/google_auth_config.dart)
+(client IDs are shipped to every browser by design; the client *secret* is
+not used by this flow and is never committed).
+
+1. In the [Google Cloud console](https://console.cloud.google.com/apis/credentials),
+   open the OAuth **Web application** client and add your origins under
+   **Authorized JavaScript origins** — e.g. `http://localhost:5000` for local
+   development, plus your deployed URL.
+2. Run on that fixed port:
+
+   ```bash
+   flutter run -d chrome --web-port=5000
+   ```
+
+If sign-in is cancelled or unavailable (e.g. Windows desktop, where the
+plugin isn't supported), the email path still signs you into the simulated
+session — nothing breaks.
 
 ---
 

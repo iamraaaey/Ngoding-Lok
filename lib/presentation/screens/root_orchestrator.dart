@@ -3,6 +3,7 @@ import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/module_type.dart';
 import '../../core/session/api_service.dart';
 import '../../core/session/app_route.dart';
+import '../../core/session/google_auth_service.dart';
 import '../../core/session/leaderboard.dart';
 import '../../core/session/user_session.dart';
 import 'ad_screen.dart';
@@ -36,14 +37,15 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   bool _adIsRewarded = false;
   VoidCallback? _onAdComplete;
 
-  void _login(String email) {
+  void _login(String email, {String? name, String? photoUrl}) {
     setState(() {
-      _user = UserSession(email: email);
+      _user = UserSession(email: email, name: name, photoUrl: photoUrl);
       _route = AppRoute.dashboard;
     });
   }
 
   void _logout() {
+    GoogleAuthService.signOut(); // fire-and-forget; no-op for email sessions
     setState(() {
       _user = null;
       _route = AppRoute.auth;

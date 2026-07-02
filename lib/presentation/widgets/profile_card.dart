@@ -18,7 +18,18 @@ class ProfileCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const DoodleIconBadge(icon: Icons.person, color: DoodlePalette.blue, size: 48, iconSize: 24, borderRadius: 24),
+              if (user.photoUrl != null)
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.black, width: 2),
+                    image: DecorationImage(image: NetworkImage(user.photoUrl!), fit: BoxFit.cover),
+                  ),
+                )
+              else
+                const DoodleIconBadge(icon: Icons.person, color: DoodlePalette.blue, size: 48, iconSize: 24, borderRadius: 24),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
