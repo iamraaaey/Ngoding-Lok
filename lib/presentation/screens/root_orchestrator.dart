@@ -12,6 +12,7 @@ import 'dashboard_screen.dart';
 import 'grid_game_screen.dart';
 import 'landing_screen.dart';
 import 'rocket_game_screen.dart';
+import 'signup_screen.dart';
 import 'splash_screen.dart';
 import 'sql_game_screen.dart';
 
@@ -163,6 +164,13 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
         return AuthScreen(
           onLogin: _login,
           onBack: () => setState(() => _route = AppRoute.landing),
+          onCreateAccount: () => setState(() => _route = AppRoute.signup),
+        );
+
+      case AppRoute.signup:
+        return SignUpScreen(
+          onRegister: _login,
+          onBackToLogin: () => setState(() => _route = AppRoute.auth),
         );
 
       case AppRoute.dashboard:
