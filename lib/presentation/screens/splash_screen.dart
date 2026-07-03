@@ -76,15 +76,19 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       child: Scaffold(
         backgroundColor: DoodlePalette.dark,
         body: AnimatedDoodleDotBackground(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+          child: LayoutBuilder(
+            builder: (context, constraints) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                     // ── Logo ──────────────────────────────────────────────
                     FadeTransition(
                       opacity: _logoCtrl,
@@ -279,7 +283,10 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         },
                       ),
                     ),
-                  ],
+                      ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

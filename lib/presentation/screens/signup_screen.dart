@@ -1,7 +1,10 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../core/session/google_auth_service.dart';
 import '../theme/doodle.dart';
 import '../widgets/labeled_text_field.dart';
+import '../widgets/policy_dialog.dart';
+import '../widgets/sso_buttons.dart';
 
 /// "Create Your Account" registration card. Validates name, email format,
 /// password length, and password confirmation before registering; Google
@@ -30,7 +33,10 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
   String? _emailError;
   String? _passwordError;
   String? _confirmError;
+  String? _consentError;
   bool _googleBusy = false;
+  bool _consentChecked = false;
+  bool _newsletterOptIn = false;
 
   @override
   void initState() {
@@ -62,9 +68,14 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
       _emailError = _emailPattern.hasMatch(email) ? null : 'Enter a valid email address.';
       _passwordError = password.length >= 6 ? null : 'Password must be at least 6 characters.';
       _confirmError = confirm == password ? null : 'Passwords do not match.';
+      _consentError = _consentChecked ? null : 'You must agree to continue.';
     });
 
-    final valid = _nameError == null && _emailError == null && _passwordError == null && _confirmError == null;
+    final valid = _nameError == null &&
+        _emailError == null &&
+        _passwordError == null &&
+        _confirmError == null &&
+        _consentError == null;
     if (valid) widget.onRegister(email, name: name);
   }
 
@@ -126,12 +137,10 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                   style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 13),
                                 ),
                                 const SizedBox(height: 24),
-                                DoodleButton(
-                                  label: _googleBusy ? 'Connecting…' : 'Sign up with Google',
-                                  color: Colors.white,
-                                  icon: _googleBusy ? null : Icons.g_mobiledata_rounded,
-                                  isLoading: _googleBusy,
-                                  onPressed: _signUpWithGoogle,
+                                SsoButtons(
+                                  actionVerb: 'Sign up',
+                                  googleBusy: _googleBusy,
+                                  onGooglePressed: _signUpWithGoogle,
                                   dense: dense,
                                 ),
                                 const SizedBox(height: 20),
@@ -185,6 +194,22 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
                                   hint: 'Same password again',
                                   obscure: true,
                                   errorText: _confirmError,
+                                ),
+                                const SizedBox(height: 20),
+                                _ConsentCheckbox(
+                                  key: const Key('signup-consent-checkbox'),
+                                  value: _consentChecked,
+                                  onChanged: (v) => setState(() {
+                                    _consentChecked = v;
+                                    if (v) _consentError = null;
+                                  }),
+                                  errorText: _consentError,
+                                ),
+                                const SizedBox(height: 10),
+                                _NewsletterCheckbox(
+                                  key: const Key('signup-newsletter-checkbox'),
+                                  value: _newsletterOptIn,
+                                  onChanged: (v) => setState(() => _newsletterOptIn = v),
                                 ),
                                 const SizedBox(height: 24),
                                 DoodleButton(
@@ -243,6 +268,151 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Required "I agree to the Privacy Policy and Cookies Policy" checkbox.
+/// Both policy names are tappable and open [showPolicyDialog].
+class _ConsentCheckbox extends StatefulWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final String? errorText;
+
+  const _ConsentCheckbox({super.key, required this.value, required this.onChanged, this.errorText});
+
+  @override
+  State<_ConsentCheckbox> createState() => _ConsentCheckboxState();
+}
+
+class _ConsentCheckboxState extends State<_ConsentCheckbox> {
+  late final _privacyRecognizer = TapGestureRecognizer()
+    ..onTap = () => showPolicyDialog(context, title: 'Privacy Policy');
+  late final _cookiesRecognizer = TapGestureRecognizer()
+    ..onTap = () => showPolicyDialog(context, title: 'Cookies Policy');
+
+  @override
+  void dispose() {
+    _privacyRecognizer.dispose();
+    _cookiesRecognizer.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasError = widget.errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _CheckboxRow(
+          value: widget.value,
+          onChanged: widget.onChanged,
+          hasError: hasError,
+          toggleOnLabelTap: false,
+          label: RichText(
+            text: TextSpan(
+              style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w700, fontSize: 12, height: 1.35),
+              children: [
+                const TextSpan(text: 'I agree to the '),
+                TextSpan(
+                  text: 'Privacy Policy',
+                  style: const TextStyle(color: DoodlePalette.blue, decoration: TextDecoration.underline, fontWeight: FontWeight.w800),
+                  recognizer: _privacyRecognizer,
+                ),
+                const TextSpan(text: ' and '),
+                TextSpan(
+                  text: 'Cookies Policy',
+                  style: const TextStyle(color: DoodlePalette.blue, decoration: TextDecoration.underline, fontWeight: FontWeight.w800),
+                  recognizer: _cookiesRecognizer,
+                ),
+                const TextSpan(text: '. *'),
+              ],
+            ),
+          ),
+        ),
+        if (hasError) ...[
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 30),
+            child: Text(widget.errorText!, style: const TextStyle(color: DoodlePalette.red, fontWeight: FontWeight.w700, fontSize: 12)),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Optional "Keep me posted" newsletter opt-in checkbox.
+class _NewsletterCheckbox extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _NewsletterCheckbox({super.key, required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return _CheckboxRow(
+      value: value,
+      onChanged: onChanged,
+      hasError: false,
+      label: const Text(
+        'Send me tips, new modules & leaderboard updates (optional).',
+        style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700, fontSize: 12, height: 1.35),
+      ),
+    );
+  }
+}
+
+/// Shared checkbox + label row used by [_ConsentCheckbox] and [_NewsletterCheckbox].
+///
+/// [toggleOnLabelTap] must be false when [label] embeds its own tap targets
+/// (e.g. the consent checkbox's policy links) — otherwise the label's
+/// GestureDetector and the embedded TextSpan recognizers would compete for
+/// the same pointer event in the same gesture arena.
+class _CheckboxRow extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final bool hasError;
+  final Widget label;
+  final bool toggleOnLabelTap;
+
+  const _CheckboxRow({
+    required this.value,
+    required this.onChanged,
+    required this.hasError,
+    required this.label,
+    this.toggleOnLabelTap = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 22,
+          height: 22,
+          child: Checkbox(
+            value: value,
+            onChanged: (v) => onChanged(v ?? false),
+            activeColor: DoodlePalette.green,
+            checkColor: Colors.black,
+            side: BorderSide(color: hasError ? DoodlePalette.red : Colors.black, width: 2),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: toggleOnLabelTap
+              ? GestureDetector(
+                  onTap: () => onChanged(!value),
+                  behavior: HitTestBehavior.translucent,
+                  child: label,
+                )
+              : label,
+        ),
+      ],
     );
   }
 }

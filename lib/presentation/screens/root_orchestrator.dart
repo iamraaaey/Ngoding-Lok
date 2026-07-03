@@ -9,6 +9,7 @@ import '../../core/session/user_session.dart';
 import 'ad_screen.dart';
 import 'auth_screen.dart';
 import 'dashboard_screen.dart';
+import 'forgot_password_screen.dart';
 import 'grid_game_screen.dart';
 import 'landing_screen.dart';
 import 'rocket_game_screen.dart';
@@ -158,18 +159,27 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   Widget _buildCurrentRoute() {
     switch (_route) {
       case AppRoute.landing:
-        return LandingScreen(onGetStarted: () => setState(() => _route = AppRoute.auth));
+        return LandingScreen(
+          onGetStarted: () => setState(() => _route = AppRoute.auth),
+          onSignUp: () => setState(() => _route = AppRoute.signup),
+        );
 
       case AppRoute.auth:
         return AuthScreen(
           onLogin: _login,
           onBack: () => setState(() => _route = AppRoute.landing),
           onCreateAccount: () => setState(() => _route = AppRoute.signup),
+          onForgotPassword: () => setState(() => _route = AppRoute.forgotPassword),
         );
 
       case AppRoute.signup:
         return SignUpScreen(
           onRegister: _login,
+          onBackToLogin: () => setState(() => _route = AppRoute.auth),
+        );
+
+      case AppRoute.forgotPassword:
+        return ForgotPasswordScreen(
           onBackToLogin: () => setState(() => _route = AppRoute.auth),
         );
 

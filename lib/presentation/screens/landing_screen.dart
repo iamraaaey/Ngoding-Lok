@@ -6,8 +6,9 @@ import '../theme/doodle.dart';
 /// wires to advance past this screen into the real app.
 class LandingScreen extends StatefulWidget {
   final VoidCallback onGetStarted;
+  final VoidCallback onSignUp;
 
-  const LandingScreen({super.key, required this.onGetStarted});
+  const LandingScreen({super.key, required this.onGetStarted, required this.onSignUp});
 
   @override
   State<LandingScreen> createState() => _LandingScreenState();
@@ -85,6 +86,7 @@ class _LandingScreenState extends State<LandingScreen> with SingleTickerProvider
                 child: _NavBar(
                   onFeaturesTap: () => _scrollTo(_featuresKey),
                   onLogIn: widget.onGetStarted,
+                  onSignUp: widget.onSignUp,
                   onPlayNow: widget.onGetStarted,
                 ),
               ),
@@ -99,11 +101,13 @@ class _LandingScreenState extends State<LandingScreen> with SingleTickerProvider
 class _NavBar extends StatelessWidget {
   final VoidCallback onFeaturesTap;
   final VoidCallback onLogIn;
+  final VoidCallback onSignUp;
   final VoidCallback onPlayNow;
 
   const _NavBar({
     required this.onFeaturesTap,
     required this.onLogIn,
+    required this.onSignUp,
     required this.onPlayNow,
   });
 
@@ -119,20 +123,43 @@ class _NavBar extends StatelessWidget {
             builder: (context, constraints) {
               // "NgeCode Juh!" is longer than the original "CodeQuest" wordmark,
               // so this needs a wider breakpoint than a typical navbar to avoid
-              // overflow once Features/Log In join the row.
-              final isWide = constraints.maxWidth > 780;
+              // overflow once Features/Log In/Sign Up join the row.
+              final isWide = constraints.maxWidth > 860;
+              final isCompact = constraints.maxWidth < 420;
               return Row(
                 children: [
-                  const DoodleIconBadge(icon: Icons.terminal, color: DoodlePalette.purple, size: 44),
-                  const SizedBox(width: 12),
-                  const Text('NgeCode Juh!', style: TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.w800)),
-                  const Spacer(),
+                  // Wrapping the logo group in the sole Expanded (rather than
+                  // giving the text its own Flexible alongside a Spacer) means
+                  // it claims all leftover width instead of splitting it evenly
+                  // with an empty spacer, so the wordmark only truncates when
+                  // there's genuinely no room left.
+                  Expanded(
+                    child: Row(
+                      children: [
+                        DoodleIconBadge(icon: Icons.terminal, color: DoodlePalette.purple, size: isCompact ? 36 : 44),
+                        SizedBox(width: isCompact ? 8 : 12),
+                        Flexible(
+                          child: Text(
+                            'NgeCode Juh!',
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: TextStyle(color: Colors.black, fontSize: isCompact ? 16 : 22, fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   if (isWide) ...[
                     _NavLink('Features', onFeaturesTap),
                     const SizedBox(width: 24),
                     TextButton(
                       onPressed: onLogIn,
                       child: const Text('Log In', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800)),
+                    ),
+                    const SizedBox(width: 12),
+                    TextButton(
+                      onPressed: onSignUp,
+                      child: const Text('Sign Up', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800)),
                     ),
                     const SizedBox(width: 12),
                   ],

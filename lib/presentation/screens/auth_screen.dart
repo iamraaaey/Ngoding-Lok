@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/session/google_auth_service.dart';
 import '../theme/doodle.dart';
 import '../widgets/labeled_text_field.dart';
+import '../widgets/sso_buttons.dart';
 
 /// "Join the Quest" auth card. The Google button performs a real OAuth
 /// sign-in via [GoogleAuthService]; when that is cancelled or unavailable
@@ -13,12 +14,14 @@ class AuthScreen extends StatefulWidget {
   final void Function(String email, {String? name, String? photoUrl}) onLogin;
   final VoidCallback onBack;
   final VoidCallback onCreateAccount;
+  final VoidCallback onForgotPassword;
 
   const AuthScreen({
     super.key,
     required this.onLogin,
     required this.onBack,
     required this.onCreateAccount,
+    required this.onForgotPassword,
   });
 
   @override
@@ -111,12 +114,10 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                   style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 13),
                                 ),
                                 const SizedBox(height: 24),
-                                DoodleButton(
-                                  label: _googleBusy ? 'Connecting…' : 'Continue with Google',
-                                  color: Colors.white,
-                                  icon: _googleBusy ? null : Icons.g_mobiledata_rounded,
-                                  isLoading: _googleBusy,
-                                  onPressed: _signInWithGoogle,
+                                SsoButtons(
+                                  actionVerb: 'Continue',
+                                  googleBusy: _googleBusy,
+                                  onGooglePressed: _signInWithGoogle,
                                   dense: dense,
                                 ),
                                 const SizedBox(height: 20),
@@ -141,7 +142,24 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                                 LabeledTextField(label: 'Email Address', controller: _emailController, hint: 'coder@unimas.my'),
                                 const SizedBox(height: 16),
                                 LabeledTextField(label: 'Password', controller: _passwordController, hint: '••••••••', obscure: true),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 10),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: GestureDetector(
+                                    key: const Key('forgot-password-link'),
+                                    onTap: widget.onForgotPassword,
+                                    child: Text(
+                                      'Forgot your password?',
+                                      style: TextStyle(
+                                        color: DoodlePalette.blue,
+                                        decoration: TextDecoration.underline,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
                                 DoodleButton(
                                   label: "Let's Go!",
                                   color: DoodlePalette.yellow,
