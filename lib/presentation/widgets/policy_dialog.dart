@@ -6,6 +6,19 @@ import '../theme/doodle.dart';
 /// to make the consent checkbox's links resolve to something rather than
 /// nothing — swap in real copy before shipping.
 void showPolicyDialog(BuildContext context, {required String title}) {
+  showInfoDialog(
+    context,
+    title: title,
+    body: 'This is placeholder text — NgeCode Juh! is a Final Year Project prototype and '
+        'does not yet have a real $title. In a production release this dialog would '
+        'contain the actual terms covering what data is collected, how it is used, and '
+        'the choices available to you as a user.',
+  );
+}
+
+/// Generic doodle-styled info dialog with a title, scrollable body, and a
+/// Close button. Reused for the Settings "About / Privacy / Terms" links.
+void showInfoDialog(BuildContext context, {required String title, required String body}) {
   showDialog<void>(
     context: context,
     builder: (context) => Dialog(
@@ -24,10 +37,7 @@ void showPolicyDialog(BuildContext context, {required String title}) {
               Flexible(
                 child: SingleChildScrollView(
                   child: Text(
-                    'This is placeholder text — NgeCode Juh! is a Final Year Project prototype and '
-                    'does not yet have a real $title. In a production release this dialog would '
-                    'contain the actual terms covering what data is collected, how it is used, and '
-                    'the choices available to you as a user.',
+                    body,
                     style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600, height: 1.4),
                   ),
                 ),

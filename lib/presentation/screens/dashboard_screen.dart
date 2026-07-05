@@ -14,12 +14,16 @@ class DashboardScreen extends StatefulWidget {
   final VoidCallback onLogout;
   final void Function(CurriculumModule module) onLaunchModule;
 
+  /// Returns to the Home hub. Optional so the screen still works standalone.
+  final VoidCallback? onBack;
+
   const DashboardScreen({
     super.key,
     required this.user,
     required this.leaderboard,
     required this.onLogout,
     required this.onLaunchModule,
+    this.onBack,
   });
 
   @override
@@ -54,9 +58,37 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 800;
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.onBack != null) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: GestureDetector(
+                      onTap: widget.onBack,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          DoodleIconBadge(
+                            icon: Icons.arrow_back,
+                            color: DoodlePalette.white,
+                            iconColor: Colors.black,
+                            size: 38,
+                            iconSize: 18,
+                            borderRadius: 12,
+                          ),
+                          SizedBox(width: 8),
+                          Text('Back to Hub', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isWide = constraints.maxWidth > 800;
                 final sidebar = DoodleFadeSlide(
                   animation: _interval(0.0, 0.50),
                   yOffset: 24,
@@ -141,13 +173,16 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     ],
                   );
                 }
-                return SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [sidebar, const SizedBox(height: 16), content],
+                      return SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [sidebar, const SizedBox(height: 16), content],
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
         ),

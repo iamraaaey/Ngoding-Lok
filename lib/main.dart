@@ -13,8 +13,18 @@ class _NoScrollbarBehavior extends MaterialScrollBehavior {
   Widget buildScrollbar(BuildContext context, Widget child, ScrollableDetails details) => child;
 }
 
-class NgeCodeJuhApp extends StatelessWidget {
+class NgeCodeJuhApp extends StatefulWidget {
   const NgeCodeJuhApp({super.key});
+
+  @override
+  State<NgeCodeJuhApp> createState() => _NgeCodeJuhAppState();
+}
+
+class _NgeCodeJuhAppState extends State<NgeCodeJuhApp> {
+  // App-wide preferences, flipped from the Settings screen. Session-only (no
+  // persistence), matching the rest of this prototype's in-memory state.
+  bool _darkMode = true;
+  bool _soundEnabled = true;
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +32,15 @@ class NgeCodeJuhApp extends StatelessWidget {
       title: 'NgeCode Juh!',
       debugShowCheckedModeBanner: false,
       scrollBehavior: _NoScrollbarBehavior(),
-      theme: appTheme,
-      home: const RootOrchestrator(),
+      theme: appLightTheme,
+      darkTheme: appTheme,
+      themeMode: _darkMode ? ThemeMode.dark : ThemeMode.light,
+      home: RootOrchestrator(
+        darkMode: _darkMode,
+        soundEnabled: _soundEnabled,
+        onSetDarkMode: (v) => setState(() => _darkMode = v),
+        onSetSound: (v) => setState(() => _soundEnabled = v),
+      ),
     );
   }
 }

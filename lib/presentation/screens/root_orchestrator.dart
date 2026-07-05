@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/curriculum/curriculum.dart';
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/module_type.dart';
 import '../../core/session/api_service.dart';
@@ -8,11 +9,16 @@ import '../../core/session/leaderboard.dart';
 import '../../core/session/user_session.dart';
 import 'ad_screen.dart';
 import 'auth_screen.dart';
+import 'code_golf_screen.dart';
 import 'dashboard_screen.dart';
 import 'forgot_password_screen.dart';
 import 'grid_game_screen.dart';
+import 'home_dashboard_screen.dart';
 import 'landing_screen.dart';
+import 'league_map_screen.dart';
+import 'profile_screen.dart';
 import 'rocket_game_screen.dart';
+import 'settings_screen.dart';
 import 'signup_screen.dart';
 import 'splash_screen.dart';
 import 'sql_game_screen.dart';
@@ -24,7 +30,21 @@ import 'sql_game_screen.dart';
 /// `onComplete` decides, not to nav history), so a `Navigator` would just
 /// fight this shape rather than fit it.
 class RootOrchestrator extends StatefulWidget {
-  const RootOrchestrator({super.key});
+  /// App-wide theme + sound preferences, owned by [NgeCodeJuhApp] so the theme
+  /// switch can rebuild the whole [MaterialApp]. Threaded down to the Settings
+  /// screen, which flips them via the callbacks.
+  final bool darkMode;
+  final bool soundEnabled;
+  final ValueChanged<bool> onSetDarkMode;
+  final ValueChanged<bool> onSetSound;
+
+  const RootOrchestrator({
+    super.key,
+    required this.darkMode,
+    required this.soundEnabled,
+    required this.onSetDarkMode,
+    required this.onSetSound,
+  });
 
   @override
   State<RootOrchestrator> createState() => _RootOrchestratorState();
@@ -39,11 +59,26 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   bool _adIsRewarded = false;
   VoidCallback? _onAdComplete;
 
+  /// Streak the player starts a fresh session with. There's no day-tracking
+  /// backend in this prototype, so this stands in for a returning player's
+  /// run rather than being computed from real login dates.
+  static const int _seededStreak = 3;
+
   void _login(String email, {String? name, String? photoUrl}) {
     setState(() {
-      _user = UserSession(email: email, name: name, photoUrl: photoUrl);
-      _route = AppRoute.dashboard;
+      _user = UserSession(email: email, name: name, photoUrl: photoUrl, streak: _seededStreak);
+      _route = AppRoute.home;
     });
+  }
+
+  /// The next puzzle to resume: the first curriculum module the player hasn't
+  /// cleared yet, or null once everything is done. Levels are sequential, so
+  /// this also respects the map's unlock order.
+  CurriculumModule? get _nextModule {
+    for (final module in Curriculum.modules) {
+      if (!_user!.completedModuleIds.contains(module.id)) return module;
+    }
+    return null;
   }
 
   void _logout() {
@@ -61,11 +96,25 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     });
   }
 
-  void _backToDashboard() {
+  /// Returns from a game (win or quit) to the Home hub, so the player lands
+  /// back on an up-to-date view of their XP, streak, league, and next puzzle.
+  void _returnToHub() {
     setState(() {
       _activeModule = null;
-      _route = AppRoute.dashboard;
+      _route = AppRoute.home;
     });
+  }
+
+  /// Spends XP to buy a Streak Freeze from the Profile screen. Returns false
+  /// (leaving state untouched) when the player can't afford it, so the screen
+  /// can surface the right message.
+  bool _purchaseStreakFreeze() {
+    const cost = ProfileScreen.streakFreezeCost;
+    if (_user!.xp < cost) return false;
+    setState(() {
+      _user = _user!.copyWith(xp: _user!.xp - cost, streakFreezes: _user!.streakFreezes + 1);
+    });
+    return true;
   }
 
   /// Pauses the active game screen (which stays mounted under a Stack
@@ -98,7 +147,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     setState(() => _user = _user!.withModuleCompleted(module.id, result.finalScore));
     setState(() {
       _adIsRewarded = false;
-      _onAdComplete = _backToDashboard;
+      _onAdComplete = _returnToHub;
       _route = AppRoute.ad;
     });
   }
@@ -110,21 +159,21 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           module: module,
           onRequestHintAd: _requestHintAd,
           onWin: _handleModuleWin,
-          onBack: _backToDashboard,
+          onBack: _returnToHub,
         );
       case ModuleType.sqlTerminal:
         return SqlGameScreen(
           module: module,
           onRequestHintAd: _requestHintAd,
           onWin: _handleModuleWin,
-          onBack: _backToDashboard,
+          onBack: _returnToHub,
         );
       case ModuleType.rocketFlight:
         return RocketGameScreen(
           module: module,
           onRequestHintAd: _requestHintAd,
           onWin: _handleModuleWin,
-          onBack: _backToDashboard,
+          onBack: _returnToHub,
         );
     }
   }
@@ -183,12 +232,56 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           onBackToLogin: () => setState(() => _route = AppRoute.auth),
         );
 
+      case AppRoute.home:
+        return HomeDashboardScreen(
+          user: _user!,
+          nextModule: _nextModule,
+          onResume: _launchModule,
+          onOpenMap: () => setState(() => _route = AppRoute.leagueMap),
+          onOpenCodeGolf: () => setState(() => _route = AppRoute.codeGolf),
+          onOpenProfile: () => setState(() => _route = AppRoute.profile),
+          onOpenSettings: () => setState(() => _route = AppRoute.settings),
+          onLogout: _logout,
+        );
+
+      case AppRoute.codeGolf:
+        return CodeGolfScreen(
+          user: _user!,
+          onBack: () => setState(() => _route = AppRoute.home),
+        );
+
+      case AppRoute.profile:
+        return ProfileScreen(
+          user: _user!,
+          onPurchaseStreakFreeze: _purchaseStreakFreeze,
+          onBack: () => setState(() => _route = AppRoute.home),
+        );
+
+      case AppRoute.settings:
+        return SettingsScreen(
+          user: _user!,
+          darkMode: widget.darkMode,
+          soundEnabled: widget.soundEnabled,
+          onSetDarkMode: widget.onSetDarkMode,
+          onSetSound: widget.onSetSound,
+          onLogout: _logout,
+          onBack: () => setState(() => _route = AppRoute.home),
+        );
+
+      case AppRoute.leagueMap:
+        return LeagueMapScreen(
+          user: _user!,
+          onLaunch: _launchModule,
+          onBack: () => setState(() => _route = AppRoute.home),
+        );
+
       case AppRoute.dashboard:
         return DashboardScreen(
           user: _user!,
           leaderboard: Leaderboard.withUser(_user!),
           onLogout: _logout,
           onLaunchModule: _launchModule,
+          onBack: () => setState(() => _route = AppRoute.home),
         );
 
       case AppRoute.game:

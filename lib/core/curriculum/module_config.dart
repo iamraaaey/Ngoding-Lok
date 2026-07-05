@@ -31,11 +31,17 @@ class SqlTerminalConfig extends ModuleConfig {
   final String instruction;
   final List<String> requiredSubstrings;
 
+  /// Story-appropriate server output printed on success. When empty,
+  /// [SqlChecker] falls back to the original Module 2 "admin password"
+  /// transcript so the first SQL level keeps its exact original behavior.
+  final List<String> successLog;
+
   const SqlTerminalConfig({
     required this.table,
     required this.schema,
     required this.instruction,
     required this.requiredSubstrings,
+    this.successLog = const [],
   });
 }
 

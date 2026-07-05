@@ -35,11 +35,16 @@ class SqlChecker {
       );
     }
 
-    return SqlCheckResult(SqlCheckResultType.success, serverLog: const [
-      'Connecting to db://prod-cluster-01...',
-      'Query accepted. Scanning table...',
-      '[1 ROW RETURNED] id: 42, role: \'admin\', password: \'FLAG{sqli_master_99}\'',
-      'Access Granted. Module Complete!',
-    ]);
+    return SqlCheckResult(
+      SqlCheckResultType.success,
+      serverLog: config.successLog.isNotEmpty
+          ? config.successLog
+          : const [
+              'Connecting to db://prod-cluster-01...',
+              'Query accepted. Scanning table...',
+              '[1 ROW RETURNED] id: 42, role: \'admin\', password: \'FLAG{sqli_master_99}\'',
+              'Access Granted. Module Complete!',
+            ],
+    );
   }
 }
