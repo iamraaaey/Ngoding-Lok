@@ -59,6 +59,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final bg = dark ? DoodlePalette.dark : DoodlePalette.cream;
     final progression = Progression(widget.user.xp);
 
     final appBar = DoodleFadeSlide(
@@ -97,8 +99,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
     );
 
     return Scaffold(
-      backgroundColor: DoodlePalette.dark,
+      backgroundColor: bg,
       body: DoodleDotBackground(
+        backgroundColor: bg,
         child: SafeArea(
           child: Align(
             alignment: Alignment.topCenter,

@@ -52,9 +52,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final bg = dark ? DoodlePalette.dark : DoodlePalette.cream;
+    final onBg = dark ? Colors.white : Colors.black;
+    final onBgMuted = dark ? Colors.white70 : Colors.black54;
     return Scaffold(
-      backgroundColor: DoodlePalette.dark,
+      backgroundColor: bg,
       body: DoodleDotBackground(
+        backgroundColor: bg,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -68,8 +73,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                       onTap: widget.onBack,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: const [
-                          DoodleIconBadge(
+                        children: [
+                          const DoodleIconBadge(
                             icon: Icons.arrow_back,
                             color: DoodlePalette.white,
                             iconColor: Colors.black,
@@ -77,8 +82,8 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                             iconSize: 18,
                             borderRadius: 12,
                           ),
-                          SizedBox(width: 8),
-                          Text('Back to Hub', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800)),
+                          const SizedBox(width: 8),
+                          Text('Back to Hub', style: TextStyle(color: onBg, fontWeight: FontWeight.w800)),
                         ],
                       ),
                     ),
@@ -115,10 +120,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     DoodleFadeSlide(
                       animation: _interval(0.10, 0.55),
                       yOffset: 20,
-                      child: const Text(
+                      child: Text(
                         'Active Curriculum Maps',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: onBg,
                           fontSize: 26,
                           fontWeight: FontWeight.w800,
                         ),
@@ -128,10 +133,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     DoodleFadeSlide(
                       animation: _interval(0.15, 0.60),
                       yOffset: 16,
-                      child: const Text(
+                      child: Text(
                         'Select an interactive module to continue your programming journey.',
                         style: TextStyle(
-                          color: Colors.white70,
+                          color: onBgMuted,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

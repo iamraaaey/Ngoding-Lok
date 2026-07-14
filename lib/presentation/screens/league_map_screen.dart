@@ -86,10 +86,13 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final bg = dark ? DoodlePalette.dark : DoodlePalette.cream;
     final entries = _buildEntries();
     return Scaffold(
-      backgroundColor: DoodlePalette.dark,
+      backgroundColor: bg,
       body: DoodleDotBackground(
+        backgroundColor: bg,
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
