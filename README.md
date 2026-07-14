@@ -1,17 +1,17 @@
 <p align="center">
-  <img src="doc/assets/banner.svg" alt="NgeCode Juh! — learn to code, one command at a time" width="100%">
+  <img src="doc/assets/banner.svg" alt="Ngoding Lok! — learn to code, one command at a time" width="100%">
 </p>
 
-# NgeCode Juh!
+# Ngoding Lok!
 
 > An AI-assisted, gamified platform for teaching foundational programming concepts.
 
-[![web-deploy](https://github.com/iamraaaey/NgeCode-Juh/actions/workflows/web-deploy.yml/badge.svg)](https://github.com/iamraaaey/NgeCode-Juh/actions/workflows/web-deploy.yml)
+[![web-deploy](https://github.com/iamraaaey/Ngoding-Lok/actions/workflows/web-deploy.yml/badge.svg)](https://github.com/iamraaaey/Ngoding-Lok/actions/workflows/web-deploy.yml)
 [![Flutter](https://img.shields.io/badge/Flutter-Dart%203.10+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Backend](https://img.shields.io/badge/Backend-Firebase%20Cloud%20Functions-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com/docs/functions)
 [![AI](https://img.shields.io/badge/Hints-Anthropic%20Claude-D97757)](https://www.anthropic.com/)
 
-NgeCode Juh! is a cross-platform Flutter application that teaches programming
+Ngoding Lok! is a cross-platform Flutter application that teaches programming
 fundamentals through three distinct, playable puzzle modules — sequential grid
 logic, SQL querying, and an ordered/stateful launch procedure — wrapped in a
 game-like progression system (XP, a leaderboard, timed challenges, and module
@@ -275,7 +275,7 @@ Deferred as future work beyond the current scope (see
 
 ## Project context
 
-NgeCode Juh! is developed as a **Final Year Project** by
+Ngoding Lok! is developed as a **Final Year Project** by
 **Raynold Anak Kabai**, Bachelor of Software Engineering (Hons),
 Universiti Malaysia Sarawak (UNIMAS). The project investigates whether a
 lightweight, gamified, multi-paradigm coding platform augmented with an
