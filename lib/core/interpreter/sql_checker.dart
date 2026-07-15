@@ -15,18 +15,40 @@ class SqlCheckResult {
 /// substring check against [SqlTerminalConfig.requiredSubstrings]. Never
 /// throws.
 class SqlChecker {
-  SqlCheckResult check(String query, SqlTerminalConfig config) {
-    final normalized =
-        query.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  String _normalize(String s) {
+    var val = s.trim().toLowerCase();
+    val = val.replaceAll('"', "'");
+    val = val.replaceAllMapped(RegExp(r'\s*([=><!(),])\s*'), (Match m) => m[1]!);
+    val = val.replaceAll(RegExp(r'\s+'), ' ');
+    if (val.endsWith(';')) {
+      val = val.substring(0, val.length - 1);
+    }
+    return val.trim();
+  }
 
-    if (normalized.isEmpty) {
+  SqlCheckResult check(String query, SqlTerminalConfig config) {
+    final normalizedQuery = _normalize(query);
+
+    if (normalizedQuery.isEmpty) {
       return const SqlCheckResult(SqlCheckResultType.empty,
           detail: 'Query is empty.');
     }
 
-    final missing = config.requiredSubstrings
-        .where((s) => !normalized.contains(s.toLowerCase()))
-        .toList();
+    final missing = <String>[];
+    for (final s in config.requiredSubstrings) {
+      final normalizedReq = _normalize(s);
+      if (normalizedReq == "role='admin'") {
+        final hasRole = normalizedQuery.contains("role='admin'");
+        final hasUser = normalizedQuery.contains("username='admin'");
+        if (!hasRole && !hasUser) {
+          missing.add(s);
+        }
+      } else {
+        if (!normalizedQuery.contains(normalizedReq)) {
+          missing.add(s);
+        }
+      }
+    }
 
     if (missing.isNotEmpty) {
       return SqlCheckResult(

@@ -14,6 +14,29 @@ Future<void> _skipSplash(WidgetTester tester) async {
   }
 }
 
+/// The RootOrchestrator wraps route changes in a 420ms AnimatedSwitcher
+/// transition, during which the incoming screen can't be hit-tested —
+/// so every navigation step pumps past the transition before tapping.
+Future<void> settleRoute(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 1000));
+}
+
+Future<void> goToSignUp(WidgetTester tester) async {
+  await tester.pumpWidget(const NgeCodeJuhApp());
+  await _skipSplash(tester);
+
+  await tester.tap(find.text('PLAY NOW'));
+  await settleRoute(tester);
+
+  final createLink = find.byKey(const Key('create-account-link'));
+  await tester.ensureVisible(createLink);
+  await tester.pump();
+  await tester.tap(createLink);
+  await settleRoute(tester);
+  expect(find.text('CREATE MY ACCOUNT'), findsOneWidget);
+}
+
 void main() {
   testWidgets('cold start shows the landing page', (WidgetTester tester) async {
     await tester.pumpWidget(const NgeCodeJuhApp());
@@ -30,49 +53,28 @@ void main() {
     await _skipSplash(tester);
 
     await tester.tap(find.text('PLAY NOW'));
-    await tester.pump();
+    await settleRoute(tester);
     final letsGoButton = find.text("LET'S GO!");
     expect(letsGoButton, findsOneWidget);
 
     await tester.ensureVisible(letsGoButton);
     await tester.pump();
     await tester.tap(letsGoButton);
-    await tester.pump();
+    await settleRoute(tester);
     expect(find.text('Module 1: Sequential Steps'), findsOneWidget);
 
-    final launchButton = find.byKey(const Key('launch-m1'));
+    final launchButton = find.text('RESUME PLAYING');
     await tester.ensureVisible(launchButton);
     await tester.pump();
     await tester.tap(launchButton);
-    await tester.pump();
+    await settleRoute(tester);
 
     expect(find.text('COMPILE & RUN'), findsOneWidget);
     expect(find.byIcon(Icons.flag), findsOneWidget);
     expect(find.byIcon(Icons.smart_button), findsOneWidget);
   });
 
-  /// The RootOrchestrator wraps route changes in a 420ms AnimatedSwitcher
-  /// transition, during which the incoming screen can't be hit-tested —
-  /// so every navigation step pumps past the transition before tapping.
-  Future<void> settleRoute(WidgetTester tester) async {
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-  }
 
-  Future<void> goToSignUp(WidgetTester tester) async {
-    await tester.pumpWidget(const NgeCodeJuhApp());
-    await _skipSplash(tester);
-
-    await tester.tap(find.text('PLAY NOW'));
-    await settleRoute(tester);
-
-    final createLink = find.byKey(const Key('create-account-link'));
-    await tester.ensureVisible(createLink);
-    await tester.pump();
-    await tester.tap(createLink);
-    await settleRoute(tester);
-    expect(find.text('CREATE MY ACCOUNT'), findsOneWidget);
-  }
 
   testWidgets('sign-up rejects invalid input with inline errors and stays put',
       (WidgetTester tester) async {
@@ -94,6 +96,17 @@ void main() {
     await tester.enterText(find.descendant(of: find.byKey(const Key('signup-email')), matching: find.byType(TextField)), 'vera@unimas.my');
     await tester.enterText(find.descendant(of: find.byKey(const Key('signup-password')), matching: find.byType(TextField)), 'secret123');
     await tester.enterText(find.descendant(of: find.byKey(const Key('signup-confirm')), matching: find.byType(TextField)), 'different');
+    
+    final consentCheckbox = find.descendant(
+        of: find.byKey(const Key('signup-consent-checkbox')),
+        matching: find.byType(Checkbox));
+    await tester.ensureVisible(consentCheckbox);
+    await tester.pump();
+    await tester.tap(consentCheckbox);
+    await tester.pump();
+
+    await tester.ensureVisible(submit);
+    await tester.pump();
     await tester.tap(submit);
     await tester.pump();
 
@@ -109,6 +122,14 @@ void main() {
     await tester.enterText(find.descendant(of: find.byKey(const Key('signup-email')), matching: find.byType(TextField)), 'vera@unimas.my');
     await tester.enterText(find.descendant(of: find.byKey(const Key('signup-password')), matching: find.byType(TextField)), 'secret123');
     await tester.enterText(find.descendant(of: find.byKey(const Key('signup-confirm')), matching: find.byType(TextField)), 'secret123');
+
+    final consentCheckbox = find.descendant(
+        of: find.byKey(const Key('signup-consent-checkbox')),
+        matching: find.byType(Checkbox));
+    await tester.ensureVisible(consentCheckbox);
+    await tester.pump();
+    await tester.tap(consentCheckbox);
+    await tester.pump();
 
     final submit = find.text('CREATE MY ACCOUNT');
     await tester.ensureVisible(submit);

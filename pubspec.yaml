@@ -42,6 +42,9 @@ dependencies:
   # see lib/core/config/google_auth_config.dart.
   google_sign_in: ^6.2.1
 
+  # Local key-value storage persistence.
+  shared_preferences: ^2.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

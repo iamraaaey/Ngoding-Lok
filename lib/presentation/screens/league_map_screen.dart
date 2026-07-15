@@ -49,37 +49,20 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
 
   List<_LevelEntry> _buildEntries() {
     final cleared = widget.user.completedModuleIds;
+    final trackModules = Curriculum.modules.where((m) => m.track == _track).toList();
 
-    if (_track == LanguageTrack.python) {
-      final modules = Curriculum.modules;
-      return [
-        for (var i = 0; i < modules.length; i++)
-          _LevelEntry(
-            number: i + 1,
-            title: modules[i].title,
-            subtitle: modules[i].description,
-            module: modules[i],
-            // Level 1 is always open; each later level unlocks once the
-            // previous module has been cleared.
-            locked: i != 0 && !cleared.contains(modules[i - 1].id),
-            completed: cleared.contains(modules[i].id),
-            score: widget.user.moduleScores[modules[i].id],
-          ),
-      ];
-    }
-
-    // Java track: preview-only placeholders, all locked.
-    const javaTitles = ['Java Level 1: Variables', 'Java Level 2: Control Flow', 'Java Level 3: Objects'];
     return [
-      for (var i = 0; i < javaTitles.length; i++)
+      for (var i = 0; i < trackModules.length; i++)
         _LevelEntry(
           number: i + 1,
-          title: javaTitles[i],
-          subtitle: 'Coming soon — this track is still being built.',
-          module: null,
-          locked: true,
-          completed: false,
-          score: null,
+          title: trackModules[i].title,
+          subtitle: trackModules[i].description,
+          module: trackModules[i],
+          // Level 1 is always open; each later level unlocks once the
+          // previous module has been cleared.
+          locked: i != 0 && !cleared.contains(trackModules[i - 1].id),
+          completed: cleared.contains(trackModules[i].id),
+          score: widget.user.moduleScores[trackModules[i].id],
         ),
     ];
   }

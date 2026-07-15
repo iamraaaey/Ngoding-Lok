@@ -1,4 +1,5 @@
 import 'curriculum_module.dart';
+import 'language_track.dart';
 import 'module_config.dart';
 import 'module_type.dart';
 
@@ -10,6 +11,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm1',
       type: ModuleType.logicGrid,
+      track: LanguageTrack.python,
       title: 'Module 1: Sequential Steps',
       description: 'Learn basic movement commands to navigate the grid.',
       xpReward: 100,
@@ -21,6 +23,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm2',
       type: ModuleType.sqlTerminal,
+      track: LanguageTrack.python,
       title: 'Module 2: Intro to SQL',
       description: 'Query a database to extract sensitive information.',
       xpReward: 250,
@@ -37,6 +40,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm3',
       type: ModuleType.rocketFlight,
+      track: LanguageTrack.python,
       title: 'Module 3: Aerospace Logic',
       description:
           'Use codeblocks to initiate preflight systems and achieve escape velocity.',
@@ -49,6 +53,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm4',
       type: ModuleType.logicGrid,
+      track: LanguageTrack.python,
       title: 'Module 4: Backtrack Basics',
       description:
           'You start at the bottom-right corner. Retrace your steps with move.left() and move.up().',
@@ -61,6 +66,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm5',
       type: ModuleType.logicGrid,
+      track: LanguageTrack.python,
       title: 'Module 5: The Long Trek',
       description:
           'A bigger 7x7 frontier. Plan a longer route across the wilderness to the far corner.',
@@ -73,6 +79,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm6',
       type: ModuleType.sqlTerminal,
+      track: LanguageTrack.python,
       title: 'Module 6: Filtering 101',
       description: 'Query the student records to list everyone with a perfect grade.',
       xpReward: 300,
@@ -95,6 +102,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm7',
       type: ModuleType.rocketFlight,
+      track: LanguageTrack.python,
       title: 'Module 7: High Orbit',
       description:
           'Mission control needs a satellite parked at 250km. Sequence the launch and keep climbing.',
@@ -107,6 +115,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm8',
       type: ModuleType.logicGrid,
+      track: LanguageTrack.python,
       title: 'Module 8: Center Escape',
       description:
           'Dropped in the middle of a 6x6 grid, the extraction point is at the top-right. Mix your directions.',
@@ -119,6 +128,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm9',
       type: ModuleType.sqlTerminal,
+      track: LanguageTrack.python,
       title: 'Module 9: Sorting Secrets',
       description: 'The tournament board is a mess. Order the score table from best to worst.',
       xpReward: 450,
@@ -141,6 +151,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm10',
       type: ModuleType.rocketFlight,
+      track: LanguageTrack.python,
       title: 'Module 10: Gravity Well',
       description:
           'A heavy payload and a hungry planet: fight your way out to 400km before fuel discipline slips.',
@@ -153,6 +164,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm11',
       type: ModuleType.logicGrid,
+      track: LanguageTrack.python,
       title: 'Module 11: The Grand Maze',
       description:
           'An 8x8 monster grid. Start at the top-right, finish at the bottom-left. No wrong turns.',
@@ -165,6 +177,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm12',
       type: ModuleType.sqlTerminal,
+      track: LanguageTrack.python,
       title: 'Module 12: Counting Heads',
       description: 'Ops needs a headcount. Aggregate the player table instead of eyeballing it.',
       xpReward: 600,
@@ -187,6 +200,7 @@ class Curriculum {
     CurriculumModule(
       id: 'm13',
       type: ModuleType.rocketFlight,
+      track: LanguageTrack.python,
       title: 'Module 13: Escape Velocity',
       description:
           'The graduation flight: leave the planet for good. 600km, one flawless launch sequence.',
@@ -195,6 +209,50 @@ class Curriculum {
           'Everything you know in one script: sys.preflight(), engine.start(), then enough throttle() to bank 600km of altitude.',
       config: RocketFlightConfig(targetAltitude: 600),
       initialCode: '// Final mission: 600km\n\n',
+    ),
+
+    // Java track modules
+    CurriculumModule(
+      id: 'j1',
+      type: ModuleType.logicGrid,
+      track: LanguageTrack.java,
+      title: 'Java Level 1: Variables & Method Calls',
+      description: 'Navigate the grid using precise Java-like sequential method calls.',
+      xpReward: 100,
+      hint: 'Remember that Java uses semicolons. Direct the robot with 3 right moves and 3 down moves.',
+      config: LogicGridConfig(targetX: 3, targetY: 3, gridSize: 5),
+      initialCode: 'move.right();\nmove.right();\n',
+    ),
+    CurriculumModule(
+      id: 'j2',
+      type: ModuleType.sqlTerminal,
+      track: LanguageTrack.java,
+      title: 'Java Level 2: Control Flow Filtering',
+      description: 'Filter records from database tables based on structured conditions.',
+      xpReward: 250,
+      hint: "Make sure you filter where grade is 'A'. Written exactly as: grade='A'",
+      config: SqlTerminalConfig(
+        table: 'students',
+        schema: ['id (int)', 'name (str)', 'grade (str)'],
+        instruction: "List the names of all students whose grade is 'A'.",
+        requiredSubstrings: ['select', 'name', 'from students', "grade='a'"],
+        successLog: [
+          'Database search complete.',
+          '[3 ROWS RETURNED] grade: \'A\'',
+        ],
+      ),
+      initialCode: 'SELECT * FROM students;',
+    ),
+    CurriculumModule(
+      id: 'j3',
+      type: ModuleType.rocketFlight,
+      track: LanguageTrack.java,
+      title: 'Java Level 3: Space Object Control',
+      description: 'Initiate systems and launch the spacecraft to 150km using object properties.',
+      xpReward: 400,
+      hint: 'First call sys.preflight(); and engine.start();, then add throttle(150); to reach altitude.',
+      config: RocketFlightConfig(targetAltitude: 150),
+      initialCode: 'sys.preflight();\nengine.start();\n',
     ),
   ];
 

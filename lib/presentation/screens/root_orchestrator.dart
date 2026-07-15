@@ -7,6 +7,7 @@ import '../../core/session/app_route.dart';
 import '../../core/session/google_auth_service.dart';
 import '../../core/session/leaderboard.dart';
 import '../../core/session/user_session.dart';
+import '../../core/session/session_persistence.dart';
 import 'ad_screen.dart';
 import 'auth_screen.dart';
 import 'code_golf_screen.dart';
@@ -64,9 +65,38 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   /// run rather than being computed from real login dates.
   static const int _seededStreak = 3;
 
-  void _login(String email, {String? name, String? photoUrl}) {
+  @override
+  void initState() {
+    super.initState();
+    _loadPersistedSession();
+  }
+
+  Future<void> _loadPersistedSession() async {
+    final session = await SessionPersistence.loadSession();
+    if (session != null && mounted) {
+      setState(() {
+        _user = session;
+        _route = AppRoute.home;
+        _splashDone = true;
+      });
+    }
+  }
+
+  void _updateUser(UserSession? user) {
     setState(() {
-      _user = UserSession(email: email, name: name, photoUrl: photoUrl, streak: _seededStreak);
+      _user = user;
+    });
+    if (user != null) {
+      SessionPersistence.saveSession(user);
+    } else {
+      SessionPersistence.clearSession();
+    }
+  }
+
+  void _login(String email, {String? name, String? photoUrl}) {
+    final session = UserSession(email: email, name: name, photoUrl: photoUrl, streak: _seededStreak);
+    _updateUser(session);
+    setState(() {
       _route = AppRoute.home;
     });
   }
@@ -83,8 +113,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
 
   void _logout() {
     GoogleAuthService.signOut(); // fire-and-forget; no-op for email sessions
+    _updateUser(null);
     setState(() {
-      _user = null;
       _route = AppRoute.auth;
     });
   }
@@ -111,9 +141,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   bool _purchaseStreakFreeze() {
     const cost = ProfileScreen.streakFreezeCost;
     if (_user!.xp < cost) return false;
-    setState(() {
-      _user = _user!.copyWith(xp: _user!.xp - cost, streakFreezes: _user!.streakFreezes + 1);
-    });
+    final updated = _user!.copyWith(xp: _user!.xp - cost, streakFreezes: _user!.streakFreezes + 1);
+    _updateUser(updated);
     return true;
   }
 
@@ -131,8 +160,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     });
   }
 
-  /// Runs the fake XP-sync API, updates the session, then shows the
-  /// non-rewarded interstitial ad before returning to the dashboard.
+  /// Runs the fake XP-sync API, updates the session, then automatically
+  /// launches the next module in the track (if any) directly without displaying ads.
   Future<void> _handleModuleWin({
     required int linesUsed,
     required int executionMs,
@@ -144,11 +173,21 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       executionMs: executionMs,
     );
 
-    setState(() => _user = _user!.withModuleCompleted(module.id, result.finalScore));
+    final updated = _user!.withModuleCompleted(module.id, result.finalScore);
+    _updateUser(updated);
+
+    final trackModules = Curriculum.modules.where((m) => m.track == module.track).toList();
+    final index = trackModules.indexOf(module);
+    final nextModule = (index >= 0 && index < trackModules.length - 1) ? trackModules[index + 1] : null;
+
     setState(() {
-      _adIsRewarded = false;
-      _onAdComplete = _returnToHub;
-      _route = AppRoute.ad;
+      if (nextModule != null) {
+        _activeModule = nextModule;
+        _route = AppRoute.game;
+      } else {
+        _activeModule = null;
+        _route = AppRoute.home;
+      }
     });
   }
 
@@ -296,7 +335,15 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
         return Stack(
           children: [
             if (_activeModule != null) _buildGameScreen(_activeModule!),
-            AdScreen(isRewarded: _adIsRewarded, onComplete: _onAdComplete!),
+            AdScreen(
+              isRewarded: _adIsRewarded,
+              onComplete: _onAdComplete!,
+              onCancel: () {
+                setState(() {
+                  _route = _activeModule != null ? AppRoute.game : AppRoute.home;
+                });
+              },
+            ),
           ],
         );
     }

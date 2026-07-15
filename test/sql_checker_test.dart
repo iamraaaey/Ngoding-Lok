@@ -45,5 +45,32 @@ void main() {
 
       expect(result.type, SqlCheckResultType.empty);
     });
+
+    test('is tolerant of whitespace around operators', () {
+      final result = SqlChecker().check(
+        "SELECT * FROM users WHERE role = 'admin' ;",
+        config,
+      );
+
+      expect(result.type, SqlCheckResultType.success);
+    });
+
+    test('is tolerant of double quotes', () {
+      final result = SqlChecker().check(
+        'SELECT * FROM users WHERE role = "admin";',
+        config,
+      );
+
+      expect(result.type, SqlCheckResultType.success);
+    });
+
+    test('accepts username = "admin" as equivalent to role = "admin"', () {
+      final result = SqlChecker().check(
+        "SELECT * FROM users WHERE username = 'admin';",
+        config,
+      );
+
+      expect(result.type, SqlCheckResultType.success);
+    });
   });
 }

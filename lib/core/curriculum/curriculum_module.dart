@@ -1,3 +1,4 @@
+import 'language_track.dart';
 import 'module_config.dart';
 import 'module_type.dart';
 
@@ -7,6 +8,7 @@ import 'module_type.dart';
 class CurriculumModule {
   final String id;
   final ModuleType type;
+  final LanguageTrack track;
   final String title;
   final String description;
   final int xpReward;
@@ -17,6 +19,7 @@ class CurriculumModule {
   const CurriculumModule({
     required this.id,
     required this.type,
+    required this.track,
     required this.title,
     required this.description,
     required this.xpReward,

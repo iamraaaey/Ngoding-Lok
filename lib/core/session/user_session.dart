@@ -76,4 +76,35 @@ class UserSession {
       },
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'email': email,
+      'name': name,
+      'photoUrl': photoUrl,
+      'xp': xp,
+      'completedModuleIds': completedModuleIds,
+      'streak': streak,
+      'moduleScores': moduleScores,
+      'streakFreezes': streakFreezes,
+    };
+  }
+
+  factory UserSession.fromJson(Map<String, dynamic> json) {
+    return UserSession(
+      email: json['email'] as String,
+      name: json['name'] as String?,
+      photoUrl: json['photoUrl'] as String?,
+      xp: json['xp'] as int? ?? 0,
+      completedModuleIds: (json['completedModuleIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      streak: json['streak'] as int? ?? 1,
+      moduleScores: (json['moduleScores'] as Map<String, dynamic>?)
+              ?.map((k, v) => MapEntry(k, v as int)) ??
+          const {},
+      streakFreezes: json['streakFreezes'] as int? ?? 0,
+    );
+  }
 }
