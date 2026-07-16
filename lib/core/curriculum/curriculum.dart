@@ -9,6 +9,24 @@ import 'module_type.dart';
 class Curriculum {
   static const List<CurriculumModule> modules = [
     CurriculumModule(
+      id: 'arduino-wokwi-starter',
+      type: ModuleType.arduinoSimulator,
+      track: LanguageTrack.arduino,
+      trackOrder: 1,
+      title: 'ESP32 Lab: HTTP API Request',
+      description:
+          'Connect to Wokwi-GUEST and fetch live JSON from a public web API.',
+      xpReward: 200,
+      hint:
+          'Press the green play button, then check the serial monitor for the HTTP status and JSON response.',
+      config: ArduinoSimulatorConfig(
+        projectUrl: 'https://wokwi.com/projects/377140251430773761',
+        instruction:
+            'Edit the sketch on the left, then run the simulation and observe the virtual hardware on the right.',
+      ),
+      initialCode: '',
+    ),
+    CurriculumModule(
       id: 'cyber-warmup',
       type: ModuleType.cybersecurityRoom,
       track: LanguageTrack.cybersecurity,

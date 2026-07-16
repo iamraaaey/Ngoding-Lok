@@ -119,6 +119,7 @@ class CodeGolf {
       LanguageTrack.sql => _sql,
       LanguageTrack.java => _java,
       LanguageTrack.cybersecurity => const <CodeGolfEntry>[],
+      LanguageTrack.arduino => const <CodeGolfEntry>[],
     };
     return [...list]..sort(
       (a, b) => a.bytes != b.bytes

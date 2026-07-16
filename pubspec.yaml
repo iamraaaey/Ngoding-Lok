@@ -47,6 +47,9 @@ dependencies:
   firebase_core: ^4.12.1
   firebase_auth: ^6.5.6
 
+  # Typed browser DOM APIs for the web-only Wokwi iframe.
+  web: ^1.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

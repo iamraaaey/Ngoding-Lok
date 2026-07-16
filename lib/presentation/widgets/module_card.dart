@@ -20,6 +20,7 @@ class ModuleCard extends StatelessWidget {
     ModuleType.sqlTerminal => Icons.storage,
     ModuleType.rocketFlight => Icons.rocket_launch,
     ModuleType.cybersecurityRoom => Icons.shield_outlined,
+    ModuleType.arduinoSimulator => Icons.memory_rounded,
   };
 
   Color get _accent => switch (module.type) {
@@ -27,6 +28,7 @@ class ModuleCard extends StatelessWidget {
     ModuleType.sqlTerminal => DoodlePalette.purple,
     ModuleType.rocketFlight => DoodlePalette.orange,
     ModuleType.cybersecurityRoom => DoodlePalette.green,
+    ModuleType.arduinoSimulator => DoodlePalette.blue,
   };
 
   @override

@@ -10,6 +10,7 @@ import '../../core/session/leaderboard.dart';
 import '../../core/session/user_session.dart';
 import '../../core/session/session_persistence.dart';
 import 'ad_screen.dart';
+import 'arduino_simulator_screen.dart';
 import 'auth_screen.dart';
 import 'code_golf_screen.dart';
 import 'cybersecurity_room_screen.dart';
@@ -237,6 +238,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
               _updateUser(_user!.withCyberRoomProgress(module.id, progress)),
           onBadgeAwarded: (badge) => _updateUser(_user!.withBadge(badge)),
         );
+      case ModuleType.arduinoSimulator:
+        return ArduinoSimulatorScreen(module: module, onBack: _returnToHub);
     }
   }
 

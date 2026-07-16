@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../theme/landing_tokens.dart';
@@ -151,19 +153,7 @@ class _BrandLockup extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: const BoxDecoration(
-              color: LandingTokens.ember,
-              borderRadius: LandingTokens.smallRadius,
-            ),
-            child: const Icon(
-              Icons.terminal_rounded,
-              color: Color(0xFF0A0500),
-              size: 18,
-            ),
-          ),
+          const _AnimatedBrandMark(),
           if (!iconOnly) ...[
             const SizedBox(width: LandingTokens.space12),
             Text(
@@ -178,6 +168,116 @@ class _BrandLockup extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Gives the terminal mark a quiet "live session" feel without competing
+/// with the navigation. Ambient motion is disabled for reduced-motion users.
+class _AnimatedBrandMark extends StatefulWidget {
+  const _AnimatedBrandMark();
+
+  @override
+  State<_AnimatedBrandMark> createState() => _AnimatedBrandMarkState();
+}
+
+class _AnimatedBrandMarkState extends State<_AnimatedBrandMark>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  bool _motionEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final motionEnabled = !LandingTokens.reducedMotion(context);
+    if (_motionEnabled == motionEnabled && _controller.isAnimating) return;
+
+    _motionEnabled = motionEnabled;
+    if (_motionEnabled) {
+      _controller.repeat();
+    } else {
+      _controller.stop();
+      _controller.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      child: const Icon(
+        Icons.terminal_rounded,
+        color: Color(0xFF0A0500),
+        size: 18,
+      ),
+      builder: (context, child) {
+        final phase = _motionEnabled ? _controller.value * math.pi * 2 : 0.0;
+        final pulse = (math.sin(phase) + 1) / 2;
+        final cursorOpacity = _motionEnabled
+            ? (math.sin(phase * 1.5) > 0 ? 1.0 : 0.25)
+            : 1.0;
+
+        return Transform.translate(
+          offset: Offset(0, -pulse * 1.2),
+          child: Transform.scale(
+            scale: 1 + pulse * 0.035,
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Color.lerp(
+                  LandingTokens.ember,
+                  LandingTokens.emberBright,
+                  pulse,
+                ),
+                borderRadius: LandingTokens.smallRadius,
+                boxShadow: [
+                  BoxShadow(
+                    color: LandingTokens.ember.withValues(
+                      alpha: 0.18 + pulse * 0.18,
+                    ),
+                    blurRadius: 8 + pulse * 8,
+                    spreadRadius: pulse * 0.5,
+                  ),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  child!,
+                  Positioned(
+                    right: 6,
+                    bottom: 7,
+                    child: Opacity(
+                      opacity: cursorOpacity,
+                      child: Container(
+                        width: 3,
+                        height: 1.5,
+                        color: const Color(0xFF0A0500),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -230,9 +330,7 @@ class _NavLinkState extends State<_NavLink> {
             fontSize: 11,
             color: _hovered ? LandingTokens.ember : LandingTokens.textMuted,
           ),
-          child: Text(
-            '${_hovered ? '/' : ''}${widget.label.toUpperCase()}',
-          ),
+          child: Text('${_hovered ? '/' : ''}${widget.label.toUpperCase()}'),
         ),
       ),
     );
@@ -272,10 +370,7 @@ class _CompactNavigation extends StatelessWidget {
           _item(_NavDestination.howItWorks, 'HOW IT WORKS'),
           _item(_NavDestination.signIn, 'SIGN IN'),
         ],
-        icon: const Icon(
-          Icons.menu_rounded,
-          color: LandingTokens.textPrimary,
-        ),
+        icon: const Icon(Icons.menu_rounded, color: LandingTokens.textPrimary),
       ),
     );
   }

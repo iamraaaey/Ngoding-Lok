@@ -58,3 +58,15 @@ class CyberSecurityConfig extends ModuleConfig {
   final String roomAsset;
   const CyberSecurityConfig({required this.roomAsset});
 }
+
+/// Configuration for a Wokwi-hosted, hands-on hardware lesson. The simulator
+/// contains the code editor, circuit canvas, and run controls in one place.
+class ArduinoSimulatorConfig extends ModuleConfig {
+  final String projectUrl;
+  final String instruction;
+
+  const ArduinoSimulatorConfig({
+    required this.projectUrl,
+    required this.instruction,
+  });
+}

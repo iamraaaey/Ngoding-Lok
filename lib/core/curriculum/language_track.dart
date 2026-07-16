@@ -3,7 +3,8 @@ enum LanguageTrack {
   python('Python Track', 'Python'),
   sql('SQL Track', 'SQL'),
   java('Java Track', 'Java'),
-  cybersecurity('Cybersecurity Track', 'Cyber');
+  cybersecurity('Cybersecurity Track', 'Cyber'),
+  arduino('Arduino Lab', 'Arduino');
 
   final String label;
 
