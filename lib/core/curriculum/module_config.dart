@@ -50,3 +50,11 @@ class RocketFlightConfig extends ModuleConfig {
 
   const RocketFlightConfig({required this.targetAltitude});
 }
+
+/// Points at a JSON-only cybersecurity room. Keeping authored tasks and
+/// terminal transcripts in an asset lets content writers add rooms without
+/// modifying the game engine.
+class CyberSecurityConfig extends ModuleConfig {
+  final String roomAsset;
+  const CyberSecurityConfig({required this.roomAsset});
+}

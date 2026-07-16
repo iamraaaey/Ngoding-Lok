@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/curriculum/curriculum.dart';
 import '../../core/curriculum/curriculum_module.dart';
+import '../../core/curriculum/language_track.dart';
 import '../../core/curriculum/module_type.dart';
 import '../../core/session/api_service.dart';
 import '../../core/session/app_route.dart';
@@ -11,6 +12,7 @@ import '../../core/session/session_persistence.dart';
 import 'ad_screen.dart';
 import 'auth_screen.dart';
 import 'code_golf_screen.dart';
+import 'cybersecurity_room_screen.dart';
 import 'dashboard_screen.dart';
 import 'forgot_password_screen.dart';
 import 'grid_game_screen.dart';
@@ -94,7 +96,12 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   }
 
   void _login(String email, {String? name, String? photoUrl}) {
-    final session = UserSession(email: email, name: name, photoUrl: photoUrl, streak: _seededStreak);
+    final session = UserSession(
+      email: email,
+      name: name,
+      photoUrl: photoUrl,
+      streak: _seededStreak,
+    );
     _updateUser(session);
     setState(() {
       _route = AppRoute.home;
@@ -105,7 +112,11 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   /// cleared yet, or null once everything is done. Levels are sequential, so
   /// this also respects the map's unlock order.
   CurriculumModule? get _nextModule {
-    for (final module in Curriculum.modules) {
+    // The Home hub resumes the five-room Cybersecurity Track. The other
+    // programming tracks remain available from the League Map.
+    for (final module in Curriculum.modules.where(
+      (m) => m.track == LanguageTrack.cybersecurity,
+    )) {
       if (!_user!.completedModuleIds.contains(module.id)) return module;
     }
     return null;
@@ -141,7 +152,10 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   bool _purchaseStreakFreeze() {
     const cost = ProfileScreen.streakFreezeCost;
     if (_user!.xp < cost) return false;
-    final updated = _user!.copyWith(xp: _user!.xp - cost, streakFreezes: _user!.streakFreezes + 1);
+    final updated = _user!.copyWith(
+      xp: _user!.xp - cost,
+      streakFreezes: _user!.streakFreezes + 1,
+    );
     _updateUser(updated);
     return true;
   }
@@ -176,9 +190,13 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     final updated = _user!.withModuleCompleted(module.id, result.finalScore);
     _updateUser(updated);
 
-    final trackModules = Curriculum.modules.where((m) => m.track == module.track).toList();
+    final trackModules = Curriculum.modules
+        .where((m) => m.track == module.track)
+        .toList();
     final index = trackModules.indexOf(module);
-    final nextModule = (index >= 0 && index < trackModules.length - 1) ? trackModules[index + 1] : null;
+    final nextModule = (index >= 0 && index < trackModules.length - 1)
+        ? trackModules[index + 1]
+        : null;
 
     setState(() {
       if (nextModule != null) {
@@ -214,6 +232,16 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           onWin: _handleModuleWin,
           onBack: _returnToHub,
         );
+      case ModuleType.cybersecurityRoom:
+        return CybersecurityRoomScreen(
+          module: module,
+          onWin: _handleModuleWin,
+          onBack: _returnToHub,
+          savedProgress: _user!.cyberRoomProgress[module.id],
+          onProgressChanged: (progress) =>
+              _updateUser(_user!.withCyberRoomProgress(module.id, progress)),
+          onBadgeAwarded: (badge) => _updateUser(_user!.withBadge(badge)),
+        );
     }
   }
 
@@ -228,7 +256,10 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 420),
       transitionBuilder: (child, animation) {
-        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
         return FadeTransition(
           opacity: curved,
           child: ScaleTransition(
@@ -237,10 +268,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           ),
         );
       },
-      child: KeyedSubtree(
-        key: ValueKey(_route),
-        child: _buildCurrentRoute(),
-      ),
+      child: KeyedSubtree(key: ValueKey(_route), child: _buildCurrentRoute()),
     );
   }
 
@@ -257,7 +285,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           onLogin: _login,
           onBack: () => setState(() => _route = AppRoute.landing),
           onCreateAccount: () => setState(() => _route = AppRoute.signup),
-          onForgotPassword: () => setState(() => _route = AppRoute.forgotPassword),
+          onForgotPassword: () =>
+              setState(() => _route = AppRoute.forgotPassword),
         );
 
       case AppRoute.signup:
@@ -340,7 +369,9 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
               onComplete: _onAdComplete!,
               onCancel: () {
                 setState(() {
-                  _route = _activeModule != null ? AppRoute.game : AppRoute.home;
+                  _route = _activeModule != null
+                      ? AppRoute.game
+                      : AppRoute.home;
                 });
               },
             ),

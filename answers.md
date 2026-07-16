@@ -178,3 +178,58 @@ This document contains the working solutions for all Python and Java track modul
   engine.start();
   throttle(750);
   ```
+
+---
+
+## Cybersecurity Track Solutions
+
+All cybersecurity rooms are deterministic browser simulations. No command,
+login, inbox, cipher, or file operation touches a real system.
+
+### Room 1: Warmup Web Server
+
+1. `21,80`
+2. `FTP`
+3. `HTTP`
+4. `FLAG{an0n_ftp_1s_r1sky}`
+
+Terminal path: `nmap target.thm` → `ftp target.thm` → `ls` → `cat flag.txt`.
+
+### Room 2: Training Portal Login
+
+1. `Structured Query Language` (also accepted: `SQL`)
+2. `' OR '1'='1`
+3. `Admin panel` (also accepted: `admin`)
+4. `FLAG{v4l1d4t3_1nputs}`
+
+Enter the training input in the browser mockup, sign in, then open the
+simulated Inspect panel to reveal the flag.
+
+### Room 3: Pick the Right Exploit
+
+This room has no typed answers. Select the `FTP` service whose banner says
+`Anonymous login enabled`, select `Anonymous FTP login`, and click `Match & Test`.
+
+Flag: `FLAG{r34d_th3_b4nn3r}`
+
+### Room 4: SOC Dashboard Defense — Build the Case
+
+This room has no typed answers. Expand each traffic entry, select at least two
+signals, and commit blocks only for the two entries showing correlated attack
+patterns. Ignore the legitimate employee entries, including the late-night
+login with a confirmed shift.
+
+Flag: `FLAG{d3f3nd_th3_l0g5}`
+
+### Room 5: Red Team, Then Blue Team
+
+This room has no typed answers. Select the correct option at each decision:
+
+1. Anonymous file share
+2. Browse the shared files
+3. Extract the training record
+4. Patch the anonymous share permissions
+5. Require authentication for the share
+6. Run the safe re-test
+
+Flags: `FLAG{r3d_t3am_c4ptur3}` and `FLAG{blu3_t3am_f1x3d}`

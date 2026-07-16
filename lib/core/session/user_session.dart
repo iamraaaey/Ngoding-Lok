@@ -1,3 +1,5 @@
+import '../cybersecurity/cyber_room.dart';
+
 /// Immutable snapshot of the logged-in student: their identity, XP total,
 /// and which curriculum modules they've cleared.
 class UserSession {
@@ -25,6 +27,8 @@ class UserSession {
   /// Number of "Streak Freeze" tokens the player owns, bought with XP on the
   /// Profile screen. A freeze would spare a missed day from breaking a streak.
   final int streakFreezes;
+  final Map<String, CyberRoomProgress> cyberRoomProgress;
+  final List<String> badges;
 
   const UserSession({
     required this.email,
@@ -35,6 +39,8 @@ class UserSession {
     this.streak = 1,
     this.moduleScores = const {},
     this.streakFreezes = 0,
+    this.cyberRoomProgress = const {},
+    this.badges = const [],
   });
 
   String get displayName {
@@ -49,6 +55,8 @@ class UserSession {
     int? streak,
     Map<String, int>? moduleScores,
     int? streakFreezes,
+    Map<String, CyberRoomProgress>? cyberRoomProgress,
+    List<String>? badges,
   }) {
     return UserSession(
       email: email,
@@ -59,8 +67,18 @@ class UserSession {
       streak: streak ?? this.streak,
       moduleScores: moduleScores ?? this.moduleScores,
       streakFreezes: streakFreezes ?? this.streakFreezes,
+      cyberRoomProgress: cyberRoomProgress ?? this.cyberRoomProgress,
+      badges: badges ?? this.badges,
     );
   }
+
+  UserSession withCyberRoomProgress(
+    String moduleId,
+    CyberRoomProgress progress,
+  ) => copyWith(cyberRoomProgress: {...cyberRoomProgress, moduleId: progress});
+
+  UserSession withBadge(String badge) =>
+      copyWith(badges: [...badges, if (!badges.contains(badge)) badge]);
 
   UserSession withModuleCompleted(String moduleId, int score) {
     final best = moduleScores[moduleId];
@@ -87,6 +105,10 @@ class UserSession {
       'streak': streak,
       'moduleScores': moduleScores,
       'streakFreezes': streakFreezes,
+      'cyberRoomProgress': cyberRoomProgress.map(
+        (key, value) => MapEntry(key, value.toJson()),
+      ),
+      'badges': badges,
     };
   }
 
@@ -96,15 +118,27 @@ class UserSession {
       name: json['name'] as String?,
       photoUrl: json['photoUrl'] as String?,
       xp: json['xp'] as int? ?? 0,
-      completedModuleIds: (json['completedModuleIds'] as List<dynamic>?)
+      completedModuleIds:
+          (json['completedModuleIds'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
       streak: json['streak'] as int? ?? 1,
-      moduleScores: (json['moduleScores'] as Map<String, dynamic>?)
-              ?.map((k, v) => MapEntry(k, v as int)) ??
+      moduleScores:
+          (json['moduleScores'] as Map<String, dynamic>?)?.map(
+            (k, v) => MapEntry(k, v as int),
+          ) ??
           const {},
       streakFreezes: json['streakFreezes'] as int? ?? 0,
+      cyberRoomProgress:
+          (json['cyberRoomProgress'] as Map<String, dynamic>?)?.map(
+            (key, value) => MapEntry(
+              key,
+              CyberRoomProgress.fromJson(value as Map<String, dynamic>),
+            ),
+          ) ??
+          const {},
+      badges: (json['badges'] as List<dynamic>?)?.cast<String>() ?? const [],
     );
   }
 }

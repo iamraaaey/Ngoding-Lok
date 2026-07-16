@@ -16,16 +16,18 @@ class ModuleCard extends StatelessWidget {
   });
 
   IconData get _icon => switch (module.type) {
-        ModuleType.logicGrid => Icons.videogame_asset,
-        ModuleType.sqlTerminal => Icons.storage,
-        ModuleType.rocketFlight => Icons.rocket_launch,
-      };
+    ModuleType.logicGrid => Icons.videogame_asset,
+    ModuleType.sqlTerminal => Icons.storage,
+    ModuleType.rocketFlight => Icons.rocket_launch,
+    ModuleType.cybersecurityRoom => Icons.shield_outlined,
+  };
 
   Color get _accent => switch (module.type) {
-        ModuleType.logicGrid => DoodlePalette.blue,
-        ModuleType.sqlTerminal => DoodlePalette.purple,
-        ModuleType.rocketFlight => DoodlePalette.orange,
-      };
+    ModuleType.logicGrid => DoodlePalette.blue,
+    ModuleType.sqlTerminal => DoodlePalette.purple,
+    ModuleType.rocketFlight => DoodlePalette.orange,
+    ModuleType.cybersecurityRoom => DoodlePalette.green,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -38,21 +40,41 @@ class ModuleCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              DoodleIconBadge(icon: _icon, color: _accent, size: 48, iconSize: 24, borderRadius: 14),
-              if (isCompleted) const DoodlePill(text: 'Cleared', background: DoodlePalette.green),
+              DoodleIconBadge(
+                icon: _icon,
+                color: _accent,
+                size: 48,
+                iconSize: 24,
+                borderRadius: 14,
+              ),
+              if (isCompleted)
+                const DoodlePill(
+                  text: 'Cleared',
+                  background: DoodlePalette.green,
+                ),
             ],
           ),
           const SizedBox(height: 14),
-          Text(module.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.black, fontSize: 17, fontWeight: FontWeight.w800)),
+          Text(
+            module.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 17,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           const SizedBox(height: 6),
           Text(
             module.description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.black54, fontSize: 13, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              color: Colors.black54,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const Spacer(),
           Row(
@@ -62,7 +84,14 @@ class ModuleCard extends StatelessWidget {
                 children: [
                   const Icon(Icons.star, size: 16, color: Colors.black),
                   const SizedBox(width: 4),
-                  Text('+${module.xpReward} XP', style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.w800)),
+                  Text(
+                    '+${module.xpReward} XP',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ],
               ),
               DoodleButton(

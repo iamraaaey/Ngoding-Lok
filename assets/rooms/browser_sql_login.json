@@ -1,0 +1,10 @@
+{
+  "id":"sql-login","title":"Training Portal Login","scenario":"A fictional student portal uses an unsafe, simulated login check. Explore how a fixed training input can change the result without touching a real website.","points":375,"badge":"Query Spotter","environment":"browser",
+  "environmentData":{"url":"https://portal.training.thm/login","siteTitle":"Campus Portal","injection":"' OR '1'='1","flag":"FLAG{v4l1d4t3_1nputs}"},
+  "tasks":[
+    {"prompt":"What does SQL stand for?","hint1":"It is a language commonly used with databases.","hint2":"Structured Query Language.","answer":"Structured Query Language","acceptedAnswers":["SQL"],"caseSensitive":false},
+    {"prompt":"What is the training input shown in the browser-mockup hint?","hint1":"It is a fixed string in this safe simulator.","hint2":"Try ' OR '1'='1","answer":"' OR '1'='1","caseSensitive":true},
+    {"prompt":"Use that training input in either field and sign in. What panel appears?","hint1":"The mockup switches screens after its local check.","hint2":"It says Admin panel.","answer":"Admin panel","acceptedAnswers":["admin"],"caseSensitive":false},
+    {"prompt":"Open the simulated Inspect panel and submit its flag.","hint1":"There is an Inspect panel button on the mock admin page.","hint2":"The flag starts FLAG{v4...}","answer":"FLAG{v4l1d4t3_1nputs}","caseSensitive":true,"learn":{"title":"Safe input handling","body":"SQL means Structured Query Language. When a website mixes untrusted input into a database query, the input can change what the query means. Real applications avoid this with parameterized queries and careful validation."}}
+  ],"terminalScript":{},"commandHints":{}
+}

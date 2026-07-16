@@ -1,0 +1,55 @@
+{
+  "id": "warmup-web-server",
+  "title": "Warmup Web Server",
+  "scenario": "A small company left a training web server misconfigured. Explore this completely simulated target to find its hidden flag — no real network is ever contacted.",
+  "points": 350,
+  "badge": "First Flag",
+  "environment": "terminal",
+  "environmentData": {},
+  "tasks": [
+    {
+      "prompt": "Scan the target. Which open ports do you see? Enter them separated by a comma.",
+      "hint1": "Start by asking the simulated terminal to scan target.thm.",
+      "hint2": "Try: nmap target.thm — the output lists 21 and 80.",
+      "answer": "21,80",
+      "acceptedAnswers": ["21, 80", "80,21", "80, 21"],
+      "caseSensitive": false
+    },
+    {
+      "prompt": "What service is running on port 21?",
+      "hint1": "Read the SERVICE column from the scan results.",
+      "hint2": "Port 21 is FTP (File Transfer Protocol).",
+      "answer": "FTP",
+      "caseSensitive": false
+    },
+    {
+      "prompt": "What service is running on port 80?",
+      "hint1": "Read the second open port in the simulated scan.",
+      "hint2": "Port 80 is HTTP, the web service.",
+      "answer": "HTTP",
+      "acceptedAnswers": ["web", "web server"],
+      "caseSensitive": false
+    },
+    {
+      "prompt": "Find and submit the flag stored on the anonymous FTP server.",
+      "hint1": "FTP is a way of transferring files. Connect with ftp target.thm, then sign in as anonymous.",
+      "hint2": "After connecting, use ls to list files and cat flag.txt to read the flag.",
+      "answer": "FLAG{an0n_ftp_1s_r1sky}",
+      "caseSensitive": true,
+      "learn": {
+        "title": "Why anonymous FTP is risky",
+        "body": "FTP means File Transfer Protocol: an older way to move files. Anonymous access lets anyone browse files without a personal account. On a real company system, that can accidentally expose sensitive documents — so public access should be disabled unless it is truly needed."
+      }
+    }
+  ],
+  "terminalScript": {
+    "nmap target.thm": "Starting Nmap (simulated) at 10:00\nNmap scan report for target.thm\nPORT   STATE SERVICE\n21/tcp open  ftp\n80/tcp open  http\n\nNmap done: 1 simulated host scanned.",
+    "ftp target.thm": "Connected to target.thm (simulated).\n220 Training FTP server ready.\nName (target.thm:student): anonymous\n331 Anonymous login ok, send your email as password.\nPassword:\n230 Login successful.\nftp>",
+    "ls": "public\nflag.txt",
+    "cat flag.txt": "Nice exploration! Your first flag is:\n\nFLAG{an0n_ftp_1s_r1sky}\n\nSubmit it in the final task."
+  },
+  "commandHints": {
+    "help": "Try nmap target.thm to begin your safe, simulated investigation.",
+    "default": "That command is not part of this training simulation. Try nmap target.thm, ftp target.thm, ls, or cat flag.txt."
+  }
+}

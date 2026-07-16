@@ -16,7 +16,12 @@ class LeagueMapScreen extends StatefulWidget {
   final void Function(CurriculumModule module) onLaunch;
   final VoidCallback onBack;
 
-  const LeagueMapScreen({super.key, required this.user, required this.onLaunch, required this.onBack});
+  const LeagueMapScreen({
+    super.key,
+    required this.user,
+    required this.onLaunch,
+    required this.onBack,
+  });
 
   @override
   State<LeagueMapScreen> createState() => _LeagueMapScreenState();
@@ -45,11 +50,13 @@ class _LevelEntry {
 }
 
 class _LeagueMapScreenState extends State<LeagueMapScreen> {
-  LanguageTrack _track = LanguageTrack.python;
+  LanguageTrack _track = LanguageTrack.cybersecurity;
 
   List<_LevelEntry> _buildEntries() {
     final cleared = widget.user.completedModuleIds;
-    final trackModules = Curriculum.modules.where((m) => m.track == _track).toList();
+    final trackModules = Curriculum.modules
+        .where((m) => m.track == _track)
+        .toList();
 
     return [
       for (var i = 0; i < trackModules.length; i++)
@@ -58,9 +65,9 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
           title: trackModules[i].title,
           subtitle: trackModules[i].description,
           module: trackModules[i],
-          // Level 1 is always open; each later level unlocks once the
-          // previous module has been cleared.
-          locked: i != 0 && !cleared.contains(trackModules[i - 1].id),
+          // Testing mode: every module is launchable without completing a
+          // previous module. Completion still records scores and badges.
+          locked: false,
           completed: cleared.contains(trackModules[i].id),
           score: widget.user.moduleScores[trackModules[i].id],
         ),
@@ -96,8 +103,9 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          onTap(_LevelEntry e) =>
-                              (e.locked || e.module == null) ? null : () => widget.onLaunch(e.module!);
+                          onTap(_LevelEntry e) => (e.locked || e.module == null)
+                              ? null
+                              : () => widget.onLaunch(e.module!);
 
                           // Wide: a 2-column grid of level cards fills the
                           // width (connector rail dropped since a grid isn't a
@@ -109,14 +117,25 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
                               spacing: gap,
                               children: [
                                 for (final e in entries)
-                                  SizedBox(width: tileW, child: _LevelTile(entry: e, isLast: true, onTap: onTap(e))),
+                                  SizedBox(
+                                    width: tileW,
+                                    child: _LevelTile(
+                                      entry: e,
+                                      isLast: true,
+                                      onTap: onTap(e),
+                                    ),
+                                  ),
                               ],
                             );
                           }
                           return Column(
                             children: [
                               for (var i = 0; i < entries.length; i++)
-                                _LevelTile(entry: entries[i], isLast: i == entries.length - 1, onTap: onTap(entries[i])),
+                                _LevelTile(
+                                  entry: entries[i],
+                                  isLast: i == entries.length - 1,
+                                  onTap: onTap(entries[i]),
+                                ),
                             ],
                           );
                         },
@@ -138,7 +157,11 @@ class _Header extends StatelessWidget {
   final VoidCallback onBack;
   final ValueChanged<LanguageTrack> onTrackChanged;
 
-  const _Header({required this.track, required this.onBack, required this.onTrackChanged});
+  const _Header({
+    required this.track,
+    required this.onBack,
+    required this.onTrackChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +187,11 @@ class _Header extends StatelessWidget {
               'League Map',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 20),
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w800,
+                fontSize: 20,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -198,9 +225,14 @@ class _TrackDropdown extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
           dropdownColor: DoodlePalette.white,
-          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 13),
+          style: const TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+          ),
           items: [
-            for (final t in LanguageTrack.values) DropdownMenuItem(value: t, child: Text(t.label)),
+            for (final t in LanguageTrack.values)
+              DropdownMenuItem(value: t, child: Text(t.label)),
           ],
           onChanged: (t) {
             if (t != null) onChanged(t);
@@ -219,7 +251,11 @@ class _LevelTile extends StatelessWidget {
   final bool isLast;
   final VoidCallback? onTap;
 
-  const _LevelTile({required this.entry, required this.isLast, required this.onTap});
+  const _LevelTile({
+    required this.entry,
+    required this.isLast,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -246,10 +282,22 @@ class _LevelTile extends StatelessWidget {
                 alignment: Alignment.center,
                 child: locked
                     ? const Icon(Icons.lock, size: 18, color: Colors.black)
-                    : Text('${entry.number}',
-                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 16)),
+                    : Text(
+                        '${entry.number}',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
-              if (!isLast) Expanded(child: Container(width: 4, color: Colors.black.withValues(alpha: 0.22))),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 4,
+                    color: Colors.black.withValues(alpha: 0.22),
+                  ),
+                ),
             ],
           ),
           const SizedBox(width: 14),
@@ -261,7 +309,9 @@ class _LevelTile extends StatelessWidget {
                 child: GestureDetector(
                   onTap: onTap,
                   child: DoodleCard(
-                    color: locked ? const Color(0xFFECECEC) : DoodlePalette.white,
+                    color: locked
+                        ? const Color(0xFFECECEC)
+                        : DoodlePalette.white,
                     padding: const EdgeInsets.all(16),
                     borderRadius: 18,
                     child: Column(
@@ -270,22 +320,41 @@ class _LevelTile extends StatelessWidget {
                         Row(
                           children: [
                             Expanded(
-                              child: Text(entry.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 15)),
+                              child: Text(
+                                entry.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                ),
+                              ),
                             ),
                             if (entry.completed)
-                              const DoodlePill(text: 'Cleared', background: DoodlePalette.green)
+                              const DoodlePill(
+                                text: 'Cleared',
+                                background: DoodlePalette.green,
+                              )
                             else if (locked)
-                              const Icon(Icons.lock, size: 18, color: Colors.black45),
+                              const Icon(
+                                Icons.lock,
+                                size: 18,
+                                color: Colors.black45,
+                              ),
                           ],
                         ),
                         const SizedBox(height: 6),
-                        Text(entry.subtitle,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 12)),
+                        Text(
+                          entry.subtitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.black54,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
                         const SizedBox(height: 12),
                         _Footer(entry: entry),
                       ],
@@ -319,8 +388,14 @@ class _Footer extends StatelessWidget {
   Widget build(BuildContext context) {
     if (entry.locked) {
       return Text(
-        entry.module == null ? 'Coming soon' : 'Clear the previous level to unlock',
-        style: const TextStyle(color: Colors.black45, fontWeight: FontWeight.w700, fontSize: 12),
+        entry.module == null
+            ? 'Coming soon'
+            : 'Clear the previous level to unlock',
+        style: const TextStyle(
+          color: Colors.black45,
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
+        ),
       );
     }
 
@@ -336,8 +411,11 @@ class _Footer extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               for (var i = 0; i < 3; i++)
-                Icon(i < _stars ? Icons.star : Icons.star_border,
-                    size: 18, color: i < _stars ? DoodlePalette.orange : Colors.black38),
+                Icon(
+                  i < _stars ? Icons.star : Icons.star_border,
+                  size: 18,
+                  color: i < _stars ? DoodlePalette.orange : Colors.black38,
+                ),
             ],
           ),
           Row(
@@ -345,11 +423,21 @@ class _Footer extends StatelessWidget {
             children: [
               const Icon(Icons.bolt, size: 15, color: Colors.black),
               const SizedBox(width: 3),
-              Text('${entry.score ?? 0} pts',
-                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 12)),
+              Text(
+                '${entry.score ?? 0} pts',
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
-          const _ActionChip(label: 'Replay', icon: Icons.refresh, color: DoodlePalette.yellow),
+          const _ActionChip(
+            label: 'Replay',
+            icon: Icons.refresh,
+            color: DoodlePalette.yellow,
+          ),
         ],
       );
     }
@@ -363,11 +451,21 @@ class _Footer extends StatelessWidget {
           children: [
             const Icon(Icons.star, size: 15, color: Colors.black),
             const SizedBox(width: 3),
-            Text('+${entry.module!.xpReward} XP',
-                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 12)),
+            Text(
+              '+${entry.module!.xpReward} XP',
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+              ),
+            ),
           ],
         ),
-        const _ActionChip(label: 'Play', icon: Icons.play_arrow, color: DoodlePalette.green),
+        const _ActionChip(
+          label: 'Play',
+          icon: Icons.play_arrow,
+          color: DoodlePalette.green,
+        ),
       ],
     );
   }
@@ -379,7 +477,11 @@ class _ActionChip extends StatelessWidget {
   final IconData icon;
   final Color color;
 
-  const _ActionChip({required this.label, required this.icon, required this.color});
+  const _ActionChip({
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -393,7 +495,14 @@ class _ActionChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
           const SizedBox(width: 4),
           Icon(icon, size: 15, color: Colors.black),
         ],

@@ -9,6 +9,72 @@ import 'module_type.dart';
 class Curriculum {
   static const List<CurriculumModule> modules = [
     CurriculumModule(
+      id: 'cyber-warmup',
+      type: ModuleType.cybersecurityRoom,
+      track: LanguageTrack.cybersecurity,
+      title: 'Cyber Lab: Warmup Web Server',
+      description:
+          'Explore a safe simulated server and capture your first flag.',
+      xpReward: 350,
+      hint: 'Use the simulated terminal to explore target.thm.',
+      config: CyberSecurityConfig(
+        roomAsset: 'assets/rooms/warmup_web_server.json',
+      ),
+      initialCode: '',
+    ),
+    CurriculumModule(
+      id: 'cyber-default-credentials',
+      type: ModuleType.cybersecurityRoom,
+      track: LanguageTrack.cybersecurity,
+      title: 'Cyber Lab: Training Portal Login',
+      description: 'Explore a fake browser login and a safe SQL input lesson.',
+      xpReward: 375,
+      hint: 'Use the browser mockup and its simulated Inspect panel.',
+      config: CyberSecurityConfig(
+        roomAsset: 'assets/rooms/browser_sql_login.json',
+      ),
+      initialCode: '',
+    ),
+    CurriculumModule(
+      id: 'cyber-pick-right-exploit',
+      type: ModuleType.cybersecurityRoom,
+      track: LanguageTrack.cybersecurity,
+      title: 'Cyber Lab: Pick the Right Exploit',
+      description: 'Read scan evidence and match the correct safe technique.',
+      xpReward: 400,
+      hint: 'Compare the service banner with the candidate techniques.',
+      config: CyberSecurityConfig(
+        roomAsset: 'assets/rooms/brute_force_simulator.json',
+      ),
+      initialCode: '',
+    ),
+    CurriculumModule(
+      id: 'cyber-soc-defense',
+      type: ModuleType.cybersecurityRoom,
+      track: LanguageTrack.cybersecurity,
+      title: 'Cyber Lab: SOC Dashboard Defense',
+      description: 'React to scripted network traffic and block real threats.',
+      xpReward: 425,
+      hint: 'Use the traffic legend and block the three red entries.',
+      config: CyberSecurityConfig(
+        roomAsset: 'assets/rooms/caesar_cipher_puzzle.json',
+      ),
+      initialCode: '',
+    ),
+    CurriculumModule(
+      id: 'cyber-red-blue-capstone',
+      type: ModuleType.cybersecurityRoom,
+      track: LanguageTrack.cybersecurity,
+      title: 'Cyber Lab: Red Team vs Blue Team',
+      description: 'Explore a toy weakness, patch it, and re-test the system.',
+      xpReward: 450,
+      hint: 'Follow the attacker phase, then complete the defender phase.',
+      config: CyberSecurityConfig(
+        roomAsset: 'assets/rooms/hidden_file_hunt.json',
+      ),
+      initialCode: '',
+    ),
+    CurriculumModule(
       id: 'm1',
       type: ModuleType.logicGrid,
       track: LanguageTrack.python,
@@ -60,8 +126,15 @@ class Curriculum {
       xpReward: 150,
       hint:
           'The flag is at the top-left. You need exactly 4 move.left() and 4 move.up() calls — in any order.',
-      config: LogicGridConfig(playerX: 4, playerY: 4, targetX: 0, targetY: 0, gridSize: 5),
-      initialCode: '// New commands unlocked: move.left() and move.up()\nmove.left();\n',
+      config: LogicGridConfig(
+        playerX: 4,
+        playerY: 4,
+        targetX: 0,
+        targetY: 0,
+        gridSize: 5,
+      ),
+      initialCode:
+          '// New commands unlocked: move.left() and move.up()\nmove.left();\n',
     ),
     CurriculumModule(
       id: 'm5',
@@ -81,7 +154,8 @@ class Curriculum {
       type: ModuleType.sqlTerminal,
       track: LanguageTrack.python,
       title: 'Module 6: Filtering 101',
-      description: 'Query the student records to list everyone with a perfect grade.',
+      description:
+          'Query the student records to list everyone with a perfect grade.',
       xpReward: 300,
       hint:
           "SELECT the name column FROM students, and filter with WHERE grade='A' — written exactly like that, no spaces around the = sign.",
@@ -122,7 +196,13 @@ class Curriculum {
       xpReward: 400,
       hint:
           'From (2,2), the flag at (5,0) needs 3 move.right() and 2 move.up() — up means y gets SMALLER.',
-      config: LogicGridConfig(playerX: 2, playerY: 2, targetX: 5, targetY: 0, gridSize: 6),
+      config: LogicGridConfig(
+        playerX: 2,
+        playerY: 2,
+        targetX: 5,
+        targetY: 0,
+        gridSize: 6,
+      ),
       initialCode: '// You start mid-grid at (2,2)\n\n',
     ),
     CurriculumModule(
@@ -130,7 +210,8 @@ class Curriculum {
       type: ModuleType.sqlTerminal,
       track: LanguageTrack.python,
       title: 'Module 9: Sorting Secrets',
-      description: 'The tournament board is a mess. Order the score table from best to worst.',
+      description:
+          'The tournament board is a mess. Order the score table from best to worst.',
       xpReward: 450,
       hint:
           'SELECT everything FROM scores, then add ORDER BY points DESC to rank from highest to lowest.',
@@ -171,7 +252,13 @@ class Curriculum {
       xpReward: 550,
       hint:
           'From (7,0) to (0,7): seven move.left() and seven move.down(). Fourteen perfect steps.',
-      config: LogicGridConfig(playerX: 7, playerY: 0, targetX: 0, targetY: 7, gridSize: 8),
+      config: LogicGridConfig(
+        playerX: 7,
+        playerY: 0,
+        targetX: 0,
+        targetY: 7,
+        gridSize: 8,
+      ),
       initialCode: '// The final navigation exam\n\n',
     ),
     CurriculumModule(
@@ -179,7 +266,8 @@ class Curriculum {
       type: ModuleType.sqlTerminal,
       track: LanguageTrack.python,
       title: 'Module 12: Counting Heads',
-      description: 'Ops needs a headcount. Aggregate the player table instead of eyeballing it.',
+      description:
+          'Ops needs a headcount. Aggregate the player table instead of eyeballing it.',
       xpReward: 600,
       hint:
           'Use the COUNT( function: SELECT COUNT(*) FROM players gives one number instead of every row.',
@@ -210,16 +298,17 @@ class Curriculum {
       config: RocketFlightConfig(targetAltitude: 600),
       initialCode: '// Final mission: 600km\n\n',
     ),
-
     // Java track modules
     CurriculumModule(
       id: 'j1',
       type: ModuleType.logicGrid,
       track: LanguageTrack.java,
       title: 'Java Level 1: Variables & Method Calls',
-      description: 'Navigate the grid using precise Java-like sequential method calls.',
+      description:
+          'Navigate the grid using precise Java-like sequential method calls.',
       xpReward: 100,
-      hint: 'Remember that Java uses semicolons. Direct the robot with 3 right moves and 3 down moves.',
+      hint:
+          'Remember that Java uses semicolons. Direct the robot with 3 right moves and 3 down moves.',
       config: LogicGridConfig(targetX: 3, targetY: 3, gridSize: 5),
       initialCode: 'move.right();\nmove.right();\n',
     ),
@@ -228,9 +317,11 @@ class Curriculum {
       type: ModuleType.sqlTerminal,
       track: LanguageTrack.java,
       title: 'Java Level 2: Control Flow Filtering',
-      description: 'Filter records from database tables based on structured conditions.',
+      description:
+          'Filter records from database tables based on structured conditions.',
       xpReward: 250,
-      hint: "Make sure you filter where grade is 'A'. Written exactly as: grade='A'",
+      hint:
+          "Make sure you filter where grade is 'A'. Written exactly as: grade='A'",
       config: SqlTerminalConfig(
         table: 'students',
         schema: ['id (int)', 'name (str)', 'grade (str)'],
@@ -248,9 +339,11 @@ class Curriculum {
       type: ModuleType.rocketFlight,
       track: LanguageTrack.java,
       title: 'Java Level 3: Space Object Control',
-      description: 'Initiate systems and launch the spacecraft to 150km using object properties.',
+      description:
+          'Initiate systems and launch the spacecraft to 150km using object properties.',
       xpReward: 400,
-      hint: 'First call sys.preflight(); and engine.start();, then add throttle(150); to reach altitude.',
+      hint:
+          'First call sys.preflight(); and engine.start();, then add throttle(150); to reach altitude.',
       config: RocketFlightConfig(targetAltitude: 150),
       initialCode: 'sys.preflight();\nengine.start();\n',
     ),
