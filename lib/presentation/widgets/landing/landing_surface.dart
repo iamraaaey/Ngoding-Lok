@@ -50,20 +50,40 @@ class _CinematicBackdropState extends State<CinematicBackdrop>
             animation: _drift,
             builder: (context, _) {
               final t = _drift.value * 2 * math.pi;
-              return DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment(
-                      0.65 + 0.25 * math.cos(t),
-                      -0.7 + 0.18 * math.sin(t),
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: Alignment(
+                          0.35 + 0.42 * math.cos(t),
+                          -0.55 + 0.38 * math.sin(t),
+                        ),
+                        radius: 1.2,
+                        colors: const <Color>[
+                          Color(0x24FF5C01),
+                          Color(0x00070707),
+                        ],
+                      ),
                     ),
-                    radius: 1.15,
-                    colors: const <Color>[
-                      Color(0x14FF5C01),
-                      Color(0x00070707),
-                    ],
                   ),
-                ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: Alignment(
+                          -0.55 + 0.32 * math.cos(t + math.pi),
+                          0.5 + 0.26 * math.sin(t + math.pi),
+                        ),
+                        radius: 0.9,
+                        colors: const <Color>[
+                          Color(0x0C00E5FF),
+                          Color(0x00070707),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),

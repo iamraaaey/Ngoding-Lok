@@ -95,7 +95,9 @@ class _Skin {
 }
 
 class _LeagueMapScreenState extends State<LeagueMapScreen> {
-  LanguageTrack _track = LanguageTrack.cybersecurity;
+  // The curriculum's primary learning path is Python.  Starting here also
+  // keeps the map consistent with the dashboard's next-module card.
+  LanguageTrack _track = LanguageTrack.python;
 
   List<_LevelEntry> _buildEntries() {
     final cleared = widget.user.completedModuleIds;
@@ -132,14 +134,21 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
         children: [
           if (dark) const CinematicBackdrop(),
           SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1400),
-                child: Column(
+            child: LayoutBuilder(
+              builder: (context, viewport) {
+                // Let the map use the available web canvas.  The old 1400px
+                // cap created very large empty gutters on wide monitors.
+                final sidePadding = viewport.maxWidth >= 900 ? 24.0 : 16.0;
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      padding: EdgeInsets.fromLTRB(
+                        sidePadding,
+                        16,
+                        sidePadding,
+                        8,
+                      ),
                       child: _Header(
                         track: _track,
                         skin: skin,
@@ -149,7 +158,12 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
                     ),
                     Expanded(
                       child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        padding: EdgeInsets.fromLTRB(
+                          sidePadding,
+                          8,
+                          sidePadding,
+                          24,
+                        ),
                         child: LayoutBuilder(
                           builder: (context, constraints) {
                             onTap(_LevelEntry e) =>
@@ -196,8 +210,8 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
                       ),
                     ),
                   ],
-                ),
-              ),
+                );
+              },
             ),
           ),
         ],
@@ -302,10 +316,7 @@ class _TrackDropdown extends StatelessWidget {
           value: track,
           isDense: true,
           borderRadius: LandingTokens.mediumRadius,
-          icon: const Icon(
-            Icons.arrow_drop_down,
-            color: LandingTokens.ember,
-          ),
+          icon: const Icon(Icons.arrow_drop_down, color: LandingTokens.ember),
           dropdownColor: skin.panel,
           style: LandingTokens.label(
             fontSize: 11,
@@ -551,7 +562,11 @@ class _Footer extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const _ActionChip(label: 'REPLAY', icon: Icons.refresh, filled: false),
+          const _ActionChip(
+            label: 'REPLAY',
+            icon: Icons.refresh,
+            filled: false,
+          ),
         ],
       );
     }

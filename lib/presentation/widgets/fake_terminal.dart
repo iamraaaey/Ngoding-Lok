@@ -119,10 +119,6 @@ class _FakeTerminalState extends State<FakeTerminal> {
                           ? const Color(0xFF43FFA4)
                           : const Color(0xFFCFCEC7),
                     ),
-                    toolbarOptions: const ToolbarOptions(
-                      copy: true,
-                      selectAll: true,
-                    ),
                   ),
                 ),
             ],

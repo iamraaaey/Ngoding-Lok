@@ -112,10 +112,10 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   /// cleared yet, or null once everything is done. Levels are sequential, so
   /// this also respects the map's unlock order.
   CurriculumModule? get _nextModule {
-    // The Home hub resumes the five-room Cybersecurity Track. The other
-    // programming tracks remain available from the League Map.
+    // Python is the primary path shown by the League Map and is the natural
+    // default for a new learner. The other tracks remain selectable there.
     for (final module in Curriculum.modules.where(
-      (m) => m.track == LanguageTrack.cybersecurity,
+      (m) => m.track == LanguageTrack.python,
     )) {
       if (!_user!.completedModuleIds.contains(module.id)) return module;
     }
