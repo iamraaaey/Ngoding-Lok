@@ -21,14 +21,18 @@ class CyberEnvironment extends StatelessWidget {
     if (type == 'inbox') return FakeInboxMock(data: data);
     if (type == 'cipher') return FakeCipherTool(data: data);
     if (type == 'files') return FakeFileExplorer(data: data);
-    if (type == 'bruteforce')
+    if (type == 'bruteforce') {
       return FakeBruteForceSimulator(data: data, onComplete: onActionComplete);
-    if (type == 'soc')
+    }
+    if (type == 'soc') {
       return FakeSocDashboard(data: data, onComplete: onActionComplete);
-    if (type == 'redblue')
+    }
+    if (type == 'redblue') {
       return FakeRedBlueScenario(data: data, onComplete: onActionComplete);
-    if (type == 'decision')
+    }
+    if (type == 'decision') {
       return DecisionTreeEnvironment(data: data, onComplete: onActionComplete);
+    }
     return FakeTerminal(script: terminalScript, hints: commandHints);
   }
 }
@@ -100,17 +104,17 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF4E5),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFE5A33C)),
+              color: const Color(0x2EFF5C01),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: const Color(0x66FF5C01)),
             ),
             child: Row(
               children: [
                 Icon(
                   _loggedIn ? Icons.lock_open : Icons.lock,
                   color: _loggedIn
-                      ? const Color(0xFF16804B)
-                      : const Color(0xFFB56A00),
+                      ? const Color(0xFF43FFA4)
+                      : const Color(0xFFFF7A2F),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -119,7 +123,7 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
                         ? 'Admin panel unlocked (training mockup)'
                         : 'Fictional admin login · locked',
                     style: const TextStyle(
-                      color: Color(0xFF553500),
+                      color: Color(0xFFFF7A2F),
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -128,7 +132,7 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
                   Text(
                     '${widget.data['flag']}',
                     style: const TextStyle(
-                      color: Color(0xFF16804B),
+                      color: Color(0xFF43FFA4),
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -141,14 +145,14 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
               const Text(
                 'Wordlist size:',
                 style: TextStyle(
-                  color: Color(0xFF263237),
+                  color: Color(0xFFCFCEC7),
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(width: 8),
               DropdownButton<String>(
                 value: _size,
-                style: const TextStyle(color: Color(0xFF172429)),
+                style: const TextStyle(color: Color(0xFFF4F3EF)),
                 items: const [
                   DropdownMenuItem(value: 'Small', child: Text('Small')),
                   DropdownMenuItem(value: 'Medium', child: Text('Medium')),
@@ -163,8 +167,9 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF101719),
-                borderRadius: BorderRadius.circular(10),
+                color: const Color(0xFF050505),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: const Color(0x1AFFFFFF)),
               ),
               child: ListView(
                 children: [
@@ -172,7 +177,7 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
                     const Text(
                       'Ready. This is a fixed, scripted animation—not real cracking.',
                       style: TextStyle(
-                        color: Color(0xFFB9D2CC),
+                        color: Color(0xFF908F88),
                         fontFamily: 'monospace',
                       ),
                     ),
@@ -181,8 +186,8 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
                       line,
                       style: TextStyle(
                         color: line.endsWith('✓')
-                            ? const Color(0xFF8FE3B0)
-                            : const Color(0xFFD8E7E3),
+                            ? const Color(0xFF43FFA4)
+                            : const Color(0xFFCFCEC7),
                         fontFamily: 'monospace',
                         height: 1.4,
                       ),
@@ -198,8 +203,8 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
               icon: const Icon(Icons.play_arrow),
               label: Text(_running ? 'Attack running…' : 'Launch Attack'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF164E59),
-                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFFFF5C01),
+                foregroundColor: const Color(0xFF0A0500),
               ),
             )
           else if (!_loggedIn)
@@ -208,8 +213,8 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
               icon: const Icon(Icons.login),
               label: const Text('Use Credentials'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF16804B),
-                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFF43FFA4),
+                foregroundColor: const Color(0xFF0A0500),
               ),
             )
           else
@@ -217,12 +222,12 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0xFFE4F9E9),
+                color: const Color(0x1443FFA4),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SelectableText(
                 'Learn: ${widget.data['learnTitle']}\n\n${widget.data['learnBody']}',
-                style: const TextStyle(color: Color(0xFF14532D), height: 1.3),
+                style: const TextStyle(color: Color(0xFF43FFA4), height: 1.3),
               ),
             ),
         ],
@@ -241,7 +246,6 @@ class FakeSocDashboard extends StatefulWidget {
 
 class _SocState extends State<FakeSocDashboard> {
   final Set<int> _blocked = {};
-  int _cursor = 0;
   String? _feedback;
   bool _won = false;
   List<Map<String, dynamic>> get _feed => (widget.data['feed'] as List)
@@ -252,12 +256,12 @@ class _SocState extends State<FakeSocDashboard> {
     if (item['malicious'] == true) {
       setState(() {
         _blocked.add(index);
-        _cursor = index + 1;
         _feedback = 'Threat blocked — nice read!';
         if (_blocked.length >= (widget.data['threshold'] as int)) _won = true;
       });
-      if (_blocked.length >= (widget.data['threshold'] as int))
+      if (_blocked.length >= (widget.data['threshold'] as int)) {
         widget.onComplete?.call();
+      }
     } else {
       setState(
         () => _feedback =
@@ -276,11 +280,15 @@ class _SocState extends State<FakeSocDashboard> {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            color: const Color(0xFFE8F1FF),
+            decoration: BoxDecoration(
+              color: const Color(0x1A00E5FF),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: const Color(0x3300E5FF)),
+            ),
             child: const Text(
               'SOC = Security Operations Center. Block red entries with repeated failures, odd hours, or unusual locations.',
               style: TextStyle(
-                color: Color(0xFF153B68),
+                color: Color(0xFF9DEEFF),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -305,8 +313,8 @@ class _SocState extends State<FakeSocDashboard> {
                 _feedback!,
                 style: TextStyle(
                   color: _feedback!.startsWith('Threat')
-                      ? const Color(0xFF16804B)
-                      : const Color(0xFF9B4B00),
+                      ? const Color(0xFF43FFA4)
+                      : const Color(0xFFFF7A2F),
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -315,13 +323,13 @@ class _SocState extends State<FakeSocDashboard> {
             Container(
               padding: const EdgeInsets.all(11),
               decoration: BoxDecoration(
-                color: const Color(0xFFE4F9E9),
+                color: const Color(0x1443FFA4),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SelectableText(
                 'Breach Prevented!\n${widget.data['flag']}\n\nLearn: ${widget.data['learnBody']}',
                 style: const TextStyle(
-                  color: Color(0xFF14532D),
+                  color: Color(0xFF43FFA4),
                   height: 1.3,
                   fontWeight: FontWeight.w700,
                 ),
@@ -344,31 +352,37 @@ class _TrafficRow extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) => Card(
-    color: item['malicious'] == true ? const Color(0xFFFFEEEE) : Colors.white,
+    color: item['malicious'] == true
+        ? const Color(0x1FFF6B6B)
+        : const Color(0xFF101010),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(4),
+      side: const BorderSide(color: Color(0x1AFFFFFF)),
+    ),
     child: ListTile(
       leading: Icon(
         item['malicious'] == true ? Icons.warning_amber : Icons.check_circle,
         color: item['malicious'] == true
-            ? const Color(0xFFC23B3B)
-            : const Color(0xFF16804B),
+            ? const Color(0xFFFF6B6B)
+            : const Color(0xFF43FFA4),
       ),
       title: Text(
         item['text'] as String,
         style: const TextStyle(
-          color: Color(0xFF172429),
+          color: Color(0xFFF4F3EF),
           fontWeight: FontWeight.w700,
         ),
       ),
       subtitle: Text(
         item['reason'] as String,
-        style: const TextStyle(color: Color(0xFF526166)),
+        style: const TextStyle(color: Color(0xFF908F88)),
       ),
       trailing: blocked
-          ? const Icon(Icons.block, color: Color(0xFFC23B3B))
+          ? const Icon(Icons.block, color: Color(0xFFFF6B6B))
           : OutlinedButton(
               onPressed: onBlock,
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFC23B3B),
+                foregroundColor: const Color(0xFFFF6B6B),
               ),
               child: const Text('Block'),
             ),
@@ -427,7 +441,7 @@ class _RedBlueState extends State<FakeRedBlueScenario> {
                   ? 'PHASE 1 · Red Team: explore the flaw'
                   : 'PHASE 2 · Blue Team: fix the flaw',
               style: const TextStyle(
-                color: Color(0xFF172429),
+                color: Color(0xFFF4F3EF),
                 fontWeight: FontWeight.w800,
                 fontSize: 19,
               ),
@@ -436,9 +450,9 @@ class _RedBlueState extends State<FakeRedBlueScenario> {
             LinearProgressIndicator(
               value: _complete ? 1 : (_phase * 3 + _step) / 6,
               color: _phase == 0
-                  ? const Color(0xFFC23B3B)
-                  : const Color(0xFF16804B),
-              backgroundColor: const Color(0xFFDDE5E5),
+                  ? const Color(0xFFFF6B6B)
+                  : const Color(0xFF43FFA4),
+              backgroundColor: const Color(0xFF161616),
             ),
             const SizedBox(height: 16),
             if (current != null) ...[
@@ -446,14 +460,14 @@ class _RedBlueState extends State<FakeRedBlueScenario> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: _phase == 0
-                      ? const Color(0xFFFFEEEE)
-                      : const Color(0xFFE4F9E9),
+                      ? const Color(0x1FFF6B6B)
+                      : const Color(0x1443FFA4),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   current['response'] as String,
                   style: const TextStyle(
-                    color: Color(0xFF263237),
+                    color: Color(0xFFCFCEC7),
                     height: 1.35,
                   ),
                 ),
@@ -465,19 +479,19 @@ class _RedBlueState extends State<FakeRedBlueScenario> {
                 label: Text(current['label'] as String),
                 style: FilledButton.styleFrom(
                   backgroundColor: _phase == 0
-                      ? const Color(0xFF9D3030)
-                      : const Color(0xFF16804B),
-                  foregroundColor: Colors.white,
+                      ? const Color(0xFFFF6B6B)
+                      : const Color(0xFF43FFA4),
+                  foregroundColor: const Color(0xFF0A0500),
                 ),
               ),
             ] else
               Container(
                 padding: const EdgeInsets.all(12),
-                color: const Color(0xFFE4F9E9),
+                color: const Color(0x1443FFA4),
                 child: SelectableText(
                   'Captured flag: ${widget.data['flag1']}\nPatched-system flag: ${widget.data['flag2']}\n\nLearn: ${widget.data['learnBody']}',
                   style: const TextStyle(
-                    color: Color(0xFF14532D),
+                    color: Color(0xFF43FFA4),
                     height: 1.35,
                     fontWeight: FontWeight.w700,
                   ),
@@ -530,13 +544,13 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
   Widget _learn() => Container(
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
-      color: const Color(0xFFE4F9E9),
+      color: const Color(0x1443FFA4),
       borderRadius: BorderRadius.circular(9),
     ),
     child: SelectableText(
       'Learn: ${widget.data['learnBody']}\n\n${widget.data['flag'] ?? '${widget.data['flag1']}\n${widget.data['flag2'] ?? ''}'}',
       style: const TextStyle(
-        color: Color(0xFF14532D),
+        color: Color(0xFF43FFA4),
         height: 1.35,
         fontWeight: FontWeight.w700,
       ),
@@ -549,13 +563,14 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
         services[_service]['id'] == widget.data['correctService'];
     final correctMethod =
         methods[_method]['id'] == widget.data['correctMethod'];
-    if (correctService && correctMethod)
+    if (correctService && correctMethod) {
       _finish();
-    else
+    } else {
       setState(
         () => _feedback =
             'That pairing failed in the scripted lab. Re-read the service banner and try again.',
       );
+    }
   }
 
   void _block(int index) {
@@ -592,15 +607,17 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
         .toList();
     final option = options[optionIndex];
     if (option['correct'] == true) {
-      if (_step + 1 >= steps.length)
+      if (_step + 1 >= steps.length) {
         _finish();
-      else
+      } else {
         setState(() {
           _step++;
           _feedback = option['response'] as String;
         });
-    } else
+      }
+    } else {
       setState(() => _feedback = option['feedback'] as String);
+    }
   }
 
   Widget _room3() {
@@ -612,26 +629,36 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
         const Text(
           'Scan results',
           style: TextStyle(
-            color: Color(0xFF172429),
+            color: Color(0xFFF4F3EF),
             fontSize: 18,
             fontWeight: FontWeight.w800,
           ),
         ),
         for (var i = 0; i < services.length; i++)
           Card(
-            color: _service == i ? const Color(0xFFDCEEFF) : Colors.white,
+            color: _service == i
+                ? const Color(0x2600E5FF)
+                : const Color(0xFF101010),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+              side: BorderSide(
+                color: _service == i
+                    ? const Color(0x6600E5FF)
+                    : const Color(0x1AFFFFFF),
+              ),
+            ),
             child: ListTile(
               onTap: () => setState(() => _service = i),
               title: Text(
                 '${services[i]['port']} · ${services[i]['service']}',
                 style: const TextStyle(
-                  color: Color(0xFF172429),
+                  color: Color(0xFFF4F3EF),
                   fontWeight: FontWeight.w800,
                 ),
               ),
               subtitle: Text(
                 '${services[i]['version']}\n${services[i]['banner']}',
-                style: const TextStyle(color: Color(0xFF526166)),
+                style: const TextStyle(color: Color(0xFF908F88)),
               ),
             ),
           ),
@@ -639,23 +666,33 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
         const Text(
           'Choose an attack method to match the clue',
           style: TextStyle(
-            color: Color(0xFF172429),
+            color: Color(0xFFF4F3EF),
             fontWeight: FontWeight.w800,
           ),
         ),
         for (var i = 0; i < methods.length; i++)
           Card(
-            color: _method == i ? const Color(0xFFFFF0CF) : Colors.white,
+            color: _method == i
+                ? const Color(0x2EFF5C01)
+                : const Color(0xFF101010),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+              side: BorderSide(
+                color: _method == i
+                    ? const Color(0x66FF5C01)
+                    : const Color(0x1AFFFFFF),
+              ),
+            ),
             child: ListTile(
               onTap: () => setState(() => _method = i),
               leading: const Icon(
                 Icons.build_outlined,
-                color: Color(0xFF9B5A00),
+                color: Color(0xFFFF7A2F),
               ),
               title: Text(
                 methods[i]['label'] as String,
                 style: const TextStyle(
-                  color: Color(0xFF172429),
+                  color: Color(0xFFF4F3EF),
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -664,8 +701,8 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
         FilledButton(
           onPressed: _service >= 0 && _method >= 0 ? _pair : null,
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF164E59),
-            foregroundColor: Colors.white,
+            backgroundColor: const Color(0xFFFF5C01),
+            foregroundColor: const Color(0xFF0A0500),
           ),
           child: const Text('Match & Test'),
         ),
@@ -673,7 +710,7 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
           Text(
             _feedback!,
             style: const TextStyle(
-              color: Color(0xFF9B4B00),
+              color: Color(0xFFFF7A2F),
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -690,20 +727,26 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
         const Text(
           'Build the case: select at least two supporting signals before committing a block.',
           style: TextStyle(
-            color: Color(0xFF172429),
+            color: Color(0xFFF4F3EF),
             fontWeight: FontWeight.w800,
           ),
         ),
         for (var i = 0; i < feed.length; i++)
           Card(
             color: _blocked.contains(i)
-                ? const Color(0xFFE4F9E9)
-                : Colors.white,
+                ? const Color(0x1443FFA4)
+                : const Color(0xFF101010),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+              side: const BorderSide(color: Color(0x1AFFFFFF)),
+            ),
             child: ExpansionTile(
+              shape: const Border(),
+              collapsedShape: const Border(),
               title: Text(
                 feed[i]['summary'] as String,
                 style: const TextStyle(
-                  color: Color(0xFF172429),
+                  color: Color(0xFFF4F3EF),
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -720,7 +763,7 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
                           ),
                     title: Text(
                       (feed[i]['signals'] as List)[j] as String,
-                      style: const TextStyle(color: Color(0xFF263237)),
+                      style: const TextStyle(color: Color(0xFFCFCEC7)),
                     ),
                   ),
                 if (!_blocked.contains(i))
@@ -741,7 +784,7 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
                         _block(i);
                       },
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFF9B3030),
+                        foregroundColor: const Color(0xFFFF6B6B),
                       ),
                       child: const Text('Commit Block'),
                     ),
@@ -753,7 +796,7 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
           Text(
             _feedback!,
             style: const TextStyle(
-              color: Color(0xFF9B4B00),
+              color: Color(0xFFFF7A2F),
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -774,14 +817,14 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFFE6F1F4),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: const Color(0xFF4D7079)),
+            color: const Color(0xFF101010),
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(color: const Color(0x33FFFFFF)),
           ),
           child: Text(
             step['context'] as String,
             style: const TextStyle(
-              color: Color(0xFF102027),
+              color: Color(0xFFF4F3EF),
               fontSize: 18,
               fontWeight: FontWeight.w800,
             ),
@@ -790,12 +833,12 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
         const SizedBox(height: 10),
         for (var i = 0; i < options.length; i++)
           Card(
-            color: const Color(0xFFF7FAFB),
+            color: const Color(0xFF101010),
             elevation: 0,
             margin: const EdgeInsets.only(bottom: 10),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: const BorderSide(color: Color(0xFF587078), width: 1.2),
+              borderRadius: BorderRadius.circular(4),
+              side: const BorderSide(color: Color(0x33FFFFFF)),
             ),
             child: ListTile(
               dense: false,
@@ -807,13 +850,13 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
               title: Text(
                 options[i]['label'] as String,
                 style: const TextStyle(
-                  color: Color(0xFF102027),
+                  color: Color(0xFFF4F3EF),
                   fontWeight: FontWeight.w700,
                 ),
               ),
               trailing: const Icon(
                 Icons.chevron_right,
-                color: Color(0xFF1B4F5A),
+                color: Color(0xFF908F88),
               ),
             ),
           ),
@@ -822,14 +865,14 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
             margin: const EdgeInsets.only(top: 4),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF0D9),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFB56A18)),
+              color: const Color(0x2EFF5C01),
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: const Color(0x66FF5C01)),
             ),
             child: Text(
               _feedback!,
               style: const TextStyle(
-                color: Color(0xFF6B2D00),
+                color: Color(0xFFFF9A5C),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -859,22 +902,29 @@ class _Shell extends StatelessWidget {
   const _Shell(this.title, this.child);
   @override
   Widget build(BuildContext c) => Container(
+    clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFF25373C), width: 2),
+      color: const Color(0xFF0C0C0C),
+      borderRadius: BorderRadius.circular(4),
+      border: Border.all(color: const Color(0x1AFFFFFF)),
     ),
     child: Column(
       children: [
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(11),
-          color: const Color(0xFF25373C),
+          decoration: const BoxDecoration(
+            color: Color(0xFF161616),
+            border: Border(bottom: BorderSide(color: Color(0x1AFFFFFF))),
+          ),
           child: Text(
-            title,
+            title.toUpperCase(),
             style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
+              color: Color(0xFFF4F3EF),
+              fontFamily: 'Consolas',
+              fontSize: 11,
+              letterSpacing: 1.4,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -911,7 +961,7 @@ class _BrowserState extends State<FakeBrowserMock> {
           Text(
             widget.data['url'] as String,
             style: const TextStyle(
-              color: Color(0xFF263237),
+              color: Color(0xFFCFCEC7),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -920,21 +970,28 @@ class _BrowserState extends State<FakeBrowserMock> {
             Text(
               widget.data['siteTitle'] as String,
               style: const TextStyle(
-                color: Color(0xFF172429),
+                color: Color(0xFFF4F3EF),
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
               ),
             ),
             TextField(
               controller: input,
+              cursorColor: const Color(0xFFFF5C01),
               decoration: const InputDecoration(
                 labelText: 'Username or password',
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0x33FFFFFF)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFFFF5C01)),
+                ),
                 border: OutlineInputBorder(),
                 filled: true,
-                fillColor: Colors.white,
-                labelStyle: TextStyle(color: Color(0xFF263237)),
+                fillColor: Color(0xFF070707),
+                labelStyle: TextStyle(color: Color(0xFF908F88)),
               ),
-              style: const TextStyle(color: Color(0xFF172429)),
+              style: const TextStyle(color: Color(0xFFF4F3EF)),
             ),
             const SizedBox(height: 10),
             FilledButton(
@@ -942,8 +999,8 @@ class _BrowserState extends State<FakeBrowserMock> {
                 () => admin = input.text.trim() == widget.data['injection'],
               ),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF164E59),
-                foregroundColor: Colors.white,
+                backgroundColor: const Color(0xFFFF5C01),
+                foregroundColor: const Color(0xFF0A0500),
               ),
               child: const Text('Sign in'),
             ),
@@ -951,7 +1008,7 @@ class _BrowserState extends State<FakeBrowserMock> {
             const Text(
               'Admin panel (simulated)',
               style: TextStyle(
-                color: Color(0xFF172429),
+                color: Color(0xFFF4F3EF),
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
               ),
@@ -960,7 +1017,7 @@ class _BrowserState extends State<FakeBrowserMock> {
             OutlinedButton(
               onPressed: () => setState(() => inspect = !inspect),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF164E59),
+                foregroundColor: const Color(0xFFFF5C01),
               ),
               child: const Text('Open simulated Inspect panel'),
             ),
@@ -968,7 +1025,7 @@ class _BrowserState extends State<FakeBrowserMock> {
               Text(
                 '<!-- ${widget.data['flag']} -->',
                 style: const TextStyle(
-                  color: Color(0xFF14532D),
+                  color: Color(0xFF43FFA4),
                   fontFamily: 'monospace',
                   fontWeight: FontWeight.w700,
                 ),
@@ -1013,30 +1070,30 @@ class _InboxState extends State<FakeInboxMock> {
                     title: Text(
                       emails[i]['subject'] as String,
                       style: const TextStyle(
-                        color: Color(0xFF172429),
+                        color: Color(0xFFF4F3EF),
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     subtitle: Text(
                       emails[i]['sender'] as String,
-                      style: const TextStyle(color: Color(0xFF526166)),
+                      style: const TextStyle(color: Color(0xFF908F88)),
                     ),
                     onTap: () => showDialog(
                       context: c,
                       builder: (_) => AlertDialog(
                         title: Text(
                           emails[i]['subject'] as String,
-                          style: const TextStyle(color: Color(0xFF172429)),
+                          style: const TextStyle(color: Color(0xFFF4F3EF)),
                         ),
                         content: Text(
                           emails[i]['body'] as String,
-                          style: const TextStyle(color: Color(0xFF263237)),
+                          style: const TextStyle(color: Color(0xFFCFCEC7)),
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(c),
                             style: TextButton.styleFrom(
-                              foregroundColor: const Color(0xFF164E59),
+                              foregroundColor: const Color(0xFFFF5C01),
                             ),
                             child: const Text('Close'),
                           ),
@@ -1061,7 +1118,7 @@ class _InboxState extends State<FakeInboxMock> {
               child: Text(
                 'Nice spotting! ${widget.data['flag']}',
                 style: const TextStyle(
-                  color: Color(0xFF14532D),
+                  color: Color(0xFF43FFA4),
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1092,7 +1149,7 @@ class _CipherState extends State<FakeCipherTool> {
           Text(
             'Encoded: ${widget.data['encoded']}',
             style: const TextStyle(
-              color: Color(0xFF172429),
+              color: Color(0xFFF4F3EF),
               fontSize: 20,
               fontFamily: 'monospace',
             ),
@@ -1101,7 +1158,7 @@ class _CipherState extends State<FakeCipherTool> {
           Text(
             'Caesar shift: $shift',
             style: const TextStyle(
-              color: Color(0xFF263237),
+              color: Color(0xFFCFCEC7),
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -1116,7 +1173,7 @@ class _CipherState extends State<FakeCipherTool> {
             Text(
               'Decoded: ${widget.data['decoded']}\n${widget.data['flag']}',
               style: const TextStyle(
-                color: Color(0xFF14532D),
+                color: Color(0xFF43FFA4),
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -1151,7 +1208,7 @@ class _FilesState extends State<FakeFileExplorer> {
             title: const Text(
               'Show hidden files',
               style: TextStyle(
-                color: Color(0xFF172429),
+                color: Color(0xFFF4F3EF),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1166,13 +1223,13 @@ class _FilesState extends State<FakeFileExplorer> {
                     title: Text(
                       f['name'] as String,
                       style: const TextStyle(
-                        color: Color(0xFF172429),
+                        color: Color(0xFFF4F3EF),
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     subtitle: Text(
                       f['metadata'] as String,
-                      style: const TextStyle(color: Color(0xFF526166)),
+                      style: const TextStyle(color: Color(0xFF908F88)),
                     ),
                     onTap: () =>
                         setState(() => opened = f['content'] as String),
@@ -1186,7 +1243,7 @@ class _FilesState extends State<FakeFileExplorer> {
               child: Text(
                 opened!,
                 style: const TextStyle(
-                  color: Color(0xFF14532D),
+                  color: Color(0xFF43FFA4),
                   fontFamily: 'monospace',
                   fontWeight: FontWeight.w700,
                 ),

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
-import '../theme/doodle.dart';
+import '../widgets/landing/landing_button.dart';
 
-/// Row of SSO buttons shared by the login and sign-up cards. Google is
-/// wired to a real OAuth flow via [GoogleAuthService]; GitHub and LinkedIn
-/// have no registered API credentials or backend yet, so they show the
-/// same honest "not configured" fallback that Google itself falls back to
-/// when its popup is cancelled or unavailable — no fake logins.
+/// Column of SSO buttons shared by the login and sign-up cards, styled as
+/// the theme's bracketed hairline boxes. Google is wired to a real OAuth
+/// flow via [GoogleAuthService]; GitHub and LinkedIn have no registered API
+/// credentials or backend yet, so they show the same honest "not
+/// configured" fallback that Google itself falls back to when its popup is
+/// cancelled or unavailable — no fake logins.
 class SsoButtons extends StatelessWidget {
   final String actionVerb;
   final bool googleBusy;
   final VoidCallback onGooglePressed;
+  final bool githubBusy;
+  final VoidCallback onGithubPressed;
   final bool dense;
 
   const SsoButtons({
@@ -17,46 +20,30 @@ class SsoButtons extends StatelessWidget {
     required this.actionVerb,
     required this.googleBusy,
     required this.onGooglePressed,
+    required this.githubBusy,
+    required this.onGithubPressed,
     this.dense = false,
   });
-
-  void _showUnconfigured(BuildContext context, String provider) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("$provider sign-in isn't configured yet — you can use the email option below."),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        DoodleButton(
+        CinematicOutlineButton(
           label: googleBusy ? 'Connecting…' : '$actionVerb with Google',
-          color: Colors.white,
           icon: googleBusy ? null : Icons.g_mobiledata_rounded,
-          isLoading: googleBusy,
-          onPressed: onGooglePressed,
-          dense: dense,
+          compact: dense,
+          onPressed: googleBusy ? null : onGooglePressed,
         ),
-        const SizedBox(height: 12),
-        DoodleButton(
-          label: '$actionVerb with GitHub',
-          color: Colors.white,
+        const SizedBox(height: 10),
+        CinematicOutlineButton(
+          label: githubBusy ? 'Connecting…' : '$actionVerb with GitHub',
           icon: Icons.code_rounded,
-          onPressed: () => _showUnconfigured(context, 'GitHub'),
-          dense: dense,
+          compact: dense,
+          onPressed: githubBusy ? null : onGithubPressed,
         ),
-        const SizedBox(height: 12),
-        DoodleButton(
-          label: '$actionVerb with LinkedIn',
-          color: Colors.white,
-          icon: Icons.business_center_rounded,
-          onPressed: () => _showUnconfigured(context, 'LinkedIn'),
-          dense: dense,
-        ),
+        const SizedBox(height: 10),
       ],
     );
   }

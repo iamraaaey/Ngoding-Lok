@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/session/leaderboard_entry.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
 
+/// Live rankings panel in the terminal noir style: carbon card, hairline
+/// rows, the current player highlighted in signal green.
 class LeaderboardPanel extends StatelessWidget {
   final List<LeaderboardEntry> entries;
   final String currentUserName;
@@ -14,48 +16,97 @@ class LeaderboardPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DoodleCard(
+    return Container(
       padding: const EdgeInsets.all(20),
-      borderRadius: 20,
+      decoration: BoxDecoration(
+        color: LandingTokens.carbon,
+        borderRadius: LandingTokens.mediumRadius,
+        border: Border.all(color: LandingTokens.hairline),
+        boxShadow: LandingTokens.cardShadow,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.emoji_events, size: 18, color: Colors.black),
-              SizedBox(width: 8),
-              Text('Live Rankings', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 16)),
+              const Icon(
+                Icons.emoji_events,
+                size: 16,
+                color: LandingTokens.ember,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '// LIVE RANKINGS',
+                style: LandingTokens.label(
+                  fontSize: 10,
+                  color: LandingTokens.ember,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 14),
           for (final entry in entries)
             Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: entry.name == currentUserName ? DoodlePalette.green : const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.black, width: entry.name == currentUserName ? 3 : 2),
-                ),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 26,
-                      child: Text('#${entry.rank}', style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w800, fontSize: 12)),
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Builder(
+                builder: (context) {
+                  final isMe = entry.name == currentUserName;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
                     ),
-                    Text(entry.avatar, style: const TextStyle(fontSize: 18)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        entry.name,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 13),
+                    decoration: BoxDecoration(
+                      color: isMe
+                          ? LandingTokens.signal.withValues(alpha: 0.08)
+                          : LandingTokens.panel,
+                      borderRadius: LandingTokens.smallRadius,
+                      border: Border.all(
+                        color: isMe
+                            ? LandingTokens.signal.withValues(alpha: 0.5)
+                            : LandingTokens.hairline,
                       ),
                     ),
-                    Text('${entry.xp}', style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w800, fontSize: 12)),
-                  ],
-                ),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 30,
+                          child: Text(
+                            '#${entry.rank}',
+                            style: LandingTokens.mono(
+                              fontSize: 11,
+                              color: isMe
+                                  ? LandingTokens.signal
+                                  : LandingTokens.textFaint,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        Text(entry.avatar, style: const TextStyle(fontSize: 16)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            entry.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: LandingTokens.textPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${entry.xp} XP',
+                          style: LandingTokens.mono(
+                            fontSize: 11,
+                            color: LandingTokens.textMuted,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
         ],

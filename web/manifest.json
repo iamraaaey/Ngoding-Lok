@@ -1,11 +1,11 @@
 {
-    "name": "NgeCode Juh!",
-    "short_name": "NgeCode Juh!",
+    "name": "Ngoding Lok",
+    "short_name": "Ngoding Lok",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "NgeCode Juh! - an AI-assisted gamified platform for teaching foundational programming concepts.",
+    "description": "Ngoding Lok - an AI-assisted gamified platform for teaching foundational programming concepts.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

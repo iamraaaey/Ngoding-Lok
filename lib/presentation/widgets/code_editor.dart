@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
 
-/// Line-numbered multiline text field container for entering NgeCode Juh!
-/// script commands (e.g. `move.right();`).
+/// Line-numbered multiline text field container for entering Ngoding Lok
+/// script commands (e.g. `move.right();`), styled as a terminal noir
+/// editor: near-black field, hairline chrome, ember active line.
 class CodeEditor extends StatelessWidget {
   final TextEditingController controller;
   final int activeLineIndex;
@@ -16,31 +17,41 @@ class CodeEditor extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: DoodlePalette.dark,
+      color: LandingTokens.voidBlack,
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: Colors.black, width: 3),
-          borderRadius: BorderRadius.circular(14),
+          color: LandingTokens.carbon,
+          border: Border.all(color: LandingTokens.hairlineStrong),
+          borderRadius: LandingTokens.mediumRadius,
         ),
         clipBehavior: Clip.antiAlias,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _LineNumberGutter(controller: controller, activeLineIndex: activeLineIndex),
+            _LineNumberGutter(
+              controller: controller,
+              activeLineIndex: activeLineIndex,
+            ),
             Expanded(
               child: TextField(
                 controller: controller,
                 maxLines: null,
                 expands: true,
                 keyboardType: TextInputType.multiline,
-                style: const TextStyle(fontFamily: 'monospace', fontSize: 14, color: Colors.black),
-                decoration: const InputDecoration(
+                cursorColor: LandingTokens.ember,
+                style: LandingTokens.mono(
+                  fontSize: 14,
+                  color: LandingTokens.textPrimary,
+                ),
+                decoration: InputDecoration(
                   hintText: '// Input commands:\nmove.right();\nmove.down();',
-                  hintStyle: TextStyle(fontFamily: 'monospace', color: Colors.black38),
+                  hintStyle: LandingTokens.mono(
+                    fontSize: 14,
+                    color: LandingTokens.textFaint,
+                  ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(12),
+                  contentPadding: const EdgeInsets.all(12),
                 ),
               ),
             ),
@@ -55,7 +66,10 @@ class _LineNumberGutter extends StatelessWidget {
   final TextEditingController controller;
   final int activeLineIndex;
 
-  const _LineNumberGutter({required this.controller, required this.activeLineIndex});
+  const _LineNumberGutter({
+    required this.controller,
+    required this.activeLineIndex,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -65,10 +79,12 @@ class _LineNumberGutter extends StatelessWidget {
         final lineCount = controller.text.split('\n').length;
         return Container(
           width: 36,
-          padding: const EdgeInsets.only(top: 12),
+          padding: const EdgeInsets.only(top: 12, right: 6),
           decoration: const BoxDecoration(
-            color: DoodlePalette.cream,
-            border: Border(right: BorderSide(color: Colors.black, width: 2)),
+            color: LandingTokens.voidBlack,
+            border: Border(
+              right: BorderSide(color: LandingTokens.hairline),
+            ),
           ),
           child: Column(
             children: List.generate(lineCount, (i) {
@@ -76,11 +92,12 @@ class _LineNumberGutter extends StatelessWidget {
               return Text(
                 '${i + 1}',
                 textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 14,
-                  fontWeight: isActive ? FontWeight.w800 : FontWeight.normal,
-                  color: isActive ? DoodlePalette.blue : Colors.black38,
+                style: LandingTokens.mono(
+                  fontSize: 13,
+                  fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
+                  color: isActive
+                      ? LandingTokens.ember
+                      : LandingTokens.textFaint,
                 ),
               );
             }),

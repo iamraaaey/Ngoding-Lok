@@ -7,12 +7,14 @@ import 'package:flutter/material.dart';
 class DoodlePalette {
   DoodlePalette._();
 
-  static const dark = Color(0xFF1E1E24);
+  // Base surfaces darkened to the landing page's near-black "terminal noir"
+  // field so in-app screens read as the same product as the marketing page.
+  static const dark = Color(0xFF0A0A0A);
   static const yellow = Color(0xFFFFD166);
   static const red = Color(0xFFEF476F);
   static const green = Color(0xFF06D6A0);
   static const blue = Color(0xFF118AB2);
-  static const orange = Color(0xFFF77F00);
+  static const orange = Color(0xFFFF5C01);
   static const purple = Color(0xFF9D4EDD);
   static const white = Color(0xFFFAFAFA);
   static const cream = Color(0xFFFFFBEB);

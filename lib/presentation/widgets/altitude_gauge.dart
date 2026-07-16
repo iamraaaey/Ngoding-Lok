@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/state/rocket_state.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
 
 /// Pure render of a [RocketState] snapshot: a vertical progress gauge plus
-/// altitude/engine readouts. Kept stateless like [GameCanvas] — all
-/// animation/timing is owned by the parent screen.
+/// altitude/engine readouts, styled as a terminal noir instrument panel.
+/// Kept stateless like [GameCanvas] — all animation/timing is owned by the
+/// parent screen.
 class AltitudeGauge extends StatelessWidget {
   final RocketState state;
 
@@ -20,38 +21,60 @@ class AltitudeGauge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = (state.altitude / state.targetAltitude).clamp(0.0, 1.0);
+    const alertRed = Color(0xFFFF4D5E);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: DoodlePalette.orange, width: 3),
-        boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(6, 6))],
+        color: LandingTokens.carbon,
+        borderRadius: LandingTokens.mediumRadius,
+        border: Border.all(color: LandingTokens.hairlineStrong),
+        boxShadow: LandingTokens.cardShadow,
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('ALT: ${state.altitude}m / ${state.targetAltitude}m',
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: Colors.white, fontWeight: FontWeight.w700)),
-              Text('ENG: $_engineLabel',
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: state.exploded ? DoodlePalette.red : DoodlePalette.green,
-                  )),
+              Text(
+                'ALT: ${state.altitude}m / ${state.targetAltitude}m',
+                style: LandingTokens.mono(
+                  fontSize: 12,
+                  color: LandingTokens.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              Text(
+                'ENG: $_engineLabel',
+                style: LandingTokens.mono(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: state.exploded ? alertRed : LandingTokens.signal,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 14,
-              backgroundColor: Colors.white24,
-              color: state.exploded ? DoodlePalette.red : DoodlePalette.orange,
+          Container(
+            height: 12,
+            decoration: BoxDecoration(
+              border: Border.all(color: LandingTokens.hairline),
+              color: LandingTokens.voidBlack,
+            ),
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: progress,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: state.exploded ? alertRed : LandingTokens.ember,
+                  boxShadow: [
+                    BoxShadow(
+                      color: (state.exploded ? alertRed : LandingTokens.ember)
+                          .withValues(alpha: 0.5),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),

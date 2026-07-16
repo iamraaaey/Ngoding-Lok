@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/timer/game_timer_controller.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
+import 'landing/landing_button.dart';
 
-/// Shared chrome bar for every game screen: back button, title/icon, live
-/// timer, hint-via-ad button, and the Run button. Stateless — all state
-/// (hint status, sync status, timer) is owned by the parent screen and
-/// passed in; this widget never mutates anything itself.
+/// Shared chrome bar for every game screen, in the terminal noir style:
+/// back button, title/icon, live timer, hint-via-ad button, and the Run
+/// button. Stateless — all state (hint status, sync status, timer) is owned
+/// by the parent screen and passed in; this widget never mutates anything
+/// itself.
 class GameHeader extends StatelessWidget {
   final String title;
   final IconData icon;
@@ -33,11 +35,16 @@ class GameHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: DoodlePalette.dark,
+      color: LandingTokens.voidBlack,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      child: DoodleCard(
-        borderRadius: 18,
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: LandingTokens.carbon,
+          borderRadius: LandingTokens.mediumRadius,
+          border: Border.all(color: LandingTokens.hairline),
+          boxShadow: LandingTokens.cardShadow,
+        ),
         child: Wrap(
           crossAxisAlignment: WrapCrossAlignment.center,
           spacing: 16,
@@ -46,61 +53,100 @@ class GameHeader extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                InkWell(
-                  onTap: onBack,
-                  borderRadius: BorderRadius.circular(8),
-                  child: const Padding(
-                    padding: EdgeInsets.all(6),
-                    child: Icon(Icons.dashboard, color: Colors.black),
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: onBack,
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        borderRadius: LandingTokens.smallRadius,
+                        border: Border.all(
+                          color: LandingTokens.hairlineStrong,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.dashboard,
+                        color: LandingTokens.textPrimary,
+                        size: 16,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 4),
-                DoodleIconBadge(icon: icon, color: DoodlePalette.blue, size: 34, iconSize: 18, borderRadius: 10),
-                const SizedBox(width: 8),
-                Text(title, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 15)),
+                const SizedBox(width: 10),
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: LandingTokens.ember.withValues(alpha: 0.1),
+                    borderRadius: LandingTokens.smallRadius,
+                    border: Border.all(
+                      color: LandingTokens.ember.withValues(alpha: 0.55),
+                    ),
+                  ),
+                  child: Icon(icon, color: LandingTokens.ember, size: 17),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: LandingTokens.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
               ],
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: DoodlePalette.cream,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.black, width: 2),
+                    color: LandingTokens.voidBlack,
+                    borderRadius: LandingTokens.smallRadius,
+                    border: Border.all(color: LandingTokens.hairlineStrong),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.access_time, size: 14, color: Colors.black),
-                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.access_time,
+                        size: 13,
+                        color: LandingTokens.textMuted,
+                      ),
+                      const SizedBox(width: 5),
                       ValueListenableBuilder<int>(
                         valueListenable: timerController.elapsedSeconds,
                         builder: (context, seconds, _) => Text(
                           GameTimerController.format(seconds),
-                          style: const TextStyle(color: Colors.black, fontFamily: 'monospace', fontWeight: FontWeight.w700),
+                          style: LandingTokens.mono(
+                            fontSize: 12,
+                            color: LandingTokens.signal,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 10),
-                DoodleButton(
+                CinematicOutlineButton(
                   onPressed: hasHint ? null : onGetHint,
-                  color: hasHint ? DoodlePalette.green : DoodlePalette.yellow,
                   icon: Icons.lightbulb,
                   label: hasHint ? 'Hint Unlocked' : 'Get Hint (Ad)',
-                  dense: true,
+                  compact: true,
                 ),
                 const SizedBox(width: 8),
-                DoodleButton(
+                GradientButton(
                   onPressed: (isExecuting || isSyncing) ? null : onRun,
-                  color: DoodlePalette.orange,
-                  icon: isSyncing ? null : Icons.play_arrow,
-                  isLoading: isSyncing,
+                  icon: isSyncing ? Icons.sync : Icons.play_arrow,
                   label: isSyncing ? 'Syncing...' : 'Compile & Run',
-                  dense: true,
+                  compact: true,
                 ),
               ],
             ),

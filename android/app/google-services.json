@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "836022818923",
+    "project_id": "ngoding-lok",
+    "storage_bucket": "ngoding-lok.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:836022818923:android:2cbabd82442888e688f92e",
+        "android_client_info": {
+          "package_name": "com.ngecodejuh.ngecode_juh"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "836022818923-rbm8l7qbo63ikhu298qkfu9mt05f2ea2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC57Tgu5b-Ft2Dfcnoa7mdNcgrHTUv02rY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "836022818923-rbm8l7qbo63ikhu298qkfu9mt05f2ea2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

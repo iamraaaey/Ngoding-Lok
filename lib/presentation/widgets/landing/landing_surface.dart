@@ -1,12 +1,43 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../theme/landing_tokens.dart';
 
-/// The page-wide, original atmosphere behind the landing content. It is made
-/// from gradients and vector primitives so exported Figma/Canva art can later
-/// replace or layer over it without coupling the layout to an image asset.
-class CinematicBackdrop extends StatelessWidget {
+/// The page-wide atmosphere behind the landing content: a near-black field
+/// with faint vertical grid hairlines, sparse "+" survey marks, and one slow
+/// drifting ember glow. Built from vector primitives so no image asset is
+/// required.
+class CinematicBackdrop extends StatefulWidget {
   const CinematicBackdrop({super.key});
+
+  @override
+  State<CinematicBackdrop> createState() => _CinematicBackdropState();
+}
+
+class _CinematicBackdropState extends State<CinematicBackdrop>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _drift = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 26),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (LandingTokens.reducedMotion(context)) {
+      _drift.stop();
+      _drift.value = 0.35;
+    } else if (!_drift.isAnimating) {
+      _drift.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _drift.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,38 +45,30 @@ class CinematicBackdrop extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          const DecoratedBox(
-            decoration: BoxDecoration(gradient: LandingTokens.pageGradient),
-          ),
-          const DecoratedBox(
-            decoration: BoxDecoration(gradient: LandingTokens.heroGlow),
-          ),
-          Positioned(
-            top: -150,
-            right: -180,
-            child: _GlowOrb(
-              diameter: 420,
-              color: LandingTokens.sunlight.withValues(alpha: 0.12),
-            ),
-          ),
-          Positioned(
-            top: 520,
-            left: -240,
-            child: _GlowOrb(
-              diameter: 520,
-              color: LandingTokens.gameBlue.withValues(alpha: 0.14),
-            ),
-          ),
-          Positioned(
-            bottom: -260,
-            right: -120,
-            child: _GlowOrb(
-              diameter: 540,
-              color: LandingTokens.gamePink.withValues(alpha: 0.1),
-            ),
+          const ColoredBox(color: LandingTokens.voidBlack),
+          AnimatedBuilder(
+            animation: _drift,
+            builder: (context, _) {
+              final t = _drift.value * 2 * math.pi;
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(
+                      0.65 + 0.25 * math.cos(t),
+                      -0.7 + 0.18 * math.sin(t),
+                    ),
+                    radius: 1.15,
+                    colors: const <Color>[
+                      Color(0x14FF5C01),
+                      Color(0x00070707),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           const RepaintBoundary(
-            child: CustomPaint(painter: _AtmospherePainter()),
+            child: CustomPaint(painter: _BlueprintPainter()),
           ),
         ],
       ),
@@ -53,93 +76,63 @@ class CinematicBackdrop extends StatelessWidget {
   }
 }
 
-class _GlowOrb extends StatelessWidget {
-  final double diameter;
-  final Color color;
+class _BlueprintPainter extends CustomPainter {
+  const _BlueprintPainter();
 
-  const _GlowOrb({required this.diameter, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: diameter,
-      height: diameter,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: color, blurRadius: 110, spreadRadius: 42)],
-      ),
-    );
-  }
-}
-
-class _AtmospherePainter extends CustomPainter {
-  const _AtmospherePainter();
-
-  static const List<Offset> _stars = <Offset>[
-    Offset(0.06, 0.04),
-    Offset(0.13, 0.15),
-    Offset(0.22, 0.07),
-    Offset(0.31, 0.2),
-    Offset(0.4, 0.09),
-    Offset(0.48, 0.17),
-    Offset(0.58, 0.05),
-    Offset(0.67, 0.21),
-    Offset(0.76, 0.11),
-    Offset(0.88, 0.18),
-    Offset(0.94, 0.06),
-    Offset(0.08, 0.38),
-    Offset(0.2, 0.47),
-    Offset(0.35, 0.4),
-    Offset(0.52, 0.46),
-    Offset(0.7, 0.37),
-    Offset(0.86, 0.48),
-    Offset(0.1, 0.66),
-    Offset(0.29, 0.59),
-    Offset(0.45, 0.74),
-    Offset(0.63, 0.63),
-    Offset(0.78, 0.72),
-    Offset(0.93, 0.61),
-    Offset(0.16, 0.9),
-    Offset(0.41, 0.88),
-    Offset(0.67, 0.93),
-    Offset(0.88, 0.86),
+  static const List<Offset> _marks = <Offset>[
+    Offset(0.08, 0.06),
+    Offset(0.3, 0.14),
+    Offset(0.62, 0.05),
+    Offset(0.9, 0.12),
+    Offset(0.16, 0.34),
+    Offset(0.48, 0.28),
+    Offset(0.82, 0.4),
+    Offset(0.07, 0.58),
+    Offset(0.38, 0.52),
+    Offset(0.68, 0.66),
+    Offset(0.93, 0.6),
+    Offset(0.22, 0.8),
+    Offset(0.55, 0.88),
+    Offset(0.84, 0.82),
   ];
 
   @override
   void paint(Canvas canvas, Size size) {
-    final starPaint = Paint()
-      ..color = LandingTokens.cream.withValues(alpha: 0.2);
-    for (var index = 0; index < _stars.length; index++) {
-      final star = _stars[index];
-      final radius = index.isEven ? 1.2 : 0.7;
-      canvas.drawCircle(
-        Offset(star.dx * size.width, star.dy * size.height),
-        radius,
-        starPaint,
-      );
+    // Vertical hairlines every quarter of the content field, like the
+    // section rules in the reference shot.
+    final linePaint = Paint()
+      ..color = const Color(0x0AFFFFFF)
+      ..strokeWidth = 1;
+    for (final fraction in const <double>[0.25, 0.5, 0.75]) {
+      final x = size.width * fraction;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
     }
 
-    final linePaint = Paint()
-      ..color = LandingTokens.cream.withValues(alpha: 0.045)
+    // Sparse "+" survey marks.
+    final markPaint = Paint()
+      ..color = const Color(0x17FFFFFF)
       ..strokeWidth = 1;
-    const grid = 72.0;
-    for (var x = -size.height; x < size.width + size.height; x += grid) {
+    for (final mark in _marks) {
+      final center = Offset(mark.dx * size.width, mark.dy * size.height);
       canvas.drawLine(
-        Offset(x, 0),
-        Offset(x + size.height, size.height),
-        linePaint,
+        center - const Offset(4, 0),
+        center + const Offset(4, 0),
+        markPaint,
+      );
+      canvas.drawLine(
+        center - const Offset(0, 4),
+        center + const Offset(0, 4),
+        markPaint,
       );
     }
   }
 
   @override
-  bool shouldRepaint(covariant _AtmospherePainter oldDelegate) => false;
+  bool shouldRepaint(covariant _BlueprintPainter oldDelegate) => false;
 }
 
-/// The translucent surface used for feature cards, code previews, and callout
-/// panels. It keeps the landing-specific depth language independent of the
-/// rest of the app's neo-brutalist screens.
+/// The standard raised surface: carbon fill, hairline border, near-sharp
+/// corners. Replaces the old glass panel while keeping its call sites.
 class LandingGlassPanel extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -151,7 +144,7 @@ class LandingGlassPanel extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(LandingTokens.space24),
-    this.borderRadius = LandingTokens.largeRadius,
+    this.borderRadius = LandingTokens.mediumRadius,
     this.color,
     this.highEmphasis = false,
   });
@@ -159,14 +152,13 @@ class LandingGlassPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final panelColor =
-        color ??
-        (highEmphasis ? LandingTokens.surfaceStrong : LandingTokens.surface);
+        color ?? (highEmphasis ? LandingTokens.panel : LandingTokens.carbon);
     return Container(
       padding: padding,
       decoration: BoxDecoration(
         color: panelColor,
         borderRadius: borderRadius,
-        border: Border.all(color: LandingTokens.outline),
+        border: Border.all(color: LandingTokens.hairline),
         boxShadow: LandingTokens.cardShadow,
       ),
       child: child,
@@ -203,12 +195,14 @@ class LandingSection extends StatelessWidget {
   }
 }
 
+/// Monospace "// EYEBROW — 00N" line above a heavy display title.
 class SectionHeading extends StatelessWidget {
   final String eyebrow;
   final String title;
   final String? body;
   final TextAlign textAlign;
   final double? titleSize;
+  final String? index;
 
   const SectionHeading({
     super.key,
@@ -217,6 +211,7 @@ class SectionHeading extends StatelessWidget {
     this.body,
     this.textAlign = TextAlign.left,
     this.titleSize,
+    this.index,
   });
 
   @override
@@ -225,17 +220,36 @@ class SectionHeading extends StatelessWidget {
     final aligned = textAlign == TextAlign.center
         ? CrossAxisAlignment.center
         : CrossAxisAlignment.start;
-    final defaultSize = width >= LandingTokens.desktopBreakpoint ? 46.0 : 36.0;
+    final defaultSize = width >= LandingTokens.desktopBreakpoint ? 44.0 : 32.0;
 
     return Column(
       crossAxisAlignment: aligned,
       children: [
-        _Eyebrow(label: eyebrow),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                '// ${eyebrow.toUpperCase()}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: LandingTokens.label(color: LandingTokens.ember),
+              ),
+            ),
+            if (index != null) ...[
+              const SizedBox(width: LandingTokens.space12),
+              Text(
+                '— $index',
+                style: LandingTokens.label(color: LandingTokens.textFaint),
+              ),
+            ],
+          ],
+        ),
         const SizedBox(height: LandingTokens.space16),
         Semantics(
           header: true,
           child: Text(
-            title,
+            title.toUpperCase(),
             textAlign: textAlign,
             style: LandingTokens.sectionTitle(
               fontSize: titleSize ?? defaultSize,
@@ -251,7 +265,7 @@ class SectionHeading extends StatelessWidget {
             child: Text(
               body!,
               textAlign: textAlign,
-              style: LandingTokens.body(fontSize: 17),
+              style: LandingTokens.body(fontSize: 16),
             ),
           ),
         ],
@@ -260,30 +274,305 @@ class SectionHeading extends StatelessWidget {
   }
 }
 
-class _Eyebrow extends StatelessWidget {
-  final String label;
+/// Thin full-width rule that draws the page's horizontal grid.
+class HairlineDivider extends StatelessWidget {
+  final Color color;
 
-  const _Eyebrow({required this.label});
+  const HairlineDivider({super.key, this.color = LandingTokens.hairline});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: LandingTokens.space12,
-        vertical: LandingTokens.space8,
+    return Container(height: 1, color: color);
+  }
+}
+
+/// A blinking terminal cursor block. Renders as a steady block when the
+/// platform asks for reduced motion.
+class BlinkingCursor extends StatefulWidget {
+  final Color color;
+  final double height;
+  final double width;
+
+  const BlinkingCursor({
+    super.key,
+    this.color = LandingTokens.ember,
+    this.height = 14,
+    this.width = 8,
+  });
+
+  @override
+  State<BlinkingCursor> createState() => _BlinkingCursorState();
+}
+
+class _BlinkingCursorState extends State<BlinkingCursor>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _blink = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (LandingTokens.reducedMotion(context)) {
+      _blink.stop();
+      _blink.value = 0;
+    } else if (!_blink.isAnimating) {
+      _blink.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _blink.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _blink,
+      builder: (context, _) {
+        return Opacity(
+          opacity: _blink.value < 0.5 ? 1 : 0,
+          child: Container(
+            width: widget.width,
+            height: widget.height,
+            color: widget.color,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Small status dot with a soft expanding pulse ring.
+class PulsingDot extends StatefulWidget {
+  final Color color;
+  final double size;
+
+  const PulsingDot({
+    super.key,
+    this.color = LandingTokens.signal,
+    this.size = 7,
+  });
+
+  @override
+  State<PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<PulsingDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (LandingTokens.reducedMotion(context)) {
+      _pulse.stop();
+      _pulse.value = 0;
+    } else if (!_pulse.isAnimating) {
+      _pulse.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ringMax = widget.size * 2.6;
+    return SizedBox(
+      width: ringMax,
+      height: ringMax,
+      child: AnimatedBuilder(
+        animation: _pulse,
+        builder: (context, _) {
+          final t = Curves.easeOut.transform(_pulse.value);
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: widget.size + (ringMax - widget.size) * t,
+                height: widget.size + (ringMax - widget.size) * t,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: widget.color.withValues(alpha: (1 - t) * 0.55),
+                  ),
+                ),
+              ),
+              Container(
+                width: widget.size,
+                height: widget.size,
+                decoration: BoxDecoration(
+                  color: widget.color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
+          );
+        },
       ),
-      decoration: BoxDecoration(
-        color: LandingTokens.surfaceLight,
-        borderRadius: LandingTokens.pillRadius,
-        border: Border.all(color: LandingTokens.outline),
-      ),
-      child: Text(
-        label.toUpperCase(),
-        style: LandingTokens.label(
-          color: LandingTokens.gameYellow,
-          fontSize: 11,
-        ),
-      ),
+    );
+  }
+}
+
+/// Fades and slides its child in the first time it scrolls into view.
+class ScrollReveal extends StatefulWidget {
+  final Widget child;
+  final Duration duration;
+  final Duration delay;
+  final double offsetY;
+
+  const ScrollReveal({
+    super.key,
+    required this.child,
+    this.duration = const Duration(milliseconds: 620),
+    this.delay = Duration.zero,
+    this.offsetY = 26,
+  });
+
+  @override
+  State<ScrollReveal> createState() => _ScrollRevealState();
+}
+
+class _ScrollRevealState extends State<ScrollReveal>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: widget.duration,
+  );
+  late final CurvedAnimation _animation = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+  );
+  ScrollPosition? _position;
+  bool _revealed = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (LandingTokens.reducedMotion(context)) {
+      _controller.duration = Duration.zero;
+    }
+    final position = Scrollable.maybeOf(context)?.position;
+    if (!identical(position, _position)) {
+      _position?.removeListener(_checkVisibility);
+      _position = position;
+      _position?.addListener(_checkVisibility);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkVisibility());
+  }
+
+  void _checkVisibility() {
+    if (_revealed || !mounted) return;
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null || !box.attached || !box.hasSize) return;
+    final viewportHeight = MediaQuery.sizeOf(context).height;
+    final top = box.localToGlobal(Offset.zero).dy;
+    if (top < viewportHeight * 0.9) {
+      _revealed = true;
+      _position?.removeListener(_checkVisibility);
+      if (widget.delay == Duration.zero) {
+        _controller.forward();
+      } else {
+        Future<void>.delayed(widget.delay, () {
+          if (mounted) _controller.forward();
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _position?.removeListener(_checkVisibility);
+    _animation.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      child: widget.child,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _animation.value,
+          child: Transform.translate(
+            offset: Offset(0, (1 - _animation.value) * widget.offsetY),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// A surface filled with the slowly rotating iridescent gradient — the one
+/// rainbow element of the page, mirroring the robot screen in the reference.
+class AnimatedIridescence extends StatefulWidget {
+  final Widget? child;
+  final BorderRadius borderRadius;
+
+  const AnimatedIridescence({
+    super.key,
+    this.child,
+    this.borderRadius = LandingTokens.mediumRadius,
+  });
+
+  @override
+  State<AnimatedIridescence> createState() => _AnimatedIridescenceState();
+}
+
+class _AnimatedIridescenceState extends State<AnimatedIridescence>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _sweep = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 7),
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (LandingTokens.reducedMotion(context)) {
+      _sweep.stop();
+      _sweep.value = 0.15;
+    } else if (!_sweep.isAnimating) {
+      _sweep.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _sweep.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _sweep,
+      child: widget.child,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: widget.borderRadius,
+            gradient: LinearGradient(
+              colors: LandingTokens.iridescence,
+              transform: GradientRotation(_sweep.value * 2 * math.pi),
+            ),
+          ),
+          child: child,
+        );
+      },
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
+import 'noir_dialog.dart';
 
 /// ─────────────────────────────────────────────────────────────
 ///  Legal document model
@@ -33,12 +34,12 @@ class LegalDocument {
 }
 
 // Shared identity used across the documents so the copy stays consistent.
-const _appName = 'NgeCode Juh!';
+const _appName = 'Ngoding Lok';
 const _providerName =
     'Raynold Anak Kabai, Faculty of Computer Science and Information '
     'Technology, Universiti Malaysia Sarawak (UNIMAS)';
-const _supportEmail = 'support@ngecodejuh.app';
-const _privacyEmail = 'privacy@ngecodejuh.app';
+const _supportEmail = 'support@ngodinglok.app';
+const _privacyEmail = 'privacy@ngodinglok.app';
 const _effectiveDate = '6 July 2026';
 
 /// ─────────────────────────────────────────────────────────────
@@ -51,8 +52,8 @@ const _privacyPolicy = LegalDocument(
   effectiveDate: _effectiveDate,
   summary:
       'We collect only what we need to save your learning progress and run '
-      'the app: your account email, your game stats, and — when you ask for a '
-      'hint — the code you are working on. We do not sell your data.',
+      'the app: your account email, your game stats, and, when you ask for a '
+      'hint, the code you are working on. We do not sell your data.',
   sections: [
     LegalSection('1. Who we are', [
       '$_appName ("the App", "we", "us") is a gamified, AI-assisted platform '
@@ -174,7 +175,7 @@ const _termsOfService = LegalDocument(
   summary:
       'Use $_appName fairly and lawfully, keep your account secure, and '
       'remember that XP and in-game items have no cash value. The App is '
-      'provided as-is, and hints are learning aids — not guaranteed answers.',
+      'provided as-is, and hints are learning aids, not guaranteed answers.',
   sections: [
     LegalSection('1. Acceptance of these terms', [
       'These Terms of Service ("Terms") govern your use of $_appName. By '
@@ -332,69 +333,29 @@ void showPolicyDialog(BuildContext context, {required String title}) {
     showInfoDialog(context, title: title, body: 'Document not available.');
     return;
   }
-  showDialog<void>(
-    context: context,
-    builder: (context) => _LegalDocumentDialog(doc: doc),
-  );
-}
-
-/// Structured reader for a [LegalDocument]: title, version/date line,
-/// plain-language summary callout, then the numbered clauses.
-class _LegalDocumentDialog extends StatelessWidget {
-  final LegalDocument doc;
-  const _LegalDocumentDialog({required this.doc});
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.all(20),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 480, maxHeight: 620),
-        child: DoodleCard(
-          borderRadius: 24,
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+  showNoirDialog<void>(
+    context,
+    builder: (context) => NoirDialogShell(
+      title: doc.title,
+      eyebrow: 'Legal',
+      meta: '${doc.version} · Effective ${doc.effectiveDate}',
+      actions: const [NoirCloseButton()],
+      child: Scrollbar(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(right: 6),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(doc.title,
-                  style: const TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 4),
-              Text('${doc.version}  ·  Effective ${doc.effectiveDate}',
-                  style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 12)),
-              const SizedBox(height: 14),
               _SummaryCallout(text: doc.summary),
-              const SizedBox(height: 4),
-              Flexible(
-                child: Scrollbar(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(top: 12, right: 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (final section in doc.sections) _SectionView(section: section),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerRight,
-                child: DoodleButton(
-                  label: 'Close',
-                  color: DoodlePalette.yellow,
-                  onPressed: () => Navigator.of(context).pop(),
-                  dense: true,
-                ),
-              ),
+              const SizedBox(height: 16),
+              for (final section in doc.sections)
+                _SectionView(section: section),
             ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class _SummaryCallout extends StatelessWidget {
@@ -406,18 +367,24 @@ class _SummaryCallout extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: DoodlePalette.yellow.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black, width: 2),
+        color: LandingTokens.signal.withValues(alpha: 0.07),
+        borderRadius: LandingTokens.smallRadius,
+        border: Border.all(color: LandingTokens.signal.withValues(alpha: 0.3)),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.lightbulb_outline, size: 18, color: Colors.black87),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text('In short: $text',
-                style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w700, height: 1.35, fontSize: 12.5)),
+          Text(
+            'IN SHORT',
+            style: LandingTokens.label(fontSize: 9, color: LandingTokens.signal),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            text,
+            style: LandingTokens.body(
+              fontSize: 12.5,
+              color: LandingTokens.textPrimary,
+            ).copyWith(height: 1.45),
           ),
         ],
       ),
@@ -436,9 +403,14 @@ class _SectionView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(section.heading,
-              style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 14.5)),
-          const SizedBox(height: 6),
+          Text(
+            section.heading.toUpperCase(),
+            style: LandingTokens.label(
+              fontSize: 11,
+              color: LandingTokens.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
           for (final para in section.body) _Paragraph(text: para),
         ],
       ),
@@ -454,7 +426,8 @@ class _Paragraph extends StatelessWidget {
   Widget build(BuildContext context) {
     final isBullet = text.startsWith('• ');
     final content = isBullet ? text.substring(2) : text;
-    const style = TextStyle(color: Colors.black87, fontWeight: FontWeight.w600, height: 1.4, fontSize: 13);
+    final style = LandingTokens.body(fontSize: 13, color: LandingTokens.textMuted)
+        .copyWith(height: 1.5);
 
     if (!isBullet) {
       return Padding(
@@ -467,7 +440,13 @@ class _Paragraph extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('•  ', style: style),
+          Padding(
+            padding: const EdgeInsets.only(top: 2, right: 8),
+            child: Text(
+              '+',
+              style: LandingTokens.mono(fontSize: 13, color: LandingTokens.ember),
+            ),
+          ),
           Expanded(child: Text(content, style: style)),
         ],
       ),
@@ -475,45 +454,29 @@ class _Paragraph extends StatelessWidget {
   }
 }
 
-/// Generic doodle-styled info dialog with a title, scrollable body, and a
-/// Close button. Used for the Settings "About Us" link and any simple
-/// single-body message.
-void showInfoDialog(BuildContext context, {required String title, required String body}) {
-  showDialog<void>(
-    context: context,
-    builder: (context) => Dialog(
-      backgroundColor: Colors.transparent,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 440, maxHeight: 480),
-        child: DoodleCard(
-          borderRadius: 24,
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(title, style: const TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.w800)),
-              const SizedBox(height: 16),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Text(
-                    body,
-                    style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600, height: 1.4),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Align(
-                alignment: Alignment.centerRight,
-                child: DoodleButton(
-                  label: 'Close',
-                  color: DoodlePalette.yellow,
-                  onPressed: () => Navigator.of(context).pop(),
-                  dense: true,
-                ),
-              ),
-            ],
-          ),
+/// Generic noir info dialog with a title, scrollable body, and a Close
+/// button. Used for the Settings "About Us" link and any simple single-body
+/// message.
+void showInfoDialog(
+  BuildContext context, {
+  required String title,
+  required String body,
+}) {
+  showNoirDialog<void>(
+    context,
+    builder: (context) => NoirDialogShell(
+      title: title,
+      eyebrow: 'About',
+      maxWidth: 440,
+      maxHeight: 480,
+      actions: const [NoirCloseButton()],
+      child: SingleChildScrollView(
+        child: Text(
+          body,
+          style: LandingTokens.body(
+            fontSize: 14,
+            color: LandingTokens.textMuted,
+          ).copyWith(height: 1.55),
         ),
       ),
     ),

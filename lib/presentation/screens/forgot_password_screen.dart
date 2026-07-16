@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
 import '../widgets/labeled_text_field.dart';
+import '../widgets/landing/landing_button.dart';
+import 'auth_screen.dart';
 
-/// "Password Recovery" card. There is no account backend in this prototype
-/// (see [SignUpScreen]'s note on in-memory-only accounts), so submitting
-/// here can't actually look up or email anyone — it swaps to a confirmation
-/// state after a valid-looking email is entered, matching the always-succeed
-/// contract of the rest of the simulated auth flow.
+/// "Password Recovery" card in the terminal noir style. There is no account
+/// backend in this prototype (see [SignUpScreen]'s note on in-memory-only
+/// accounts), so submitting here can't actually look up or email anyone —
+/// it swaps to a confirmation state after a valid-looking email is entered,
+/// matching the always-succeed contract of the rest of the simulated auth
+/// flow.
 class ForgotPasswordScreen extends StatefulWidget {
   final VoidCallback onBackToLogin;
 
@@ -52,71 +55,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: DoodlePalette.dark,
-      body: DoodleDotBackground(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 440),
-                child: DoodleFadeSlide(
-                  animation: CurvedAnimation(parent: _entrance, curve: Curves.easeOutCubic),
-                  yOffset: 40,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      DoodleCard(
-                        padding: const EdgeInsets.fromLTRB(28, 40, 28, 28),
-                        borderRadius: 24,
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final dense = constraints.maxWidth < 340;
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: _sent ? _confirmation(dense) : _form(dense),
-                            );
-                          },
-                        ),
-                      ),
-                      Positioned(
-                        top: -14,
-                        right: -14,
-                        child: GestureDetector(
-                          onTap: widget.onBackToLogin,
-                          child: const DoodleIconBadge(
-                            icon: Icons.close,
-                            color: DoodlePalette.red,
-                            size: 40,
-                            iconSize: 20,
-                            borderRadius: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
+    return AuthScaffold(
+      entrance: CurvedAnimation(parent: _entrance, curve: Curves.easeOutCubic),
+      onClose: widget.onBackToLogin,
+      form: LayoutBuilder(
+        builder: (context, constraints) {
+          final dense = constraints.maxWidth < 340;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: _sent ? _confirmation(dense) : _form(dense),
+          );
+        },
       ),
     );
   }
 
   List<Widget> _form(bool dense) => [
-        const Text(
-          'Reset Your Password 🔑',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.black, fontSize: 26, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          "Enter the email on your account and we'll send you a reset link.",
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 13),
+        const AuthHeading(
+          eyebrow: 'Password recovery',
+          title: 'RESET YOUR\nPASSWORD',
+          subtitle: "ENTER YOUR ACCOUNT EMAIL AND WE'LL SEND A RESET LINK",
         ),
         const SizedBox(height: 24),
         LabeledTextField(
@@ -127,57 +86,59 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with Single
           errorText: _emailError,
         ),
         const SizedBox(height: 24),
-        DoodleButton(
+        GradientButton(
           label: 'Send Reset Link',
-          color: DoodlePalette.yellow,
           icon: Icons.send_rounded,
           onPressed: _submit,
-          dense: dense,
+          compact: dense,
         ),
         const SizedBox(height: 20),
-        _backToLoginLink(),
+        _backToLoginRow(),
       ];
 
   List<Widget> _confirmation(bool dense) => [
-        const Align(
+        Align(
           alignment: Alignment.center,
-          child: DoodleIconBadge(icon: Icons.mark_email_read_rounded, color: DoodlePalette.green, size: 56, iconSize: 28),
-        ),
-        const SizedBox(height: 20),
-        const Text(
-          'Check Your Email 📬',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.black, fontSize: 24, fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "If an account exists for ${_emailController.text.trim()}, a reset link is on its way.",
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 13),
-        ),
-        const SizedBox(height: 24),
-        _backToLoginLink(),
-      ];
-
-  Widget _backToLoginLink() => GestureDetector(
-        key: const Key('forgot-password-back-link'),
-        onTap: widget.onBackToLogin,
-        child: RichText(
-          textAlign: TextAlign.center,
-          text: TextSpan(
-            style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 13),
-            children: [
-              const TextSpan(text: 'Remembered it? '),
-              TextSpan(
-                text: 'Back to login',
-                style: TextStyle(
-                  color: DoodlePalette.blue,
-                  decoration: TextDecoration.underline,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
+          child: Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: LandingTokens.signal.withValues(alpha: 0.1),
+              borderRadius: LandingTokens.mediumRadius,
+              border: Border.all(color: LandingTokens.signal.withValues(alpha: 0.4)),
+            ),
+            child: const Icon(Icons.mark_email_read_rounded, color: LandingTokens.signal, size: 28),
           ),
         ),
+        const SizedBox(height: 20),
+        Text(
+          'CHECK YOUR EMAIL',
+          textAlign: TextAlign.center,
+          style: LandingTokens.display(fontSize: 26),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '> if an account exists for ${_emailController.text.trim()},\n> a reset link is on its way.',
+          textAlign: TextAlign.center,
+          style: LandingTokens.mono(fontSize: 12, color: LandingTokens.textMuted),
+        ),
+        const SizedBox(height: 24),
+        _backToLoginRow(),
+      ];
+
+  Widget _backToLoginRow() => Wrap(
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Text(
+            'REMEMBERED IT? ',
+            style: LandingTokens.label(fontSize: 10, color: LandingTokens.textFaint),
+          ),
+          AuthLink(
+            key: const Key('forgot-password-back-link'),
+            text: 'BACK TO LOGIN',
+            onTap: widget.onBackToLogin,
+          ),
+        ],
       );
 }

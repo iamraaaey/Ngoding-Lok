@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
 
-/// Doodle-styled labeled input used by the auth and sign-up forms.
-/// Shows an inline validation message below the field when [errorText]
-/// is non-null, tinting the border to match.
-class LabeledTextField extends StatelessWidget {
+/// Terminal-noir labeled input used by the auth and sign-up forms: a mono
+/// uppercase label over a near-black field with a hairline border that warms
+/// to ember on focus. Shows an inline validation message below the field
+/// when [errorText] is non-null, tinting the border to match.
+class LabeledTextField extends StatefulWidget {
   final String label;
   final TextEditingController controller;
   final String hint;
@@ -21,26 +22,60 @@ class LabeledTextField extends StatelessWidget {
   });
 
   @override
+  State<LabeledTextField> createState() => _LabeledTextFieldState();
+}
+
+class _LabeledTextFieldState extends State<LabeledTextField> {
+  final _focusNode = FocusNode();
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (mounted) setState(() => _focused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final hasError = errorText != null;
+    final hasError = widget.errorText != null;
+    final borderColor = hasError
+        ? const Color(0xFFFF4D5E)
+        : _focused
+            ? LandingTokens.ember
+            : LandingTokens.hairlineStrong;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 13)),
+        Text(
+          '// ${widget.label.toUpperCase()}',
+          style: LandingTokens.label(fontSize: 10, color: LandingTokens.textMuted),
+        ),
         const SizedBox(height: 8),
-        Container(
+        AnimatedContainer(
+          duration: LandingTokens.motionFor(context, LandingTokens.motionFast),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: hasError ? DoodlePalette.red : Colors.black, width: 2),
+            color: LandingTokens.voidBlack,
+            borderRadius: LandingTokens.smallRadius,
+            border: Border.all(color: borderColor),
           ),
           child: TextField(
-            controller: controller,
-            obscureText: obscure,
-            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+            controller: widget.controller,
+            focusNode: _focusNode,
+            obscureText: widget.obscure,
+            cursorColor: LandingTokens.ember,
+            style: LandingTokens.mono(fontSize: 14, color: LandingTokens.textPrimary),
             decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: const TextStyle(color: Colors.black38, fontWeight: FontWeight.w600),
+              hintText: widget.hint,
+              hintStyle: LandingTokens.mono(fontSize: 14, color: LandingTokens.textFaint),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             ),
@@ -49,8 +84,8 @@ class LabeledTextField extends StatelessWidget {
         if (hasError) ...[
           const SizedBox(height: 6),
           Text(
-            errorText!,
-            style: const TextStyle(color: DoodlePalette.red, fontWeight: FontWeight.w700, fontSize: 12),
+            widget.errorText!,
+            style: LandingTokens.mono(fontSize: 12, color: const Color(0xFFFF4D5E)),
           ),
         ],
       ],

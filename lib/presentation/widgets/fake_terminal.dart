@@ -71,10 +71,11 @@ class _FakeTerminalState extends State<FakeTerminal> {
 
   @override
   Widget build(BuildContext context) => Container(
+    clipBehavior: Clip.antiAlias,
     decoration: BoxDecoration(
-      color: const Color(0xFF101719),
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFF314247)),
+      color: const Color(0xFF050505),
+      borderRadius: BorderRadius.circular(4),
+      border: Border.all(color: const Color(0x1AFFFFFF)),
     ),
     child: Column(
       children: [
@@ -82,17 +83,17 @@ class _FakeTerminalState extends State<FakeTerminal> {
           height: 38,
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: const BoxDecoration(
-            color: Color(0xFF223238),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+            color: Color(0xFF161616),
+            border: Border(bottom: BorderSide(color: Color(0x1AFFFFFF))),
           ),
           child: const Row(
             children: [
-              Icon(Icons.terminal, color: Color(0xFF8FE3B0), size: 18),
+              Icon(Icons.terminal, color: Color(0xFF43FFA4), size: 18),
               SizedBox(width: 8),
               Text(
                 'SIMULATED TERMINAL',
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: Color(0xFF908F88),
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                   letterSpacing: 1,
@@ -115,8 +116,8 @@ class _FakeTerminalState extends State<FakeTerminal> {
                       fontSize: 13,
                       height: 1.35,
                       color: line.startsWith('student@')
-                          ? const Color(0xFF8FE3B0)
-                          : const Color(0xFFD8E7E3),
+                          ? const Color(0xFF43FFA4)
+                          : const Color(0xFFCFCEC7),
                     ),
                     toolbarOptions: const ToolbarOptions(
                       copy: true,
@@ -135,7 +136,7 @@ class _FakeTerminalState extends State<FakeTerminal> {
                 'student@target:~\$ ',
                 style: TextStyle(
                   fontFamily: 'monospace',
-                  color: Color(0xFF8FE3B0),
+                  color: Color(0xFF43FFA4),
                   fontSize: 13,
                 ),
               ),
@@ -158,10 +159,10 @@ class _FakeTerminalState extends State<FakeTerminal> {
                     onSubmitted: (_) => _run(),
                     style: const TextStyle(
                       fontFamily: 'monospace',
-                      color: Colors.white,
+                      color: Color(0xFFF4F3EF),
                       fontSize: 13,
                     ),
-                    cursorColor: const Color(0xFF8FE3B0),
+                    cursorColor: const Color(0xFF43FFA4),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       isDense: true,

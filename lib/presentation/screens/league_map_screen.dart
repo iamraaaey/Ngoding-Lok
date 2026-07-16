@@ -3,14 +3,14 @@ import '../../core/curriculum/curriculum.dart';
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/language_track.dart';
 import '../../core/session/user_session.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
+import '../widgets/landing/landing_surface.dart';
 
-/// Screen 5 — the League Map / Level Selector. Presents the curriculum as a
-/// scrolling vertical path of levels: locked levels are grayed out and unlock
-/// as the previous one is cleared, and cleared levels surface the player's
-/// best efficiency score plus a star rating. A track filter switches the
-/// map's programming language — only the Python track is playable in this
-/// prototype, with the Java track shown as a locked "coming soon" preview.
+/// Screen 5 — the League Map / Level Selector, in the terminal noir style.
+/// Presents the curriculum as a numbered mission ledger: locked levels are
+/// dimmed and unlock as the previous one is cleared, and cleared levels
+/// surface the player's best efficiency score plus a star rating. A track
+/// filter switches the map's programming language.
 class LeagueMapScreen extends StatefulWidget {
   final UserSession user;
   final void Function(CurriculumModule module) onLaunch;
@@ -49,6 +49,51 @@ class _LevelEntry {
   });
 }
 
+/// Brightness-resolved surfaces so the Settings dark/light switch keeps
+/// working; dark is the canonical terminal noir.
+class _Skin {
+  final Color bg;
+  final Color panel;
+  final Color border;
+  final Color borderStrong;
+  final Color text;
+  final Color sub;
+  final Color faint;
+
+  const _Skin({
+    required this.bg,
+    required this.panel,
+    required this.border,
+    required this.borderStrong,
+    required this.text,
+    required this.sub,
+    required this.faint,
+  });
+
+  static const dark = _Skin(
+    bg: LandingTokens.voidBlack,
+    panel: LandingTokens.carbon,
+    border: LandingTokens.hairline,
+    borderStrong: LandingTokens.hairlineStrong,
+    text: LandingTokens.textPrimary,
+    sub: LandingTokens.textMuted,
+    faint: LandingTokens.textFaint,
+  );
+
+  static const light = _Skin(
+    bg: Color(0xFFF4F2EC),
+    panel: Color(0xFFFFFFFF),
+    border: Color(0x1A000000),
+    borderStrong: Color(0x33000000),
+    text: Color(0xFF16150F),
+    sub: Color(0xFF6A6960),
+    faint: Color(0xFF9A988D),
+  );
+
+  static _Skin of(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? dark : light;
+}
+
 class _LeagueMapScreenState extends State<LeagueMapScreen> {
   LanguageTrack _track = LanguageTrack.cybersecurity;
 
@@ -76,77 +121,86 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final bg = dark ? DoodlePalette.dark : DoodlePalette.cream;
     final entries = _buildEntries();
-    return Scaffold(
-      backgroundColor: bg,
-      body: DoodleDotBackground(
-        backgroundColor: bg,
-        child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1400),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: _Header(
-                      track: _track,
-                      onBack: widget.onBack,
-                      onTrackChanged: (t) => setState(() => _track = t),
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          onTap(_LevelEntry e) => (e.locked || e.module == null)
-                              ? null
-                              : () => widget.onLaunch(e.module!);
 
-                          // Wide: a 2-column grid of level cards fills the
-                          // width (connector rail dropped since a grid isn't a
-                          // single path). Narrow: the vertical path with rails.
-                          if (constraints.maxWidth > 900) {
-                            const gap = 16.0;
-                            final tileW = (constraints.maxWidth - gap) / 2;
-                            return Wrap(
-                              spacing: gap,
-                              children: [
-                                for (final e in entries)
-                                  SizedBox(
-                                    width: tileW,
-                                    child: _LevelTile(
-                                      entry: e,
-                                      isLast: true,
-                                      onTap: onTap(e),
+    return Scaffold(
+      backgroundColor: skin.bg,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (dark) const CinematicBackdrop(),
+          SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1400),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: _Header(
+                        track: _track,
+                        skin: skin,
+                        onBack: widget.onBack,
+                        onTrackChanged: (t) => setState(() => _track = t),
+                      ),
+                    ),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            onTap(_LevelEntry e) =>
+                                (e.locked || e.module == null)
+                                ? null
+                                : () => widget.onLaunch(e.module!);
+
+                            // Wide: a 2-column grid of level cards fills the
+                            // width (connector rail dropped since a grid isn't
+                            // a single path). Narrow: the vertical path.
+                            if (constraints.maxWidth > 900) {
+                              const gap = 16.0;
+                              final tileW = (constraints.maxWidth - gap) / 2;
+                              return Wrap(
+                                spacing: gap,
+                                runSpacing: gap,
+                                children: [
+                                  for (final e in entries)
+                                    SizedBox(
+                                      width: tileW,
+                                      child: _LevelTile(
+                                        entry: e,
+                                        skin: skin,
+                                        isLast: true,
+                                        onTap: onTap(e),
+                                      ),
                                     ),
+                                ],
+                              );
+                            }
+                            return Column(
+                              children: [
+                                for (var i = 0; i < entries.length; i++)
+                                  _LevelTile(
+                                    entry: entries[i],
+                                    skin: skin,
+                                    isLast: i == entries.length - 1,
+                                    onTap: onTap(entries[i]),
                                   ),
                               ],
                             );
-                          }
-                          return Column(
-                            children: [
-                              for (var i = 0; i < entries.length; i++)
-                                _LevelTile(
-                                  entry: entries[i],
-                                  isLast: i == entries.length - 1,
-                                  onTap: onTap(entries[i]),
-                                ),
-                            ],
-                          );
-                        },
+                          },
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -154,48 +208,68 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
 
 class _Header extends StatelessWidget {
   final LanguageTrack track;
+  final _Skin skin;
   final VoidCallback onBack;
   final ValueChanged<LanguageTrack> onTrackChanged;
 
   const _Header({
     required this.track,
+    required this.skin,
     required this.onBack,
     required this.onTrackChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return DoodleCard(
+    return Container(
       padding: const EdgeInsets.all(14),
-      borderRadius: 18,
+      decoration: BoxDecoration(
+        color: skin.panel,
+        borderRadius: LandingTokens.mediumRadius,
+        border: Border.all(color: skin.border),
+        boxShadow: LandingTokens.cardShadow,
+      ),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: onBack,
-            child: const DoodleIconBadge(
-              icon: Icons.arrow_back,
-              color: DoodlePalette.white,
-              iconColor: Colors.black,
-              size: 40,
-              iconSize: 20,
-              borderRadius: 12,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'League Map',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w800,
-                fontSize: 20,
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: onBack,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: LandingTokens.smallRadius,
+                  border: Border.all(color: skin.borderStrong),
+                ),
+                child: Icon(Icons.arrow_back, color: skin.text, size: 18),
               ),
             ),
           ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '// LEVEL SELECT',
+                  style: LandingTokens.label(
+                    fontSize: 9,
+                    color: LandingTokens.ember,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'LEAGUE MAP',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: LandingTokens.display(fontSize: 20, color: skin.text),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(width: 8),
-          _TrackDropdown(track: track, onChanged: onTrackChanged),
+          _TrackDropdown(track: track, skin: skin, onChanged: onTrackChanged),
         ],
       ),
     );
@@ -205,34 +279,42 @@ class _Header extends StatelessWidget {
 /// Language filter — switches the map between programming-language tracks.
 class _TrackDropdown extends StatelessWidget {
   final LanguageTrack track;
+  final _Skin skin;
   final ValueChanged<LanguageTrack> onChanged;
 
-  const _TrackDropdown({required this.track, required this.onChanged});
+  const _TrackDropdown({
+    required this.track,
+    required this.skin,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        color: DoodlePalette.yellow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black, width: 2),
+        borderRadius: LandingTokens.smallRadius,
+        border: Border.all(color: LandingTokens.ember.withValues(alpha: 0.6)),
+        color: LandingTokens.ember.withValues(alpha: 0.08),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<LanguageTrack>(
           value: track,
           isDense: true,
-          borderRadius: BorderRadius.circular(12),
-          icon: const Icon(Icons.arrow_drop_down, color: Colors.black),
-          dropdownColor: DoodlePalette.white,
-          style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
+          borderRadius: LandingTokens.mediumRadius,
+          icon: const Icon(
+            Icons.arrow_drop_down,
+            color: LandingTokens.ember,
+          ),
+          dropdownColor: skin.panel,
+          style: LandingTokens.label(
+            fontSize: 11,
+            color: LandingTokens.ember,
+            fontWeight: FontWeight.w700,
           ),
           items: [
             for (final t in LanguageTrack.values)
-              DropdownMenuItem(value: t, child: Text(t.label)),
+              DropdownMenuItem(value: t, child: Text(t.label.toUpperCase())),
           ],
           onChanged: (t) {
             if (t != null) onChanged(t);
@@ -243,121 +325,166 @@ class _TrackDropdown extends StatelessWidget {
   }
 }
 
-/// A single node on the level path: a numbered/locked circle on a connector
-/// rail, next to a level card whose footer shows XP to earn (unlocked), stars
-/// + efficiency score (cleared), or an unlock/coming-soon hint (locked).
-class _LevelTile extends StatelessWidget {
+/// A single node on the level path: a numbered square on a hairline rail,
+/// next to a level card whose footer shows XP to earn (unlocked), stars +
+/// efficiency score (cleared), or an unlock/coming-soon hint (locked).
+class _LevelTile extends StatefulWidget {
   final _LevelEntry entry;
+  final _Skin skin;
   final bool isLast;
   final VoidCallback? onTap;
 
   const _LevelTile({
     required this.entry,
+    required this.skin,
     required this.isLast,
     required this.onTap,
   });
 
   @override
+  State<_LevelTile> createState() => _LevelTileState();
+}
+
+class _LevelTileState extends State<_LevelTile> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    final entry = widget.entry;
+    final skin = widget.skin;
     final locked = entry.locked;
     final accent = locked
-        ? const Color(0xFFB8B8B8)
-        : (entry.completed ? DoodlePalette.green : DoodlePalette.blue);
+        ? skin.faint
+        : (entry.completed ? LandingTokens.signal : LandingTokens.ember);
+    final motion = LandingTokens.motionFor(
+      context,
+      LandingTokens.motionStandard,
+    );
 
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Left rail: node circle + connector line down to the next node.
+          // Left rail: numbered node + hairline connector to the next one.
           Column(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: accent,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.black, width: 3),
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: LandingTokens.smallRadius,
+                  border: Border.all(color: accent.withValues(alpha: 0.7)),
                 ),
                 alignment: Alignment.center,
                 child: locked
-                    ? const Icon(Icons.lock, size: 18, color: Colors.black)
+                    ? Icon(Icons.lock, size: 15, color: skin.faint)
                     : Text(
-                        '${entry.number}',
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
+                        entry.number.toString().padLeft(2, '0'),
+                        style: LandingTokens.mono(
+                          fontSize: 13,
+                          color: accent,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
               ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 4,
-                    color: Colors.black.withValues(alpha: 0.22),
-                  ),
-                ),
+              if (!widget.isLast)
+                Expanded(child: Container(width: 1, color: skin.borderStrong)),
             ],
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+              padding: EdgeInsets.only(bottom: widget.isLast ? 0 : 16),
               child: Opacity(
-                opacity: locked ? 0.6 : 1,
-                child: GestureDetector(
-                  onTap: onTap,
-                  child: DoodleCard(
-                    color: locked
-                        ? const Color(0xFFECECEC)
-                        : DoodlePalette.white,
-                    padding: const EdgeInsets.all(16),
-                    borderRadius: 18,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                entry.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 15,
+                opacity: locked ? 0.55 : 1,
+                child: MouseRegion(
+                  cursor: widget.onTap == null
+                      ? MouseCursor.defer
+                      : SystemMouseCursors.click,
+                  onEnter: (_) => setState(() => _hovered = true),
+                  onExit: (_) => setState(() => _hovered = false),
+                  child: GestureDetector(
+                    onTap: widget.onTap,
+                    child: AnimatedContainer(
+                      duration: motion,
+                      curve: Curves.easeOutCubic,
+                      transform: Matrix4.translationValues(
+                        0,
+                        _hovered && widget.onTap != null ? -3 : 0,
+                        0,
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: skin.panel,
+                        borderRadius: LandingTokens.mediumRadius,
+                        border: Border.all(
+                          color: _hovered && widget.onTap != null
+                              ? accent.withValues(alpha: 0.65)
+                              : skin.border,
+                        ),
+                        boxShadow: LandingTokens.cardShadow,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  entry.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: skin.text,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 15,
+                                  ),
                                 ),
                               ),
-                            ),
-                            if (entry.completed)
-                              const DoodlePill(
-                                text: 'Cleared',
-                                background: DoodlePalette.green,
-                              )
-                            else if (locked)
-                              const Icon(
-                                Icons.lock,
-                                size: 18,
-                                color: Colors.black45,
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          entry.subtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.black54,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
+                              if (entry.completed)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: LandingTokens.smallRadius,
+                                    border: Border.all(
+                                      color: LandingTokens.signal.withValues(
+                                        alpha: 0.5,
+                                      ),
+                                    ),
+                                    color: LandingTokens.signal.withValues(
+                                      alpha: 0.08,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'CLEARED',
+                                    style: LandingTokens.label(
+                                      fontSize: 8.5,
+                                      color: LandingTokens.signal,
+                                    ),
+                                  ),
+                                )
+                              else if (locked)
+                                Icon(Icons.lock, size: 16, color: skin.faint),
+                            ],
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        _Footer(entry: entry),
-                      ],
+                          const SizedBox(height: 6),
+                          Text(
+                            entry.subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: LandingTokens.body(
+                              fontSize: 12,
+                              color: skin.sub,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _Footer(entry: entry, skin: skin),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -372,7 +499,9 @@ class _LevelTile extends StatelessWidget {
 
 class _Footer extends StatelessWidget {
   final _LevelEntry entry;
-  const _Footer({required this.entry});
+  final _Skin skin;
+
+  const _Footer({required this.entry, required this.skin});
 
   int get _stars {
     final score = entry.score;
@@ -389,13 +518,9 @@ class _Footer extends StatelessWidget {
     if (entry.locked) {
       return Text(
         entry.module == null
-            ? 'Coming soon'
-            : 'Clear the previous level to unlock',
-        style: const TextStyle(
-          color: Colors.black45,
-          fontWeight: FontWeight.w700,
-          fontSize: 12,
-        ),
+            ? '// COMING SOON'
+            : '// CLEAR THE PREVIOUS LEVEL TO UNLOCK',
+        style: LandingTokens.label(fontSize: 9, color: skin.faint),
       );
     }
 
@@ -413,31 +538,20 @@ class _Footer extends StatelessWidget {
               for (var i = 0; i < 3; i++)
                 Icon(
                   i < _stars ? Icons.star : Icons.star_border,
-                  size: 18,
-                  color: i < _stars ? DoodlePalette.orange : Colors.black38,
+                  size: 16,
+                  color: i < _stars ? LandingTokens.ember : skin.faint,
                 ),
             ],
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.bolt, size: 15, color: Colors.black),
-              const SizedBox(width: 3),
-              Text(
-                '${entry.score ?? 0} pts',
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12,
-                ),
-              ),
-            ],
+          Text(
+            '${entry.score ?? 0} PTS',
+            style: LandingTokens.mono(
+              fontSize: 12,
+              color: skin.text,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-          const _ActionChip(
-            label: 'Replay',
-            icon: Icons.refresh,
-            color: DoodlePalette.yellow,
-          ),
+          const _ActionChip(label: 'REPLAY', icon: Icons.refresh, filled: false),
         ],
       );
     }
@@ -446,26 +560,15 @@ class _Footer extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.star, size: 15, color: Colors.black),
-            const SizedBox(width: 3),
-            Text(
-              '+${entry.module!.xpReward} XP',
-              style: const TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w800,
-                fontSize: 12,
-              ),
-            ),
-          ],
+        Text(
+          '+${entry.module!.xpReward} XP',
+          style: LandingTokens.mono(
+            fontSize: 12,
+            color: LandingTokens.ember,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        const _ActionChip(
-          label: 'Play',
-          icon: Icons.play_arrow,
-          color: DoodlePalette.green,
-        ),
+        const _ActionChip(label: 'PLAY', icon: Icons.play_arrow, filled: true),
       ],
     );
   }
@@ -475,36 +578,41 @@ class _Footer extends StatelessWidget {
 class _ActionChip extends StatelessWidget {
   final String label;
   final IconData icon;
-  final Color color;
+  final bool filled;
 
   const _ActionChip({
     required this.label,
     required this.icon,
-    required this.color,
+    required this.filled,
   });
 
   @override
   Widget build(BuildContext context) {
+    final fg = filled ? const Color(0xFF0A0500) : LandingTokens.ember;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.black, width: 2),
+        color: filled ? LandingTokens.ember : Colors.transparent,
+        borderRadius: LandingTokens.smallRadius,
+        border: Border.all(
+          color: filled
+              ? LandingTokens.ember
+              : LandingTokens.ember.withValues(alpha: 0.55),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.w800,
-              fontSize: 12,
+            style: LandingTokens.label(
+              fontSize: 9.5,
+              color: fg,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(width: 4),
-          Icon(icon, size: 15, color: Colors.black),
+          Icon(icon, size: 14, color: fg),
         ],
       ),
     );

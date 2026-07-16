@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import '../../core/curriculum/language_track.dart';
 import '../../core/session/user_session.dart';
 import '../../core/social/code_golf.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
+import '../theme/noir_skin.dart';
+import '../widgets/landing/landing_surface.dart';
 
-/// Screen 9 — Code Golf Leaderboards. Players are ranked strictly by byte
-/// count (shortest solution wins). A Global/Friends scope filter and a
-/// per-language tab narrow the board. Tapping a row expands it to reveal the
-/// exact winning source — but only if the current player has themselves
-/// cleared that level, otherwise the solution stays locked.
+/// Screen 9 — Code Golf Leaderboards, in the terminal noir style. Players are
+/// ranked strictly by byte count (shortest solution wins). A Global/Friends
+/// scope filter and a per-language tab narrow the board. Tapping a row expands
+/// it to reveal the exact winning source — but only if the current player has
+/// themselves cleared that level, otherwise the solution stays locked.
 class CodeGolfScreen extends StatefulWidget {
   final UserSession user;
   final VoidCallback onBack;
@@ -24,133 +26,127 @@ class _CodeGolfScreenState extends State<CodeGolfScreen> {
   LanguageTrack _track = LanguageTrack.python;
   String? _expandedKey;
 
-  Widget _rowFor(CodeGolfEntry e, int i) {
+  Widget _rowFor(CodeGolfEntry e, int i, NoirSkin skin) {
     final key = '${e.player}-${e.moduleId}';
     return _GolfRow(
       rank: i + 1,
       entry: e,
+      skin: skin,
       unlocked: widget.user.completedModuleIds.contains(e.moduleId),
       expanded: _expandedKey == key,
-      onToggle: () => setState(() => _expandedKey = _expandedKey == key ? null : key),
+      onToggle: () =>
+          setState(() => _expandedKey = _expandedKey == key ? null : key),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final onBg = dark ? Colors.white : Colors.black;
+    final skin = NoirSkin.of(context);
 
-    final entries = CodeGolf.forTrack(_track).where((e) => !_friendsOnly || e.isFriend).toList();
+    final entries = CodeGolf.forTrack(
+      _track,
+    ).where((e) => !_friendsOnly || e.isFriend).toList();
 
     return Scaffold(
-      backgroundColor: dark ? DoodlePalette.dark : DoodlePalette.cream,
-      body: DoodleDotBackground(
-        backgroundColor: dark ? DoodlePalette.dark : DoodlePalette.cream,
-        child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1400),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: _Header(title: 'Code Golf', onBack: widget.onBack),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _SegTabs(
-                      options: const ['Global', 'Friends'],
-                      selected: _friendsOnly ? 1 : 0,
-                      onSelected: (i) => setState(() => _friendsOnly = i == 1),
+      backgroundColor: skin.bg,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (skin.isDark) const CinematicBackdrop(),
+          SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1400),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: NoirHeader(
+                        title: 'Code Golf',
+                        eyebrow: 'Fewest bytes wins',
+                        skin: skin,
+                        onBack: widget.onBack,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: _SegTabs(
-                      options: [for (final t in LanguageTrack.values) t.label.replaceAll(' Track', '')],
-                      selected: _track.index,
-                      onSelected: (i) => setState(() {
-                        _track = LanguageTrack.values[i];
-                        _expandedKey = null;
-                      }),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _SegTabs(
+                        options: const ['Global', 'Friends'],
+                        selected: _friendsOnly ? 1 : 0,
+                        skin: skin,
+                        onSelected: (i) =>
+                            setState(() => _friendsOnly = i == 1),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
-                    child: Text('Ranked by fewest bytes',
-                        style: TextStyle(color: onBg.withValues(alpha: 0.6), fontWeight: FontWeight.w700, fontSize: 12)),
-                  ),
-                  Expanded(
-                    child: entries.isEmpty
-                        ? Center(
-                            child: Text('No friends on this board yet.',
-                                style: TextStyle(color: onBg.withValues(alpha: 0.7), fontWeight: FontWeight.w700)),
-                          )
-                        : SingleChildScrollView(
-                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                            child: LayoutBuilder(
-                              builder: (context, constraints) {
-                                final rows = [for (var i = 0; i < entries.length; i++) _rowFor(entries[i], i)];
-                                // Wide: two columns of ranked cards fill the
-                                // width; reading order (left→right, top→bottom)
-                                // keeps the ranking intact.
-                                if (constraints.maxWidth <= 900) {
-                                  return Column(children: rows);
-                                }
-                                const gap = 16.0;
-                                final tileW = (constraints.maxWidth - gap) / 2;
-                                return Wrap(
-                                  spacing: gap,
-                                  children: [for (final r in rows) SizedBox(width: tileW, child: r)],
-                                );
-                              },
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _SegTabs(
+                        options: [
+                          for (final t in LanguageTrack.values)
+                            t.label.replaceAll(' Track', ''),
+                        ],
+                        selected: _track.index,
+                        skin: skin,
+                        onSelected: (i) => setState(() {
+                          _track = LanguageTrack.values[i];
+                          _expandedKey = null;
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+                      child: Text(
+                        '// RANKED BY FEWEST BYTES',
+                        style: LandingTokens.label(
+                          fontSize: 9.5,
+                          color: skin.faint,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: entries.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No friends on this board yet.',
+                                style: LandingTokens.body(
+                                  fontSize: 14,
+                                  color: skin.sub,
+                                ),
+                              ),
+                            )
+                          : SingleChildScrollView(
+                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final rows = [
+                                    for (var i = 0; i < entries.length; i++)
+                                      _rowFor(entries[i], i, skin),
+                                  ];
+                                  // Wide: two columns of ranked cards fill the
+                                  // width; reading order keeps the ranking.
+                                  if (constraints.maxWidth <= 900) {
+                                    return Column(children: rows);
+                                  }
+                                  const gap = 16.0;
+                                  final tileW = (constraints.maxWidth - gap) / 2;
+                                  return Wrap(
+                                    spacing: gap,
+                                    children: [
+                                      for (final r in rows)
+                                        SizedBox(width: tileW, child: r),
+                                    ],
+                                  );
+                                },
+                              ),
                             ),
-                          ),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Shared back-arrow + title header used by the social/profile/settings screens.
-class _Header extends StatelessWidget {
-  final String title;
-  final VoidCallback onBack;
-
-  const _Header({required this.title, required this.onBack});
-
-  @override
-  Widget build(BuildContext context) {
-    return DoodleCard(
-      padding: const EdgeInsets.all(14),
-      borderRadius: 18,
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: onBack,
-            child: const DoodleIconBadge(
-              icon: Icons.arrow_back,
-              color: DoodlePalette.white,
-              iconColor: Colors.black,
-              size: 40,
-              iconSize: 20,
-              borderRadius: 12,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 20)),
           ),
         ],
       ),
@@ -158,45 +154,61 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// Simple segmented control: a bordered pill row with one active segment.
+/// Segmented control: a hairline bar with one active ember segment.
 class _SegTabs extends StatelessWidget {
   final List<String> options;
   final int selected;
+  final NoirSkin skin;
   final ValueChanged<int> onSelected;
 
-  const _SegTabs({required this.options, required this.selected, required this.onSelected});
+  const _SegTabs({
+    required this.options,
+    required this.selected,
+    required this.skin,
+    required this.onSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: DoodlePalette.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black, width: 2),
+        color: skin.panel,
+        borderRadius: LandingTokens.mediumRadius,
+        border: Border.all(color: skin.border),
       ),
       child: Row(
         children: [
           for (var i = 0; i < options.length; i++)
             Expanded(
-              child: GestureDetector(
-                onTap: () => onSelected(i),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: i == selected ? DoodlePalette.green : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                    border: i == selected ? Border.all(color: Colors.black, width: 2) : null,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    options[i],
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight: i == selected ? FontWeight.w800 : FontWeight.w700,
-                      fontSize: 13,
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: GestureDetector(
+                  onTap: () => onSelected(i),
+                  child: AnimatedContainer(
+                    duration: LandingTokens.motionFor(
+                      context,
+                      LandingTokens.motionFast,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: i == selected
+                          ? LandingTokens.ember
+                          : Colors.transparent,
+                      borderRadius: LandingTokens.smallRadius,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      options[i].toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: LandingTokens.label(
+                        fontSize: 10,
+                        color: i == selected
+                            ? const Color(0xFF0A0500)
+                            : skin.sub,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
@@ -211,6 +223,7 @@ class _SegTabs extends StatelessWidget {
 class _GolfRow extends StatelessWidget {
   final int rank;
   final CodeGolfEntry entry;
+  final NoirSkin skin;
   final bool unlocked;
   final bool expanded;
   final VoidCallback onToggle;
@@ -218,6 +231,7 @@ class _GolfRow extends StatelessWidget {
   const _GolfRow({
     required this.rank,
     required this.entry,
+    required this.skin,
     required this.unlocked,
     required this.expanded,
     required this.onToggle,
@@ -227,60 +241,96 @@ class _GolfRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: DoodleCard(
+      child: NoirPanel(
+        skin: skin,
         padding: const EdgeInsets.all(14),
-        borderRadius: 16,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            GestureDetector(
-              onTap: onToggle,
-              behavior: HitTestBehavior.opaque,
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 28,
-                    child: Text('#$rank',
-                        style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w800, fontSize: 13)),
-                  ),
-                  Text(entry.avatar, style: const TextStyle(fontSize: 20)),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(entry.player,
+            MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: GestureDetector(
+                onTap: onToggle,
+                behavior: HitTestBehavior.opaque,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 30,
+                      child: Text(
+                        '#$rank',
+                        style: LandingTokens.mono(
+                          fontSize: 12,
+                          color: rank == 1
+                              ? LandingTokens.ember
+                              : skin.faint,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Text(entry.avatar, style: const TextStyle(fontSize: 18)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  entry.player,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 14)),
-                            ),
-                            if (entry.isFriend) ...[
-                              const SizedBox(width: 6),
-                              const Icon(Icons.people, size: 13, color: DoodlePalette.blue),
+                                  style: TextStyle(
+                                    color: skin.text,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              if (entry.isFriend) ...[
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.people,
+                                  size: 13,
+                                  color: LandingTokens.circuit,
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(entry.moduleTitle,
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            entry.moduleTitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 11)),
+                            style: LandingTokens.label(
+                              fontSize: 9,
+                              color: skin.faint,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          '${entry.bytes} B',
+                          style: LandingTokens.mono(
+                            fontSize: 16,
+                            color: skin.text,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Icon(
+                          expanded ? Icons.expand_less : Icons.expand_more,
+                          size: 18,
+                          color: skin.faint,
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text('${entry.bytes} B',
-                          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 16)),
-                      Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18, color: Colors.black54),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             if (expanded) ...[
@@ -292,17 +342,22 @@ class _GolfRow extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.black26, width: 2),
+                    color: skin.panelRaised,
+                    borderRadius: LandingTokens.smallRadius,
+                    border: Border.all(color: skin.border),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.lock, size: 18, color: Colors.black54),
-                      SizedBox(width: 10),
+                      Icon(Icons.lock, size: 16, color: skin.faint),
+                      const SizedBox(width: 10),
                       Expanded(
-                        child: Text('Beat this level yourself to view the winning solution.',
-                            style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 12)),
+                        child: Text(
+                          'Beat this level yourself to view the winning solution.',
+                          style: LandingTokens.body(
+                            fontSize: 12,
+                            color: skin.sub,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -317,6 +372,7 @@ class _GolfRow extends StatelessWidget {
 
 class _CodeBlock extends StatelessWidget {
   final String source;
+
   const _CodeBlock({required this.source});
 
   @override
@@ -325,15 +381,18 @@ class _CodeBlock extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1117),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black, width: 2),
+        color: LandingTokens.voidBlack,
+        borderRadius: LandingTokens.smallRadius,
+        border: Border.all(color: LandingTokens.hairlineStrong),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Text(
           source,
-          style: const TextStyle(color: Color(0xFFE6EDF3), fontFamily: 'monospace', fontSize: 13, height: 1.4),
+          style: LandingTokens.mono(
+            fontSize: 13,
+            color: LandingTokens.signal,
+          ),
         ),
       ),
     );

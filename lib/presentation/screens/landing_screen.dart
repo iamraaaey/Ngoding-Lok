@@ -6,11 +6,12 @@ import '../widgets/landing/landing_nav_bar.dart';
 import '../widgets/landing/landing_sections.dart';
 import '../widgets/landing/landing_surface.dart';
 
-/// Conversion-focused marketing home for NgeCode Juh!.
+/// Conversion-focused marketing home for Ngoding Lok, in the "terminal
+/// noir" style: black field, hairline grid, mono metadata, ember accents.
 ///
-/// This screen deliberately owns no direct routing: [RootOrchestrator] injects
-/// the existing auth and sign-up callbacks so the landing page remains a
-/// presentation layer rather than a second navigation system.
+/// This screen deliberately owns no direct routing: [RootOrchestrator]
+/// injects the existing auth and sign-up callbacks so the landing page
+/// remains a presentation layer rather than a second navigation system.
 class LandingScreen extends StatefulWidget {
   final VoidCallback onGetStarted;
   final VoidCallback onSignUp;
@@ -48,7 +49,7 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: LandingTokens.midnight,
+      backgroundColor: LandingTokens.voidBlack,
       body: Stack(
         children: [
           const Positioned.fill(child: CinematicBackdrop()),
@@ -56,29 +57,27 @@ class _LandingScreenState extends State<LandingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _LandingReveal(
+                _EntranceReveal(
                   child: HeroSection(
                     onStartPlaying: widget.onGetStarted,
                     onExploreModules: () => _scrollTo(_learningPathsKey),
                   ),
                 ),
+                const SizedBox(height: LandingTokens.space24),
                 const SocialProofStrip(),
                 KeyedSubtree(
                   key: _learningPathsKey,
-                  child: const _LandingReveal(
-                    duration: Duration(milliseconds: 560),
-                    child: LearningModulesSection(),
-                  ),
+                  child: const ScrollReveal(child: LearningModulesSection()),
                 ),
                 KeyedSubtree(
                   key: _howItWorksKey,
-                  child: const HowItWorksSection(),
+                  child: const ScrollReveal(child: HowItWorksSection()),
                 ),
                 KeyedSubtree(
                   key: _featuresKey,
-                  child: const AiHintFeatureSection(),
+                  child: const ScrollReveal(child: AiHintFeatureSection()),
                 ),
-                const OutcomesSection(),
+                const ScrollReveal(child: OutcomesSection()),
                 FinalCallToAction(
                   onStartPlaying: widget.onGetStarted,
                   onSignUp: widget.onSignUp,
@@ -114,17 +113,15 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 }
 
-/// A single calm entrance transition. The system's reduced-motion preference
-/// resolves it to zero duration, while all page interactions remain usable
-/// before, during, and after the visual transition.
-class _LandingReveal extends StatelessWidget {
+/// A single calm entrance transition for the above-the-fold hero. The
+/// system's reduced-motion preference resolves it to zero duration, while
+/// all page interactions remain usable before, during, and after it.
+class _EntranceReveal extends StatelessWidget {
   final Widget child;
-  final Duration duration;
 
-  const _LandingReveal({
-    required this.child,
-    this.duration = const Duration(milliseconds: 640),
-  });
+  const _EntranceReveal({required this.child});
+
+  static const Duration duration = Duration(milliseconds: 640);
 
   @override
   Widget build(BuildContext context) {

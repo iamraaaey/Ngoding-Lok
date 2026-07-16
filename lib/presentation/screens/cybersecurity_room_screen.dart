@@ -66,24 +66,28 @@ class _CybersecurityRoomScreenState extends State<CybersecurityRoomScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFF7FFF9),
-        icon: const Icon(Icons.verified, color: Color(0xFF16804A), size: 42),
+        backgroundColor: const Color(0xFF0C0C0C),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(4)),
+          side: BorderSide(color: Color(0x8043FFA4)),
+        ),
+        icon: const Icon(Icons.verified, color: Color(0xFF43FFA4), size: 42),
         title: const Text(
           'Module complete!',
           style: TextStyle(
-            color: Color(0xFF12352A),
+            color: Color(0xFFF4F3EF),
             fontWeight: FontWeight.w800,
           ),
         ),
         content: Text(
           'Great work. You earned ${room.points} XP and unlocked the ${room.badge} badge.',
-          style: const TextStyle(color: Color(0xFF24443A)),
+          style: const TextStyle(color: Color(0xFF908F88)),
         ),
         actions: [
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF16804A),
-              foregroundColor: Colors.white,
+              backgroundColor: const Color(0xFF43FFA4),
+              foregroundColor: const Color(0xFF0A0500),
             ),
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Continue'),
@@ -152,8 +156,10 @@ class _CybersecurityRoomScreenState extends State<CybersecurityRoomScreen> {
     builder: (context, snapshot) {
       if (!snapshot.hasData) {
         return const Scaffold(
-          backgroundColor: Color(0xFF081215),
-          body: Center(child: CircularProgressIndicator()),
+          backgroundColor: Color(0xFF070707),
+          body: Center(
+            child: CircularProgressIndicator(color: Color(0xFFFF5C01)),
+          ),
         );
       }
       final room = snapshot.data!;
@@ -168,7 +174,7 @@ class _CybersecurityRoomScreenState extends State<CybersecurityRoomScreen> {
           ? (_finishing ? 1.0 : 0.0)
           : _done.length / room.tasks.length;
       return Scaffold(
-        backgroundColor: const Color(0xFF081215),
+        backgroundColor: const Color(0xFF070707),
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -268,17 +274,20 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      color: const Color(0xFF102025),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0C0C0C),
+        border: Border(bottom: BorderSide(color: Color(0x1AFFFFFF))),
+      ),
       child: Column(
         children: [
           Row(
             children: [
               IconButton(
                 onPressed: onBack,
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                icon: const Icon(Icons.arrow_back, color: Color(0xFFF4F3EF)),
               ),
               const SizedBox(width: 6),
-              const Icon(Icons.shield_outlined, color: Color(0xFF6EF0AA)),
+              const Icon(Icons.shield_outlined, color: Color(0xFF43FFA4)),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -287,16 +296,19 @@ class _Header extends StatelessWidget {
                     Text(
                       room.title,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFFF4F3EF),
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     Text(
-                      'Safe simulation · ${room.points} XP · Badge: ${room.badge}',
+                      'SAFE SIMULATION · ${room.points} XP · BADGE: ${room.badge}'
+                          .toUpperCase(),
                       style: const TextStyle(
-                        color: Color(0xFF9CB2AE),
-                        fontSize: 12,
+                        color: Color(0xFF908F88),
+                        fontSize: 10,
+                        fontFamily: 'Consolas',
+                        letterSpacing: 1.4,
                       ),
                     ),
                   ],
@@ -305,20 +317,31 @@ class _Header extends StatelessWidget {
               Text(
                 '${(progress * 100).round()}%',
                 style: const TextStyle(
-                  color: Color(0xFF6EF0AA),
+                  color: Color(0xFF43FFA4),
+                  fontFamily: 'Consolas',
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(5),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: const Color(0xFF314247),
-              color: const Color(0xFF6EF0AA),
+          Container(
+            height: 6,
+            decoration: BoxDecoration(
+              color: const Color(0xFF070707),
+              border: Border.all(color: const Color(0x1AFFFFFF)),
+            ),
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: progress.clamp(0.0, 1.0),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFF43FFA4),
+                  boxShadow: [
+                    BoxShadow(color: Color(0x8043FFA4), blurRadius: 8),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -370,20 +393,21 @@ class _TaskPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAFCFB),
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF0C0C0C),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0x1AFFFFFF)),
       ),
       child: ListView(
         children: [
           Text(
             room.scenario,
-            style: const TextStyle(color: Color(0xFF263237), height: 1.35),
+            style: const TextStyle(color: Color(0xFFB9B8B0), height: 1.35),
           ),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF006B57),
+                foregroundColor: const Color(0xFF43FFA4),
               ),
               onPressed: () => showDialog(
                 context: context,
@@ -444,10 +468,10 @@ class _TaskCard extends StatelessWidget {
     margin: const EdgeInsets.only(bottom: 12),
     padding: const EdgeInsets.all(13),
     decoration: BoxDecoration(
-      color: done ? const Color(0xFFE5F9EB) : Colors.white,
-      borderRadius: BorderRadius.circular(12),
+      color: done ? const Color(0x1443FFA4) : const Color(0xFF101010),
+      borderRadius: BorderRadius.circular(4),
       border: Border.all(
-        color: done ? const Color(0xFF2FA65B) : const Color(0xFFD8E2DF),
+        color: done ? const Color(0x8043FFA4) : const Color(0x33FFFFFF),
       ),
     ),
     child: Column(
@@ -458,13 +482,17 @@ class _TaskCard extends StatelessWidget {
             CircleAvatar(
               radius: 12,
               backgroundColor: done
-                  ? const Color(0xFF2FA65B)
-                  : const Color(0xFF20383B),
+                  ? const Color(0xFF43FFA4)
+                  : const Color(0xFFFF5C01),
               child: done
-                  ? const Icon(Icons.check, size: 15, color: Colors.white)
+                  ? const Icon(Icons.check, size: 15, color: Color(0xFF0A0500))
                   : Text(
                       '${index + 1}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      style: const TextStyle(
+                        color: Color(0xFF0A0500),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
             ),
             const SizedBox(width: 8),
@@ -472,7 +500,7 @@ class _TaskCard extends StatelessWidget {
               child: SelectableText(
                 task.prompt,
                 style: const TextStyle(
-                  color: Color(0xFF172429),
+                  color: Color(0xFFF4F3EF),
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
@@ -488,27 +516,34 @@ class _TaskCard extends StatelessWidget {
                 child: TextField(
                   controller: answer,
                   onSubmitted: (_) => onSubmit(),
+                  cursorColor: const Color(0xFFFF5C01),
                   decoration: InputDecoration(
                     hintText: index == 2 ? 'FLAG{...}' : 'Your answer',
                     errorText: wrong
                         ? 'Not quite — use a hint or check the terminal.'
                         : null,
                     isDense: true,
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0x33FFFFFF)),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFFFF5C01)),
+                    ),
                     border: const OutlineInputBorder(),
                     filled: true,
-                    fillColor: Colors.white,
-                    hintStyle: const TextStyle(color: Color(0xFF526166)),
-                    labelStyle: const TextStyle(color: Color(0xFF263237)),
+                    fillColor: const Color(0xFF070707),
+                    hintStyle: const TextStyle(color: Color(0xFF56554F)),
+                    labelStyle: const TextStyle(color: Color(0xFF908F88)),
                   ),
-                  style: const TextStyle(color: Color(0xFF172429)),
+                  style: const TextStyle(color: Color(0xFFF4F3EF)),
                 ),
               ),
               const SizedBox(width: 8),
               FilledButton(
                 onPressed: onSubmit,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF20383B),
-                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFFFF5C01),
+                  foregroundColor: const Color(0xFF0A0500),
                 ),
                 child: const Text('Check'),
               ),
@@ -517,7 +552,7 @@ class _TaskCard extends StatelessWidget {
           const SizedBox(height: 6),
           TextButton.icon(
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF006B57),
+              foregroundColor: const Color(0xFF43FFA4),
             ),
             onPressed: () => onHint(showHint1),
             icon: const Icon(Icons.lightbulb_outline, size: 16),

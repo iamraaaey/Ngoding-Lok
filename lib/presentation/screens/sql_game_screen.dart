@@ -4,7 +4,7 @@ import '../../core/curriculum/module_config.dart';
 import '../../core/interpreter/sql_checker.dart';
 import '../../core/session/hint_service.dart';
 import '../../core/timer/game_timer_controller.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
 import '../widgets/code_editor.dart';
 import '../widgets/console_log.dart';
 import '../widgets/game_header.dart';
@@ -128,8 +128,9 @@ class _SqlGameScreenState extends State<SqlGameScreen> {
   Widget build(BuildContext context) {
     final config = widget.module.config as SqlTerminalConfig;
     return Scaffold(
-      backgroundColor: DoodlePalette.dark,
-      body: DoodleDotBackground(
+      backgroundColor: LandingTokens.voidBlack,
+      body: ColoredBox(
+        color: LandingTokens.voidBlack,
         child: Column(
           children: [
             GameHeader(
@@ -153,20 +154,24 @@ class _SqlGameScreenState extends State<SqlGameScreen> {
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: DoodlePalette.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: Colors.black, width: 3),
-                boxShadow: const [BoxShadow(color: Colors.black, offset: Offset(5, 5))],
+                color: LandingTokens.carbon,
+                borderRadius: LandingTokens.mediumRadius,
+                border: Border.all(color: LandingTokens.hairline),
+                boxShadow: LandingTokens.cardShadow,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(config.instruction, style: const TextStyle(color: Colors.black, fontSize: 13, fontWeight: FontWeight.w700)),
+                  Text(config.instruction,
+                      style: const TextStyle(
+                          color: LandingTokens.textPrimary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
                   Text('Table: ${config.table}',
-                      style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: DoodlePalette.purple, fontWeight: FontWeight.w700)),
+                      style: LandingTokens.mono(fontSize: 12, color: LandingTokens.circuit)),
                   Text('Columns: ${config.schema.join(', ')}',
-                      style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: DoodlePalette.purple, fontWeight: FontWeight.w700)),
+                      style: LandingTokens.mono(fontSize: 12, color: LandingTokens.circuit)),
                 ],
               ),
             ),

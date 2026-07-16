@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../theme/landing_tokens.dart';
 
-/// A high-emphasis CTA that keeps a gradient surface while retaining the
-/// focus, keyboard, and semantics behavior of a Material button.
-class GradientButton extends StatelessWidget {
+/// The high-emphasis CTA: a solid ember block with a mono uppercase label
+/// and an arrow that nudges forward on hover. Square corners on purpose —
+/// this theme's buttons are boxes, not pills.
+class GradientButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
@@ -21,88 +22,104 @@ class GradientButton extends StatelessWidget {
   });
 
   @override
+  State<GradientButton> createState() => _GradientButtonState();
+}
+
+class _GradientButtonState extends State<GradientButton> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final horizontalPadding = compact ? 18.0 : 24.0;
-    final verticalPadding = compact ? 14.0 : 18.0;
+    final motion = LandingTokens.motionFor(context, LandingTokens.motionFast);
+    final icon = widget.icon ?? Icons.arrow_forward_rounded;
 
     return Semantics(
       button: true,
-      enabled: onPressed != null,
-      label: semanticLabel ?? label,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LandingTokens.primaryActionGradient,
-          borderRadius: LandingTokens.pillRadius,
-          boxShadow: LandingTokens.actionShadow,
+      enabled: widget.onPressed != null,
+      label: widget.semanticLabel ?? widget.label,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: AnimatedContainer(
+          duration: motion,
+          decoration: BoxDecoration(
+            borderRadius: LandingTokens.smallRadius,
+            boxShadow: _hovered ? LandingTokens.emberGlow : null,
+          ),
+          child: FilledButton(
+            onPressed: widget.onPressed,
+            style: _style(),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    widget.label.toUpperCase(),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: LandingTokens.label(
+                      color: const Color(0xFF0A0500),
+                      fontSize: widget.compact ? 11 : 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                SizedBox(width: widget.compact ? 8 : 10),
+                AnimatedSlide(
+                  duration: motion,
+                  offset: _hovered ? const Offset(0.18, 0) : Offset.zero,
+                  child: Icon(
+                    icon,
+                    size: widget.compact ? 15 : 17,
+                    color: const Color(0xFF0A0500),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        child: icon == null
-            ? FilledButton(
-                onPressed: onPressed,
-                style: _style(
-                  horizontalPadding: horizontalPadding,
-                  verticalPadding: verticalPadding,
-                ),
-                child: _label(),
-              )
-            : FilledButton.icon(
-                onPressed: onPressed,
-                style: _style(
-                  horizontalPadding: horizontalPadding,
-                  verticalPadding: verticalPadding,
-                ),
-                icon: Icon(icon, size: compact ? 17 : 19),
-                label: _label(),
-              ),
       ),
     );
   }
 
-  ButtonStyle _style({
-    required double horizontalPadding,
-    required double verticalPadding,
-  }) {
+  ButtonStyle _style() {
     return ButtonStyle(
-      backgroundColor: const WidgetStatePropertyAll<Color>(Colors.transparent),
-      foregroundColor: const WidgetStatePropertyAll<Color>(LandingTokens.ink),
+      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.hovered) ||
+            states.contains(WidgetState.pressed)) {
+          return LandingTokens.emberBright;
+        }
+        return LandingTokens.ember;
+      }),
+      foregroundColor: const WidgetStatePropertyAll<Color>(Color(0xFF0A0500)),
       overlayColor: WidgetStatePropertyAll<Color>(
-        LandingTokens.ink.withValues(alpha: 0.12),
+        Colors.black.withValues(alpha: 0.08),
       ),
       elevation: const WidgetStatePropertyAll<double>(0),
       padding: WidgetStatePropertyAll<EdgeInsetsGeometry>(
         EdgeInsets.symmetric(
-          horizontal: horizontalPadding,
-          vertical: verticalPadding,
+          horizontal: widget.compact ? 16 : 24,
+          vertical: widget.compact ? 12 : 18,
         ),
       ),
       minimumSize: const WidgetStatePropertyAll<Size>(Size(48, 48)),
       shape: const WidgetStatePropertyAll<OutlinedBorder>(
-        RoundedRectangleBorder(borderRadius: LandingTokens.pillRadius),
+        RoundedRectangleBorder(borderRadius: LandingTokens.smallRadius),
       ),
       side: WidgetStateProperty.resolveWith<BorderSide?>((states) {
         if (states.contains(WidgetState.focused)) {
-          return const BorderSide(color: LandingTokens.focusRing, width: 3);
+          return const BorderSide(color: LandingTokens.focusRing, width: 2);
         }
-        return const BorderSide(color: Colors.transparent, width: 2);
+        return BorderSide.none;
       }),
-    );
-  }
-
-  Widget _label() {
-    return Text(
-      label,
-      textAlign: TextAlign.center,
-      style: LandingTokens.label(
-        color: LandingTokens.ink,
-        fontSize: compact ? 12 : 14,
-      ).copyWith(letterSpacing: 0.2),
     );
   }
 }
 
-/// A low-emphasis CTA for secondary paths and navigation. Its focused border
-/// is intentionally high-contrast so desktop keyboard users never lose track
-/// of their position.
-class CinematicOutlineButton extends StatelessWidget {
+/// The low-emphasis CTA: hairline box, mono label wrapped in brackets. The
+/// border and text warm up to ember on hover.
+class CinematicOutlineButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
@@ -119,73 +136,84 @@ class CinematicOutlineButton extends StatelessWidget {
   });
 
   @override
+  State<CinematicOutlineButton> createState() => _CinematicOutlineButtonState();
+}
+
+class _CinematicOutlineButtonState extends State<CinematicOutlineButton> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final horizontalPadding = compact ? 16.0 : 22.0;
-    final verticalPadding = compact ? 12.0 : 17.0;
+    final motion = LandingTokens.motionFor(context, LandingTokens.motionFast);
+    final color = _hovered ? LandingTokens.ember : LandingTokens.textPrimary;
 
     return Semantics(
       button: true,
-      enabled: onPressed != null,
-      label: semanticLabel ?? label,
-      child: icon == null
-          ? OutlinedButton(
-              onPressed: onPressed,
-              style: _style(
-                horizontalPadding: horizontalPadding,
-                verticalPadding: verticalPadding,
+      enabled: widget.onPressed != null,
+      label: widget.semanticLabel ?? widget.label,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: OutlinedButton(
+          onPressed: widget.onPressed,
+          style: _style(),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: AnimatedDefaultTextStyle(
+                  duration: motion,
+                  style: LandingTokens.label(
+                    color: color,
+                    fontSize: widget.compact ? 11 : 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  child: Text(
+                    '[ ${widget.label.toUpperCase()} ]',
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
-              child: _label(),
-            )
-          : OutlinedButton.icon(
-              onPressed: onPressed,
-              style: _style(
-                horizontalPadding: horizontalPadding,
-                verticalPadding: verticalPadding,
-              ),
-              icon: Icon(icon, size: compact ? 17 : 19),
-              label: _label(),
-            ),
+              if (widget.icon != null) ...[
+                SizedBox(width: widget.compact ? 8 : 10),
+                Icon(widget.icon, size: widget.compact ? 15 : 17, color: color),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 
-  ButtonStyle _style({
-    required double horizontalPadding,
-    required double verticalPadding,
-  }) {
+  ButtonStyle _style() {
     return ButtonStyle(
-      foregroundColor: const WidgetStatePropertyAll<Color>(LandingTokens.cream),
+      foregroundColor: const WidgetStatePropertyAll<Color>(
+        LandingTokens.textPrimary,
+      ),
       overlayColor: WidgetStatePropertyAll<Color>(
-        LandingTokens.cream.withValues(alpha: 0.1),
+        LandingTokens.ember.withValues(alpha: 0.08),
       ),
       padding: WidgetStatePropertyAll<EdgeInsetsGeometry>(
         EdgeInsets.symmetric(
-          horizontal: horizontalPadding,
-          vertical: verticalPadding,
+          horizontal: widget.compact ? 14 : 22,
+          vertical: widget.compact ? 12 : 18,
         ),
       ),
       minimumSize: const WidgetStatePropertyAll<Size>(Size(48, 48)),
       shape: const WidgetStatePropertyAll<OutlinedBorder>(
-        RoundedRectangleBorder(borderRadius: LandingTokens.pillRadius),
+        RoundedRectangleBorder(borderRadius: LandingTokens.smallRadius),
       ),
       side: WidgetStateProperty.resolveWith<BorderSide>((states) {
         if (states.contains(WidgetState.focused)) {
-          return const BorderSide(color: LandingTokens.focusRing, width: 3);
+          return const BorderSide(color: LandingTokens.focusRing, width: 2);
         }
         if (states.contains(WidgetState.hovered)) {
-          return const BorderSide(color: LandingTokens.cream, width: 1.5);
+          return const BorderSide(color: LandingTokens.ember, width: 1);
         }
-        return const BorderSide(color: LandingTokens.outline, width: 1);
+        return const BorderSide(color: LandingTokens.hairlineStrong, width: 1);
       }),
-    );
-  }
-
-  Widget _label() {
-    return Text(
-      label,
-      textAlign: TextAlign.center,
-      style: LandingTokens.label(
-        fontSize: compact ? 12 : 14,
-      ).copyWith(letterSpacing: 0.2),
     );
   }
 }

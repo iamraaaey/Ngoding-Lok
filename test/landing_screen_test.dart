@@ -20,10 +20,14 @@ void main() {
             home: LandingScreen(onGetStarted: () {}, onSignUp: () {}),
           ),
         );
-        await tester.pumpAndSettle();
+        // The landing page runs looping ambient animations (marquee, cursor,
+        // iridescent sweep), so pumpAndSettle would never settle — pump a
+        // bounded amount instead to get past the entrance transition.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 800));
 
-        expect(find.text('Explore. Debug.\nMaster the Code.'), findsOneWidget);
-        expect(find.text('Start Playing'), findsWidgets);
+        expect(find.text('NGODING'), findsOneWidget);
+        expect(find.text('START PLAYING'), findsWidgets);
         expect(tester.takeException(), isNull);
       }
     },

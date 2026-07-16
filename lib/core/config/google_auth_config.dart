@@ -12,4 +12,4 @@
 ///
 ///   flutter run -d chrome --web-port=5000
 const String googleWebClientId =
-    '256256957060-9mfbs0i56phcabjogns39bdu832a2gaj.apps.googleusercontent.com';
+    '836022818923-rbm8l7qbo63ikhu298qkfu9mt05f2ea2.apps.googleusercontent.com';

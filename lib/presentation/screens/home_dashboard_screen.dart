@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/session/progression.dart';
 import '../../core/session/user_session.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
 import '../theme/league_style.dart';
+import '../widgets/landing/landing_button.dart';
+import '../widgets/landing/landing_surface.dart';
 
-/// Screen 4 — the Home Dashboard ("The Hub"). Surfaces the player's identity
-/// and momentum at a glance (avatar, level/XP, daily streak), a one-tap
-/// "Resume Playing" hero that jumps straight to their next unfinished puzzle,
-/// a league-tier tracker with a progress bar to the next rank, and quick links
-/// to the full level map and the leaderboard.
+/// Screen 4 — the Home Dashboard ("The Hub") in the terminal noir style.
+/// Surfaces the player's identity and momentum at a glance (avatar,
+/// level/XP, daily streak), a one-tap "Resume Playing" hero that jumps
+/// straight to their next unfinished puzzle, a league-tier tracker with a
+/// progress bar to the next rank, and quick links to the full level map and
+/// the leaderboard.
 class HomeDashboardScreen extends StatefulWidget {
   final UserSession user;
 
@@ -39,6 +42,52 @@ class HomeDashboardScreen extends StatefulWidget {
   State<HomeDashboardScreen> createState() => _HomeDashboardScreenState();
 }
 
+/// Brightness-resolved surface colors so the Settings dark/light switch
+/// keeps working. Dark is the canonical terminal noir; light swaps in paper
+/// surfaces while keeping the same accents and structure.
+class _Skin {
+  final Color bg;
+  final Color panel;
+  final Color border;
+  final Color borderStrong;
+  final Color text;
+  final Color sub;
+  final Color faint;
+
+  const _Skin({
+    required this.bg,
+    required this.panel,
+    required this.border,
+    required this.borderStrong,
+    required this.text,
+    required this.sub,
+    required this.faint,
+  });
+
+  static const dark = _Skin(
+    bg: LandingTokens.voidBlack,
+    panel: LandingTokens.carbon,
+    border: LandingTokens.hairline,
+    borderStrong: LandingTokens.hairlineStrong,
+    text: LandingTokens.textPrimary,
+    sub: LandingTokens.textMuted,
+    faint: LandingTokens.textFaint,
+  );
+
+  static const light = _Skin(
+    bg: Color(0xFFF4F2EC),
+    panel: Color(0xFFFFFFFF),
+    border: Color(0x1A000000),
+    borderStrong: Color(0x33000000),
+    text: Color(0xFF16150F),
+    sub: Color(0xFF6A6960),
+    faint: Color(0xFF9A988D),
+  );
+
+  static _Skin of(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? dark : light;
+}
+
 class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTickerProviderStateMixin {
   late final AnimationController _entrance;
 
@@ -59,38 +108,41 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    final skin = _Skin.of(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final bg = dark ? DoodlePalette.dark : DoodlePalette.cream;
     final progression = Progression(widget.user.xp);
 
-    final appBar = DoodleFadeSlide(
+    final appBar = _FadeSlide(
       animation: _interval(0.0, 0.5),
       yOffset: -16,
       child: _TopAppBar(
         user: widget.user,
         progression: progression,
+        skin: skin,
         onAvatarTap: widget.onOpenProfile,
         onLogout: widget.onLogout,
       ),
     );
-    final hero = DoodleFadeSlide(
+    final hero = _FadeSlide(
       animation: _interval(0.12, 0.62),
       yOffset: 24,
       child: _HeroSection(
         nextModule: widget.nextModule,
+        skin: skin,
         onResume: widget.onResume,
         onOpenMap: widget.onOpenMap,
       ),
     );
-    final league = DoodleFadeSlide(
+    final league = _FadeSlide(
       animation: _interval(0.24, 0.74),
       yOffset: 24,
-      child: _LeagueTracker(progression: progression),
+      child: _LeagueTracker(progression: progression, skin: skin),
     );
-    final nav = DoodleFadeSlide(
+    final nav = _FadeSlide(
       animation: _interval(0.36, 0.86),
       yOffset: 24,
       child: _HubNav(
+        skin: skin,
         onOpenMap: widget.onOpenMap,
         onOpenCodeGolf: widget.onOpenCodeGolf,
         onOpenProfile: widget.onOpenProfile,
@@ -99,90 +151,147 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
     );
 
     return Scaffold(
-      backgroundColor: bg,
-      body: DoodleDotBackground(
-        backgroundColor: bg,
-        child: SafeArea(
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1500),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    appBar,
-                    const SizedBox(height: 20),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Wide screens: hero + league share the top row, nav
-                        // fills a full-width grid below — no dead side margins.
-                        if (constraints.maxWidth > 900) {
+      backgroundColor: skin.bg,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (dark) const CinematicBackdrop(),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1500),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      appBar,
+                      const SizedBox(height: 20),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          // Wide screens: hero + league share the top row, nav
+                          // fills a full-width grid below — no dead side margins.
+                          if (constraints.maxWidth > 900) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(flex: 3, child: hero),
+                                    const SizedBox(width: 20),
+                                    Expanded(flex: 2, child: league),
+                                  ],
+                                ),
+                                const SizedBox(height: 20),
+                                nav,
+                              ],
+                            );
+                          }
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(flex: 3, child: hero),
-                                  const SizedBox(width: 20),
-                                  Expanded(flex: 2, child: league),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
+                              hero,
+                              const SizedBox(height: 16),
+                              league,
+                              const SizedBox(height: 16),
                               nav,
                             ],
                           );
-                        }
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            hero,
-                            const SizedBox(height: 16),
-                            league,
-                            const SizedBox(height: 16),
-                            nav,
-                          ],
-                        );
-                      },
-                    ),
-                  ],
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-/// Top app bar: avatar, name, derived level + XP, a daily-streak flame pill,
-/// and a logout badge. Name is [Expanded] so the row never overflows on
-/// narrow phones.
+/// Local fade + slide entrance, driven by the screen's staggered intervals.
+class _FadeSlide extends StatelessWidget {
+  final Animation<double> animation;
+  final double yOffset;
+  final Widget child;
+
+  const _FadeSlide({required this.animation, required this.yOffset, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        return Opacity(
+          opacity: animation.value.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, (1 - animation.value) * yOffset),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Hairline panel shared by every dashboard card.
+class _Panel extends StatelessWidget {
+  final _Skin skin;
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  const _Panel({required this.skin, required this.child, this.padding = const EdgeInsets.all(20)});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: skin.panel,
+        borderRadius: LandingTokens.mediumRadius,
+        border: Border.all(color: skin.border),
+        boxShadow: LandingTokens.cardShadow,
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Top app bar: avatar, name, derived level + XP, a daily-streak flame
+/// chip, and a logout badge. Name is [Expanded] so the row never overflows
+/// on narrow phones.
 class _TopAppBar extends StatelessWidget {
   final UserSession user;
   final Progression progression;
+  final _Skin skin;
   final VoidCallback onAvatarTap;
   final VoidCallback onLogout;
 
   const _TopAppBar({
     required this.user,
     required this.progression,
+    required this.skin,
     required this.onAvatarTap,
     required this.onLogout,
   });
 
   @override
   Widget build(BuildContext context) {
-    return DoodleCard(
+    return _Panel(
+      skin: skin,
       padding: const EdgeInsets.all(14),
-      borderRadius: 20,
       child: Row(
         children: [
-          GestureDetector(onTap: onAvatarTap, child: _avatar()),
-          const SizedBox(width: 12),
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(onTap: onAvatarTap, child: _avatar()),
+          ),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,30 +300,34 @@ class _TopAppBar extends StatelessWidget {
                   user.displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 16),
+                  style: TextStyle(color: skin.text, fontWeight: FontWeight.w800, fontSize: 16),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
-                  'Level ${progression.level}  ·  ${user.xp} XP',
+                  'LVL ${progression.level} // ${user.xp} XP',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 12),
+                  style: LandingTokens.label(fontSize: 9.5, color: skin.faint),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          _StreakPill(streak: user.streak),
+          _StreakChip(streak: user.streak, skin: skin),
           const SizedBox(width: 8),
-          GestureDetector(
-            onTap: onLogout,
-            child: const DoodleIconBadge(
-              icon: Icons.logout,
-              color: DoodlePalette.white,
-              iconColor: Colors.black,
-              size: 40,
-              iconSize: 18,
-              borderRadius: 12,
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: onLogout,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  borderRadius: LandingTokens.smallRadius,
+                  border: Border.all(color: skin.borderStrong),
+                ),
+                child: Icon(Icons.logout, color: skin.sub, size: 18),
+              ),
             ),
           ),
         ],
@@ -225,89 +338,130 @@ class _TopAppBar extends StatelessWidget {
   Widget _avatar() {
     if (user.photoUrl != null) {
       return Container(
-        width: 48,
-        height: 48,
+        width: 46,
+        height: 46,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.black, width: 2),
+          borderRadius: LandingTokens.smallRadius,
+          border: Border.all(color: skin.borderStrong),
           image: DecorationImage(image: NetworkImage(user.photoUrl!), fit: BoxFit.cover),
         ),
       );
     }
-    return const DoodleIconBadge(icon: Icons.person, color: DoodlePalette.blue, size: 48, iconSize: 24, borderRadius: 14);
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: const BoxDecoration(
+        color: LandingTokens.ember,
+        borderRadius: LandingTokens.smallRadius,
+      ),
+      child: const Icon(Icons.person, color: Color(0xFF0A0500), size: 24),
+    );
   }
 }
 
-class _StreakPill extends StatelessWidget {
+class _StreakChip extends StatelessWidget {
   final int streak;
-  const _StreakPill({required this.streak});
+  final _Skin skin;
+
+  const _StreakChip({required this.streak, required this.skin});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
       decoration: BoxDecoration(
-        color: DoodlePalette.yellow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.black, width: 2),
+        borderRadius: LandingTokens.smallRadius,
+        border: Border.all(color: LandingTokens.ember.withValues(alpha: 0.55)),
+        color: LandingTokens.ember.withValues(alpha: 0.08),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.local_fire_department, size: 18, color: DoodlePalette.red),
-          const SizedBox(width: 4),
-          Text('$streak', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 14)),
+          const Icon(Icons.local_fire_department, size: 16, color: LandingTokens.ember),
+          const SizedBox(width: 5),
+          Text(
+            'x$streak',
+            style: LandingTokens.mono(fontSize: 12, color: LandingTokens.ember, fontWeight: FontWeight.w700),
+          ),
         ],
       ),
     );
   }
 }
 
-/// Hero "Resume Playing" card targeting the next unfinished puzzle. When all
-/// levels are cleared it flips to an "open the map" call-to-action instead of
-/// a dead-end.
+/// Hero "Resume Playing" card targeting the next unfinished puzzle, with
+/// the theme's single iridescent strip along the top. When all levels are
+/// cleared it flips to an "open the map" call-to-action instead of a
+/// dead-end.
 class _HeroSection extends StatelessWidget {
   final CurriculumModule? nextModule;
+  final _Skin skin;
   final void Function(CurriculumModule module) onResume;
   final VoidCallback onOpenMap;
 
-  const _HeroSection({required this.nextModule, required this.onResume, required this.onOpenMap});
+  const _HeroSection({
+    required this.nextModule,
+    required this.skin,
+    required this.onResume,
+    required this.onOpenMap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final next = nextModule;
-    return DoodleCard(
-      color: DoodlePalette.purple,
-      padding: const EdgeInsets.all(22),
-      borderRadius: 24,
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: skin.panel,
+        borderRadius: LandingTokens.mediumRadius,
+        border: Border.all(color: skin.border),
+        boxShadow: LandingTokens.cardShadow,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DoodlePill(text: next == null ? 'All Cleared' : 'Up Next', background: DoodlePalette.yellow),
-          const SizedBox(height: 14),
-          Text(
-            next == null ? "You've cleared every level!" : next.title,
-            style: const TextStyle(color: Colors.white, fontSize: 23, fontWeight: FontWeight.w800),
+          const SizedBox(
+            height: 3,
+            width: double.infinity,
+            child: AnimatedIridescence(borderRadius: BorderRadius.zero),
           ),
-          const SizedBox(height: 8),
-          Text(
-            next == null
-                ? 'Replay any level from the map to push your efficiency score higher.'
-                : next.description,
-            style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w700, height: 1.3),
-          ),
-          const SizedBox(height: 18),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: PulsingGlow(
-              glowColor: DoodlePalette.green,
-              borderRadius: 16,
-              child: DoodleButton(
-                label: next == null ? 'Open Level Map' : 'Resume Playing',
-                color: DoodlePalette.green,
-                icon: next == null ? Icons.map : Icons.play_arrow,
-                onPressed: next == null ? onOpenMap : () => onResume(next),
-              ),
+          Padding(
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const PulsingDot(color: LandingTokens.ember, size: 5),
+                    const SizedBox(width: 8),
+                    Text(
+                      next == null ? '// ALL CLEARED' : '// UP NEXT — MISSION QUEUE',
+                      style: LandingTokens.label(fontSize: 10, color: LandingTokens.ember),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  next == null ? "You've cleared every level!" : next.title,
+                  style: LandingTokens.display(fontSize: 24, color: skin.text),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  next == null
+                      ? 'Replay any level from the map to push your efficiency score higher.'
+                      : next.description,
+                  style: LandingTokens.body(fontSize: 14, color: skin.sub),
+                ),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: GradientButton(
+                    label: next == null ? 'Open Level Map' : 'Resume Playing',
+                    icon: next == null ? Icons.map : Icons.play_arrow,
+                    onPressed: next == null ? onOpenMap : () => onResume(next),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -320,7 +474,9 @@ class _HeroSection extends StatelessWidget {
 /// tier, and the XP still needed to rank up.
 class _LeagueTracker extends StatelessWidget {
   final Progression progression;
-  const _LeagueTracker({required this.progression});
+  final _Skin skin;
+
+  const _LeagueTracker({required this.progression, required this.skin});
 
   @override
   Widget build(BuildContext context) {
@@ -328,52 +484,72 @@ class _LeagueTracker extends StatelessWidget {
     final next = progression.nextTier;
     final toNext = progression.xpToNextTier;
 
-    return DoodleCard(
-      padding: const EdgeInsets.all(20),
-      borderRadius: 20,
+    return _Panel(
+      skin: skin,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              DoodleIconBadge(icon: tier.icon, color: tier.color, size: 46, iconSize: 24, borderRadius: 14),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: tier.color.withValues(alpha: 0.12),
+                  borderRadius: LandingTokens.smallRadius,
+                  border: Border.all(color: tier.color.withValues(alpha: 0.55)),
+                ),
+                child: Icon(tier.icon, color: tier.color, size: 22),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('LEAGUE',
-                        style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w800, fontSize: 11, letterSpacing: 1)),
-                    const SizedBox(height: 2),
-                    Text('${tier.label} Tier',
-                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 18)),
+                    Text('// LEAGUE', style: LandingTokens.label(fontSize: 9, color: skin.faint)),
+                    const SizedBox(height: 3),
+                    Text(
+                      '${tier.label.toUpperCase()} TIER',
+                      style: LandingTokens.display(fontSize: 18, color: skin.text),
+                    ),
                   ],
                 ),
               ),
-              if (next != null) DoodlePill(text: 'Next: ${next.label}', background: DoodlePalette.cream),
+              if (next != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(
+                    borderRadius: LandingTokens.smallRadius,
+                    border: Border.all(color: skin.borderStrong),
+                  ),
+                  child: Text(
+                    'NEXT: ${next.label.toUpperCase()}',
+                    style: LandingTokens.label(fontSize: 9, color: skin.sub),
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           Container(
-            height: 16,
-            decoration: BoxDecoration(
-              color: const Color(0xFFECECEC),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.black, width: 2),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: progression.tierProgress,
-                child: Container(color: tier.color),
+            height: 6,
+            decoration: BoxDecoration(border: Border.all(color: skin.border)),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: progression.tierProgress.clamp(0.0, 1.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: tier.color,
+                  boxShadow: [BoxShadow(color: tier.color.withValues(alpha: 0.45), blurRadius: 8)],
+                ),
               ),
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            toNext == null ? "Top tier reached — you're a legend! 🏆" : '$toNext XP to ${next!.label}',
-            style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 13),
+            toNext == null
+                ? 'TOP TIER REACHED — LEGEND STATUS'
+                : '$toNext XP TO ${next!.label.toUpperCase()}',
+            style: LandingTokens.label(fontSize: 9.5, color: skin.faint),
           ),
         ],
       ),
@@ -382,14 +558,17 @@ class _LeagueTracker extends StatelessWidget {
 }
 
 /// Quick-nav tiles below the fold: Level Map, Code Golf, Profile, Settings.
-/// Laid out in a responsive two-column grid (single column on narrow phones).
+/// Laid out in a responsive grid; each tile lifts and warms its border on
+/// hover, like the landing module cards.
 class _HubNav extends StatelessWidget {
+  final _Skin skin;
   final VoidCallback onOpenMap;
   final VoidCallback onOpenCodeGolf;
   final VoidCallback onOpenProfile;
   final VoidCallback onOpenSettings;
 
   const _HubNav({
+    required this.skin,
     required this.onOpenMap,
     required this.onOpenCodeGolf,
     required this.onOpenProfile,
@@ -399,10 +578,10 @@ class _HubNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tiles = [
-      _NavTile(icon: Icons.map, color: DoodlePalette.blue, title: 'Level Map', subtitle: 'Pick your next challenge', onTap: onOpenMap),
-      _NavTile(icon: Icons.emoji_events, color: DoodlePalette.orange, title: 'Code Golf', subtitle: 'Byte-count leaderboards', onTap: onOpenCodeGolf),
-      _NavTile(icon: Icons.person, color: DoodlePalette.green, title: 'Profile', subtitle: 'Badges & streaks', onTap: onOpenProfile),
-      _NavTile(icon: Icons.settings, color: DoodlePalette.purple, title: 'Settings', subtitle: 'Theme, account & legal', onTap: onOpenSettings),
+      _NavTile(icon: Icons.map, accent: LandingTokens.circuit, title: 'Level Map', subtitle: 'Pick your next challenge', skin: skin, onTap: onOpenMap),
+      _NavTile(icon: Icons.emoji_events, accent: LandingTokens.ember, title: 'Code Golf', subtitle: 'Byte-count leaderboards', skin: skin, onTap: onOpenCodeGolf),
+      _NavTile(icon: Icons.person, accent: LandingTokens.signal, title: 'Profile', subtitle: 'Badges & streaks', skin: skin, onTap: onOpenProfile),
+      _NavTile(icon: Icons.settings, accent: Color(0xFF9E9CFF), title: 'Settings', subtitle: 'Theme, account & legal', skin: skin, onTap: onOpenSettings),
     ];
 
     return LayoutBuilder(
@@ -426,50 +605,102 @@ class _HubNav extends StatelessWidget {
   }
 }
 
-class _NavTile extends StatelessWidget {
+class _NavTile extends StatefulWidget {
   final IconData icon;
-  final Color color;
+  final Color accent;
   final String title;
   final String subtitle;
+  final _Skin skin;
   final VoidCallback onTap;
 
   const _NavTile({
     required this.icon,
-    required this.color,
+    required this.accent,
     required this.title,
     required this.subtitle,
+    required this.skin,
     required this.onTap,
   });
 
   @override
+  State<_NavTile> createState() => _NavTileState();
+}
+
+class _NavTileState extends State<_NavTile> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: DoodleCard(
-        padding: const EdgeInsets.all(18),
-        borderRadius: 18,
-        child: Row(
-          children: [
-            DoodleIconBadge(icon: icon, color: color, size: 44, iconSize: 22, borderRadius: 12),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w800, fontSize: 15)),
-                  const SizedBox(height: 2),
-                  Text(subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 12)),
-                ],
-              ),
+    final skin = widget.skin;
+    final motion = LandingTokens.motionFor(context, LandingTokens.motionStandard);
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: motion,
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: skin.panel,
+            borderRadius: LandingTokens.mediumRadius,
+            border: Border.all(
+              color: _hovered ? widget.accent.withValues(alpha: 0.65) : skin.border,
             ),
-            const Icon(Icons.chevron_right, color: Colors.black54),
-          ],
+            boxShadow: LandingTokens.cardShadow,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: widget.accent.withValues(alpha: 0.1),
+                  borderRadius: LandingTokens.smallRadius,
+                  border: Border.all(color: widget.accent.withValues(alpha: 0.5)),
+                ),
+                child: Icon(widget.icon, color: widget.accent, size: 21),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.title.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: LandingTokens.label(
+                        fontSize: 11,
+                        color: skin.text,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      widget.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: LandingTokens.body(fontSize: 12, color: skin.faint),
+                    ),
+                  ],
+                ),
+              ),
+              AnimatedSlide(
+                duration: motion,
+                offset: _hovered ? const Offset(0.2, 0) : Offset.zero,
+                child: Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 16,
+                  color: _hovered ? widget.accent : skin.faint,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

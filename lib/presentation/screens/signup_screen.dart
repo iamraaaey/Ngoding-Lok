@@ -1,26 +1,37 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../core/session/google_auth_service.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
 import '../widgets/labeled_text_field.dart';
+import '../widgets/landing/landing_button.dart';
 import '../widgets/policy_dialog.dart';
 import '../widgets/sso_buttons.dart';
+import 'auth_screen.dart';
 
-/// "Create Your Account" registration card. Validates name, email format,
-/// password length, and password confirmation before registering; Google
-/// sign-up reuses the real OAuth flow from [GoogleAuthService]. Accounts
-/// live in the in-memory session only (no persistence), per the FYP scope.
+const _errorRed = Color(0xFFFF4D5E);
+
+/// "Create Your Account" registration card in the terminal noir style.
+/// Validates name, email format, password length, and password confirmation
+/// before registering; Google sign-up reuses the real OAuth flow from
+/// [GoogleAuthService]. Accounts live in the in-memory session only (no
+/// persistence), per the FYP scope.
 class SignUpScreen extends StatefulWidget {
-  final void Function(String email, {String? name, String? photoUrl}) onRegister;
+  final void Function(String email, {String? name, String? photoUrl})
+  onRegister;
   final VoidCallback onBackToLogin;
 
-  const SignUpScreen({super.key, required this.onRegister, required this.onBackToLogin});
+  const SignUpScreen({
+    super.key,
+    required this.onRegister,
+    required this.onBackToLogin,
+  });
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderStateMixin {
+class _SignUpScreenState extends State<SignUpScreen>
+    with SingleTickerProviderStateMixin {
   static final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   final _nameController = TextEditingController();
@@ -35,6 +46,7 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
   String? _confirmError;
   String? _consentError;
   bool _googleBusy = false;
+  bool _githubBusy = false;
   bool _consentChecked = false;
   bool _newsletterOptIn = false;
 
@@ -65,13 +77,18 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
 
     setState(() {
       _nameError = name.isEmpty ? 'Please tell us your name.' : null;
-      _emailError = _emailPattern.hasMatch(email) ? null : 'Enter a valid email address.';
-      _passwordError = password.length >= 6 ? null : 'Password must be at least 6 characters.';
+      _emailError = _emailPattern.hasMatch(email)
+          ? null
+          : 'Enter a valid email address.';
+      _passwordError = password.length >= 6
+          ? null
+          : 'Password must be at least 6 characters.';
       _confirmError = confirm == password ? null : 'Passwords do not match.';
       _consentError = _consentChecked ? null : 'You must agree to continue.';
     });
 
-    final valid = _nameError == null &&
+    final valid =
+        _nameError == null &&
         _emailError == null &&
         _passwordError == null &&
         _confirmError == null &&
@@ -90,183 +107,147 @@ class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderSt
     if (result == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Google sign-up was cancelled or is unavailable here — you can register with email below.'),
+          content: Text(
+            'Google sign-up was cancelled or is unavailable here — you can register with email below.',
+          ),
         ),
       );
       return;
     }
-    widget.onRegister(result.email, name: result.name, photoUrl: result.photoUrl);
+    widget.onRegister(
+      result.email,
+      name: result.name,
+      photoUrl: result.photoUrl,
+    );
+  }
+
+  Future<void> _signUpWithGithub() async {
+    if (_githubBusy) return;
+    setState(() => _githubBusy = true);
+    final result = await GitHubAuthService.signIn();
+    if (!mounted) return;
+    setState(() => _githubBusy = false);
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('GitHub sign-up was cancelled or is unavailable here.'),
+        ),
+      );
+      return;
+    }
+    widget.onRegister(
+      result.email,
+      name: result.name,
+      photoUrl: result.photoUrl,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: DoodlePalette.dark,
-      body: DoodleDotBackground(
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 16),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 440),
-                child: DoodleFadeSlide(
-                  animation: CurvedAnimation(parent: _entrance, curve: Curves.easeOutCubic),
-                  yOffset: 40,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      DoodleCard(
-                        padding: const EdgeInsets.fromLTRB(28, 40, 28, 28),
-                        borderRadius: 24,
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final dense = constraints.maxWidth < 340;
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                const Text(
-                                  'Create Your Account ✨',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.black, fontSize: 26, fontWeight: FontWeight.w800),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text(
-                                  'One account for XP, streaks & the leaderboard.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 13),
-                                ),
-                                const SizedBox(height: 24),
-                                SsoButtons(
-                                  actionVerb: 'Sign up',
-                                  googleBusy: _googleBusy,
-                                  onGooglePressed: _signUpWithGoogle,
-                                  dense: dense,
-                                ),
-                                const SizedBox(height: 20),
-                                Row(
-                                  children: [
-                                    const Expanded(child: Divider(color: Colors.black, thickness: 2)),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                                      child: Text(
-                                        'OR',
-                                        style: TextStyle(
-                                          color: Colors.black.withValues(alpha: 0.5),
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
-                                    const Expanded(child: Divider(color: Colors.black, thickness: 2)),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-                                LabeledTextField(
-                                  key: const Key('signup-name'),
-                                  label: 'Full Name',
-                                  controller: _nameController,
-                                  hint: 'Ray the Coder',
-                                  errorText: _nameError,
-                                ),
-                                const SizedBox(height: 16),
-                                LabeledTextField(
-                                  key: const Key('signup-email'),
-                                  label: 'Email Address',
-                                  controller: _emailController,
-                                  hint: 'coder@unimas.my',
-                                  errorText: _emailError,
-                                ),
-                                const SizedBox(height: 16),
-                                LabeledTextField(
-                                  key: const Key('signup-password'),
-                                  label: 'Password',
-                                  controller: _passwordController,
-                                  hint: 'At least 6 characters',
-                                  obscure: true,
-                                  errorText: _passwordError,
-                                ),
-                                const SizedBox(height: 16),
-                                LabeledTextField(
-                                  key: const Key('signup-confirm'),
-                                  label: 'Confirm Password',
-                                  controller: _confirmController,
-                                  hint: 'Same password again',
-                                  obscure: true,
-                                  errorText: _confirmError,
-                                ),
-                                const SizedBox(height: 20),
-                                _ConsentCheckbox(
-                                  key: const Key('signup-consent-checkbox'),
-                                  value: _consentChecked,
-                                  onChanged: (v) => setState(() {
-                                    _consentChecked = v;
-                                    if (v) _consentError = null;
-                                  }),
-                                  errorText: _consentError,
-                                ),
-                                const SizedBox(height: 10),
-                                _NewsletterCheckbox(
-                                  key: const Key('signup-newsletter-checkbox'),
-                                  value: _newsletterOptIn,
-                                  onChanged: (v) => setState(() => _newsletterOptIn = v),
-                                ),
-                                const SizedBox(height: 24),
-                                DoodleButton(
-                                  label: 'Create My Account',
-                                  color: DoodlePalette.yellow,
-                                  icon: Icons.rocket_launch,
-                                  onPressed: _submit,
-                                  dense: dense,
-                                ),
-                                const SizedBox(height: 20),
-                                GestureDetector(
-                                  key: const Key('back-to-login-link'),
-                                  onTap: widget.onBackToLogin,
-                                  child: RichText(
-                                    textAlign: TextAlign.center,
-                                    text: TextSpan(
-                                      style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.w700, fontSize: 13),
-                                      children: [
-                                        const TextSpan(text: 'Already a quester? '),
-                                        TextSpan(
-                                          text: 'Log in',
-                                          style: TextStyle(
-                                            color: DoodlePalette.blue,
-                                            decoration: TextDecoration.underline,
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                      Positioned(
-                        top: -14,
-                        right: -14,
-                        child: GestureDetector(
-                          onTap: widget.onBackToLogin,
-                          child: const DoodleIconBadge(
-                            icon: Icons.close,
-                            color: DoodlePalette.red,
-                            size: 40,
-                            iconSize: 20,
-                            borderRadius: 20,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+    return AuthScaffold(
+      entrance: CurvedAnimation(parent: _entrance, curve: Curves.easeOutCubic),
+      onClose: widget.onBackToLogin,
+      form: LayoutBuilder(
+        builder: (context, constraints) {
+          final dense = constraints.maxWidth < 340;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const AuthHeading(
+                eyebrow: 'New player',
+                title: 'CREATE YOUR\nACCOUNT',
+                subtitle: 'ONE ACCOUNT FOR XP, STREAKS & THE LEADERBOARD',
               ),
-            ),
-          ),
-        ),
+              const SizedBox(height: 24),
+              SsoButtons(
+                actionVerb: 'Sign up',
+                googleBusy: _googleBusy,
+                onGooglePressed: _signUpWithGoogle,
+                githubBusy: _githubBusy,
+                onGithubPressed: _signUpWithGithub,
+                dense: dense,
+              ),
+              const SizedBox(height: 20),
+              const AuthDivider(),
+              const SizedBox(height: 20),
+              LabeledTextField(
+                key: const Key('signup-name'),
+                label: 'Full Name',
+                controller: _nameController,
+                hint: 'Ray the Coder',
+                errorText: _nameError,
+              ),
+              const SizedBox(height: 16),
+              LabeledTextField(
+                key: const Key('signup-email'),
+                label: 'Email Address',
+                controller: _emailController,
+                hint: 'coder@unimas.my',
+                errorText: _emailError,
+              ),
+              const SizedBox(height: 16),
+              LabeledTextField(
+                key: const Key('signup-password'),
+                label: 'Password',
+                controller: _passwordController,
+                hint: 'At least 6 characters',
+                obscure: true,
+                errorText: _passwordError,
+              ),
+              const SizedBox(height: 16),
+              LabeledTextField(
+                key: const Key('signup-confirm'),
+                label: 'Confirm Password',
+                controller: _confirmController,
+                hint: 'Same password again',
+                obscure: true,
+                errorText: _confirmError,
+              ),
+              const SizedBox(height: 20),
+              _ConsentCheckbox(
+                key: const Key('signup-consent-checkbox'),
+                value: _consentChecked,
+                onChanged: (v) => setState(() {
+                  _consentChecked = v;
+                  if (v) _consentError = null;
+                }),
+                errorText: _consentError,
+              ),
+              const SizedBox(height: 10),
+              _NewsletterCheckbox(
+                key: const Key('signup-newsletter-checkbox'),
+                value: _newsletterOptIn,
+                onChanged: (v) => setState(() => _newsletterOptIn = v),
+              ),
+              const SizedBox(height: 24),
+              GradientButton(
+                label: 'Create My Account',
+                onPressed: _submit,
+                compact: dense,
+              ),
+              const SizedBox(height: 20),
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    'ALREADY A QUESTER? ',
+                    style: LandingTokens.label(
+                      fontSize: 10,
+                      color: LandingTokens.textFaint,
+                    ),
+                  ),
+                  AuthLink(
+                    key: const Key('back-to-login-link'),
+                    text: 'LOG IN',
+                    onTap: widget.onBackToLogin,
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -279,7 +260,12 @@ class _ConsentCheckbox extends StatefulWidget {
   final ValueChanged<bool> onChanged;
   final String? errorText;
 
-  const _ConsentCheckbox({super.key, required this.value, required this.onChanged, this.errorText});
+  const _ConsentCheckbox({
+    super.key,
+    required this.value,
+    required this.onChanged,
+    this.errorText,
+  });
 
   @override
   State<_ConsentCheckbox> createState() => _ConsentCheckboxState();
@@ -301,6 +287,16 @@ class _ConsentCheckboxState extends State<_ConsentCheckbox> {
   @override
   Widget build(BuildContext context) {
     final hasError = widget.errorText != null;
+    final linkStyle =
+        LandingTokens.mono(
+          fontSize: 12,
+          color: LandingTokens.ember,
+          fontWeight: FontWeight.w700,
+        ).copyWith(
+          decoration: TextDecoration.underline,
+          decorationColor: LandingTokens.ember,
+        );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -311,18 +307,21 @@ class _ConsentCheckboxState extends State<_ConsentCheckbox> {
           toggleOnLabelTap: false,
           label: RichText(
             text: TextSpan(
-              style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w700, fontSize: 12, height: 1.35),
+              style: LandingTokens.mono(
+                fontSize: 12,
+                color: LandingTokens.textMuted,
+              ),
               children: [
                 const TextSpan(text: 'I agree to the '),
                 TextSpan(
                   text: 'Privacy Policy',
-                  style: const TextStyle(color: DoodlePalette.blue, decoration: TextDecoration.underline, fontWeight: FontWeight.w800),
+                  style: linkStyle,
                   recognizer: _privacyRecognizer,
                 ),
                 const TextSpan(text: ' and '),
                 TextSpan(
                   text: 'Cookies Policy',
-                  style: const TextStyle(color: DoodlePalette.blue, decoration: TextDecoration.underline, fontWeight: FontWeight.w800),
+                  style: linkStyle,
                   recognizer: _cookiesRecognizer,
                 ),
                 const TextSpan(text: '. *'),
@@ -334,7 +333,10 @@ class _ConsentCheckboxState extends State<_ConsentCheckbox> {
           const SizedBox(height: 4),
           Padding(
             padding: const EdgeInsets.only(left: 30),
-            child: Text(widget.errorText!, style: const TextStyle(color: DoodlePalette.red, fontWeight: FontWeight.w700, fontSize: 12)),
+            child: Text(
+              widget.errorText!,
+              style: LandingTokens.mono(fontSize: 12, color: _errorRed),
+            ),
           ),
         ],
       ],
@@ -347,7 +349,11 @@ class _NewsletterCheckbox extends StatelessWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
 
-  const _NewsletterCheckbox({super.key, required this.value, required this.onChanged});
+  const _NewsletterCheckbox({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -355,9 +361,9 @@ class _NewsletterCheckbox extends StatelessWidget {
       value: value,
       onChanged: onChanged,
       hasError: false,
-      label: const Text(
+      label: Text(
         'Send me tips, new modules & leaderboard updates (optional).',
-        style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700, fontSize: 12, height: 1.35),
+        style: LandingTokens.mono(fontSize: 12, color: LandingTokens.textMuted),
       ),
     );
   }
@@ -395,10 +401,15 @@ class _CheckboxRow extends StatelessWidget {
           child: Checkbox(
             value: value,
             onChanged: (v) => onChanged(v ?? false),
-            activeColor: DoodlePalette.green,
-            checkColor: Colors.black,
-            side: BorderSide(color: hasError ? DoodlePalette.red : Colors.black, width: 2),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            activeColor: LandingTokens.signal,
+            checkColor: const Color(0xFF0A0500),
+            side: BorderSide(
+              color: hasError ? _errorRed : LandingTokens.hairlineStrong,
+              width: 1.4,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(2),
+            ),
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
