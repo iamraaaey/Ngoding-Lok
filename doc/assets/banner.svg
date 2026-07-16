@@ -1,93 +1,85 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 240" width="820" height="240" role="img" aria-label="Ngoding Lok! — an AI-assisted gamified platform for learning to code">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" width="1200" height="360" role="img" aria-label="Ngoding Lok — write, run, learn">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0b1220"/>
-      <stop offset="1" stop-color="#131c31"/>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080A0B"/>
+      <stop offset="0.55" stop-color="#101518"/>
+      <stop offset="1" stop-color="#15100E"/>
     </linearGradient>
-    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#38bdf8"/>
-      <stop offset="0.55" stop-color="#a78bfa"/>
-      <stop offset="1" stop-color="#f0abfc"/>
+    <linearGradient id="ember" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FF5C01"/>
+      <stop offset="1" stop-color="#FFAA63"/>
     </linearGradient>
-    <radialGradient id="player" cx="0.35" cy="0.35" r="0.75">
-      <stop offset="0" stop-color="#fbbf77"/>
-      <stop offset="1" stop-color="#d97757"/>
-    </radialGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#151A1D"/>
+      <stop offset="1" stop-color="#0C0F11"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#2A353A" stroke-width="1" opacity="0.34"/>
+    </pattern>
+    <filter id="softGlow" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
 
-  <!-- backdrop -->
-  <rect x="0" y="0" width="820" height="240" rx="18" fill="url(#bg)"/>
-  <rect x="0.5" y="0.5" width="819" height="239" rx="18" fill="none" stroke="#22304a" stroke-width="1"/>
+  <rect width="1200" height="360" rx="24" fill="url(#background)"/>
+  <rect width="1200" height="360" rx="24" fill="url(#grid)"/>
+  <path d="M0 310C220 245 376 380 616 286S1005 248 1200 163V360H0Z" fill="#FF5C01" opacity="0.045"/>
+  <rect x="0.5" y="0.5" width="1199" height="359" rx="23.5" fill="none" stroke="#344046"/>
 
-  <!-- ===== left column: title + live editor ===== -->
-  <text x="42" y="66" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="38" font-weight="700" fill="url(#title)">Ngoding Lok!</text>
-  <text x="44" y="94" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="14" fill="#8ea3c0">Learn to code — one command at a time.</text>
+  <!-- Brand and summary -->
+  <text x="58" y="64" font-family="'SFMono-Regular',Consolas,'Liberation Mono',monospace" font-size="11" font-weight="700" letter-spacing="2.3" fill="#52E88B">/// NGODING LOK · LEARNING ARENA</text>
+  <text x="58" y="128" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="49" font-weight="800" letter-spacing="-1.5" fill="#F4F7F5">WRITE. RUN.</text>
+  <text x="58" y="183" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="49" font-weight="800" letter-spacing="-1.5" fill="url(#ember)">LEARN.</text>
+  <text x="60" y="219" font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="17" fill="#ABB8BA">A gamified coding and safe cyber-learning prototype.</text>
+  <text x="60" y="245" font-family="'SFMono-Regular',Consolas,'Liberation Mono',monospace" font-size="12" fill="#6FD0FF">// responsive terminal-noir interface · contextual Socratic hints</text>
 
-  <!-- editor mock -->
-  <rect x="42" y="112" width="446" height="58" rx="8" fill="#0d1117" stroke="#233047"/>
-  <text x="58" y="132" font-family="'SFMono-Regular',Consolas,'Liberation Mono',monospace" font-size="12" fill="#5b6b83">// solve the level</text>
-
-  <!-- blinking prompt (live cursor) -->
-  <text x="58" y="156" font-family="'SFMono-Regular',Consolas,'Liberation Mono',monospace" font-size="15" font-weight="700" fill="#38bdf8">&gt;
-    <animate attributeName="opacity" values="1;0" keyTimes="0;0.5" calcMode="discrete" dur="1s" repeatCount="indefinite"/>
-  </text>
-
-  <!-- cycling module commands -->
-  <g font-family="'SFMono-Regular',Consolas,'Liberation Mono',monospace" font-size="15">
-    <text x="78" y="156" fill="#e2e8f0">move.right(); move.down();
-      <animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;0.30;0.36;0.95;1" dur="6s" repeatCount="indefinite"/>
-    </text>
-    <text x="78" y="156" fill="#facc15" opacity="0">SELECT * FROM users;
-      <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.30;0.36;0.63;0.69;1" dur="6s" repeatCount="indefinite"/>
-    </text>
-    <text x="78" y="156" fill="#fca5a5" opacity="0">engine.start(); throttle(100);
-      <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.63;0.69;0.96;1" dur="6s" repeatCount="indefinite"/>
-    </text>
+  <!-- Fact pills -->
+  <g font-family="'SFMono-Regular',Consolas,'Liberation Mono',monospace" font-size="11" font-weight="700" letter-spacing="0.7">
+    <rect x="58" y="282" width="145" height="34" rx="7" fill="#12181A" stroke="#3B494D"/>
+    <circle cx="76" cy="299" r="4" fill="#52E88B" filter="url(#softGlow)"/>
+    <text x="89" y="303" fill="#DCE5E2">21 MISSIONS</text>
+    <rect x="214" y="282" width="118" height="34" rx="7" fill="#12181A" stroke="#3B494D"/>
+    <circle cx="232" cy="299" r="4" fill="#6FD0FF"/>
+    <text x="245" y="303" fill="#DCE5E2">3 TRACKS</text>
+    <rect x="343" y="282" width="184" height="34" rx="7" fill="#12181A" stroke="#3B494D"/>
+    <circle cx="361" cy="299" r="4" fill="#FF5C01" filter="url(#softGlow)"/>
+    <text x="374" y="303" fill="#DCE5E2">SAFE CYBER LABS</text>
   </g>
 
-  <!-- module pills -->
-  <g font-family="'Segoe UI',Helvetica,Arial,sans-serif" font-size="12" text-anchor="middle">
-    <rect x="44" y="188" width="60" height="24" rx="12" fill="none" stroke="#38bdf8"/>
-    <text x="74" y="204" fill="#38bdf8">Grid</text>
-    <rect x="112" y="188" width="56" height="24" rx="12" fill="none" stroke="#facc15"/>
-    <text x="140" y="204" fill="#facc15">SQL</text>
-    <rect x="176" y="188" width="76" height="24" rx="12" fill="none" stroke="#d97757"/>
-    <text x="214" y="204" fill="#d97757">Rocket</text>
-    <rect x="260" y="188" width="112" height="24" rx="12" fill="none" stroke="#a78bfa"/>
-    <text x="316" y="204" fill="#a78bfa">AI Socratic hints</text>
+  <!-- Terminal window -->
+  <rect x="718" y="34" width="424" height="292" rx="16" fill="#060809" opacity="0.7"/>
+  <rect x="710" y="26" width="424" height="292" rx="16" fill="url(#panel)" stroke="#46545A"/>
+  <path d="M711 70H1133" stroke="#364249"/>
+  <circle cx="738" cy="48" r="5" fill="#FF5C01"/>
+  <circle cx="756" cy="48" r="5" fill="#F6CA4E"/>
+  <circle cx="774" cy="48" r="5" fill="#52E88B"/>
+  <text x="802" y="52" font-family="'SFMono-Regular',Consolas,'Liberation Mono',monospace" font-size="11" fill="#94A4A5">mission-console · live</text>
+
+  <rect x="732" y="87" width="380" height="165" rx="9" fill="#080B0C" stroke="#27343A"/>
+  <g font-family="'SFMono-Regular',Consolas,'Liberation Mono',monospace" font-size="14">
+    <text x="751" y="119" fill="#58686C">01</text>
+    <text x="784" y="119" fill="#52E88B">move.right();</text>
+    <text x="751" y="149" fill="#58686C">02</text>
+    <text x="784" y="149" fill="#6FD0FF">SELECT name FROM learners;</text>
+    <text x="751" y="179" fill="#58686C">03</text>
+    <text x="784" y="179" fill="#FFAA63">sys.preflight();</text>
+    <text x="751" y="209" fill="#58686C">04</text>
+    <text x="784" y="209" fill="#F4F7F5">explore --safe</text>
+    <rect x="784" y="220" width="8" height="16" rx="1" fill="#52E88B">
+      <animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
+    </rect>
   </g>
 
-  <!-- ===== right column: grid runner ===== -->
-  <rect x="538" y="46" width="154" height="154" rx="10" fill="#0d1117" stroke="#233047"/>
-  <!-- grid lines -->
-  <g stroke="#1e293b" stroke-width="1">
-    <line x1="570" y1="48" x2="570" y2="198"/>
-    <line x1="600" y1="48" x2="600" y2="198"/>
-    <line x1="630" y1="48" x2="630" y2="198"/>
-    <line x1="660" y1="48" x2="660" y2="198"/>
-    <line x1="540" y1="78" x2="690" y2="78"/>
-    <line x1="540" y1="108" x2="690" y2="108"/>
-    <line x1="540" y1="138" x2="690" y2="138"/>
-    <line x1="540" y1="168" x2="690" y2="168"/>
-  </g>
-
-  <!-- start marker -->
-  <circle cx="555" cy="63" r="4" fill="#334155"/>
-
-  <!-- goal cell -->
-  <rect x="631" y="139" width="28" height="28" rx="5" fill="#d97757" fill-opacity="0.18" stroke="#d97757" stroke-width="1.5">
-    <animate attributeName="stroke-opacity" values="0.35;0.9;0.35" dur="1.6s" repeatCount="indefinite"/>
-  </rect>
-  <path d="M639 153 l5 5 l9 -11" fill="none" stroke="#d97757" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
-
-  <!-- player -->
-  <g>
-    <circle cx="0" cy="0" r="13" fill="#d97757" opacity="0.18"/>
-    <circle cx="0" cy="0" r="8" fill="url(#player)"/>
-    <animateTransform attributeName="transform" type="translate"
-      values="555 63;585 63;615 63;645 63;645 93;645 123;645 153;645 153"
-      keyTimes="0;0.11;0.22;0.33;0.44;0.55;0.66;1"
-      calcMode="linear" dur="6s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values="1;1;0;1" keyTimes="0;0.9;0.97;1" dur="6s" repeatCount="indefinite"/>
+  <g font-family="'SFMono-Regular',Consolas,'Liberation Mono',monospace" font-size="10" font-weight="700" letter-spacing="0.8">
+    <rect x="732" y="270" width="109" height="28" rx="6" fill="#12251C" stroke="#2A6648"/>
+    <text x="751" y="288" fill="#7FF2AE">PYTHON PATH</text>
+    <rect x="851" y="270" width="90" height="28" rx="6" fill="#112027" stroke="#2A5868"/>
+    <text x="870" y="288" fill="#85E0FF">JAVA PATH</text>
+    <rect x="951" y="270" width="161" height="28" rx="6" fill="#2A1810" stroke="#7A482C"/>
+    <text x="969" y="288" fill="#FFB078">CYBERSECURITY</text>
   </g>
 </svg>
