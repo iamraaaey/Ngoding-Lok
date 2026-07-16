@@ -4,11 +4,13 @@ import 'module_type.dart';
 
 /// A single playable lesson in the curriculum: which engine it runs on
 /// ([type]/[config]), how it's presented ([title]/[description]/[hint]),
-/// and its starting script ([initialCode]).
+/// its track-local display order ([trackOrder]), and its starting script
+/// ([initialCode]).
 class CurriculumModule {
   final String id;
   final ModuleType type;
   final LanguageTrack track;
+  final int trackOrder;
   final String title;
   final String description;
   final int xpReward;
@@ -20,6 +22,7 @@ class CurriculumModule {
     required this.id,
     required this.type,
     required this.track,
+    required this.trackOrder,
     required this.title,
     required this.description,
     required this.xpReward,

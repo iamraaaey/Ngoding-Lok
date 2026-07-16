@@ -24,33 +24,46 @@ class CodeGolfEntry {
 }
 
 /// Mock code-golf standings. Real byte-count competition would stream from the
-/// backend; this stands in with a fixed, deterministic roster per track. The
-/// Java entries reference unbuilt levels, so their solutions stay locked (the
-/// player can never have cleared them) — useful for exercising the gate.
+/// backend; this stands in with a fixed, deterministic roster per learning
+/// track. Every entry references a current module in the same track.
 class CodeGolf {
   static const List<CodeGolfEntry> _python = [
     CodeGolfEntry(
       player: 'Alice_Hacker',
       avatar: '\u{1F47E}',
-      bytes: 22,
+      bytes: 74,
       moduleId: 'm1',
       moduleTitle: 'Module 1: Sequential Steps',
-      source: 'for _ in range(3):\n    move.right()\n    move.down()',
+      source:
+          'move.right()\nmove.right()\nmove.right()\nmove.down()\nmove.down()\nmove.down()',
       isFriend: false,
     ),
     CodeGolfEntry(
       player: 'CamelCaseCarol',
       avatar: '\u{1F42B}',
-      bytes: 26,
+      bytes: 75,
       moduleId: 'm1',
       moduleTitle: 'Module 1: Sequential Steps',
-      source: 'move.right();move.down();move.right();move.down();move.right();move.down();',
+      source:
+          'move.right();move.down();move.right();move.down();move.right();move.down();',
       isFriend: true,
     ),
     CodeGolfEntry(
+      player: 'Syntax_Error',
+      avatar: '\u{1F525}',
+      bytes: 45,
+      moduleId: 'm3',
+      moduleTitle: 'Module 3: Aerospace Logic',
+      source: 'sys.preflight();engine.start();throttle(500);',
+      isFriend: true,
+    ),
+  ];
+
+  static const List<CodeGolfEntry> _sql = [
+    CodeGolfEntry(
       player: 'BobbyDropTables',
       avatar: '\u{1F6E1}',
-      bytes: 31,
+      bytes: 46,
       moduleId: 'm2',
       moduleTitle: 'Module 2: Intro to SQL',
       source: "SELECT password FROM users WHERE role='admin';",
@@ -59,19 +72,19 @@ class CodeGolf {
     CodeGolfEntry(
       player: 'Null_Pointer',
       avatar: '\u{1F47B}',
-      bytes: 35,
+      bytes: 41,
       moduleId: 'm2',
       moduleTitle: 'Module 2: Intro to SQL',
       source: "SELECT * FROM users WHERE role = 'admin';",
       isFriend: true,
     ),
     CodeGolfEntry(
-      player: 'Syntax_Error',
-      avatar: '\u{1F525}',
-      bytes: 44,
-      moduleId: 'm3',
-      moduleTitle: 'Module 3: Aerospace Logic',
-      source: 'sys.preflight()\nengine.start()\nthrottle(100)',
+      player: 'QueryNinja',
+      avatar: '\u{1F9E0}',
+      bytes: 42,
+      moduleId: 'j2',
+      moduleTitle: 'SQL Level 5: Filtering with WHERE',
+      source: "SELECT name FROM students WHERE grade='A';",
       isFriend: true,
     ),
   ];
@@ -80,19 +93,20 @@ class CodeGolf {
     CodeGolfEntry(
       player: 'JitEnjoyer',
       avatar: '\u{2615}',
-      bytes: 58,
-      moduleId: 'java1',
-      moduleTitle: 'Java Level 1: Variables',
-      source: '// solution hidden',
+      bytes: 74,
+      moduleId: 'j1',
+      moduleTitle: 'Java Level 1: Variables & Method Calls',
+      source:
+          'move.right()\nmove.right()\nmove.right()\nmove.down()\nmove.down()\nmove.down()',
       isFriend: false,
     ),
     CodeGolfEntry(
       player: 'GarbageCollector',
       avatar: '\u{1F5D1}',
-      bytes: 64,
-      moduleId: 'java2',
-      moduleTitle: 'Java Level 2: Control Flow',
-      source: '// solution hidden',
+      bytes: 45,
+      moduleId: 'j3',
+      moduleTitle: 'Java Level 3: Space Object Control',
+      source: 'sys.preflight();engine.start();throttle(750);',
       isFriend: true,
     ),
   ];
@@ -100,9 +114,16 @@ class CodeGolf {
   /// Entries for a track, ranked strictly by ascending byte count (shortest
   /// solution wins). Ties broken by player name for determinism.
   static List<CodeGolfEntry> forTrack(LanguageTrack track) {
-    final list = track == LanguageTrack.python ? _python : _java;
-    return [...list]..sort((a, b) => a.bytes != b.bytes
-        ? a.bytes.compareTo(b.bytes)
-        : a.player.toLowerCase().compareTo(b.player.toLowerCase()));
+    final List<CodeGolfEntry> list = switch (track) {
+      LanguageTrack.python => _python,
+      LanguageTrack.sql => _sql,
+      LanguageTrack.java => _java,
+      LanguageTrack.cybersecurity => const <CodeGolfEntry>[],
+    };
+    return [...list]..sort(
+      (a, b) => a.bytes != b.bytes
+          ? a.bytes.compareTo(b.bytes)
+          : a.player.toLowerCase().compareTo(b.player.toLowerCase()),
+    );
   }
 }

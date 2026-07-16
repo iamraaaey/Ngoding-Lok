@@ -12,6 +12,7 @@ class Curriculum {
       id: 'cyber-warmup',
       type: ModuleType.cybersecurityRoom,
       track: LanguageTrack.cybersecurity,
+      trackOrder: 1,
       title: 'Cyber Lab: Warmup Web Server',
       description:
           'Explore a safe simulated server and capture your first flag.',
@@ -26,6 +27,7 @@ class Curriculum {
       id: 'cyber-default-credentials',
       type: ModuleType.cybersecurityRoom,
       track: LanguageTrack.cybersecurity,
+      trackOrder: 2,
       title: 'Cyber Lab: Training Portal Login',
       description: 'Explore a fake browser login and a safe SQL input lesson.',
       xpReward: 375,
@@ -39,6 +41,7 @@ class Curriculum {
       id: 'cyber-pick-right-exploit',
       type: ModuleType.cybersecurityRoom,
       track: LanguageTrack.cybersecurity,
+      trackOrder: 3,
       title: 'Cyber Lab: Pick the Right Exploit',
       description: 'Read scan evidence and match the correct safe technique.',
       xpReward: 400,
@@ -52,6 +55,7 @@ class Curriculum {
       id: 'cyber-soc-defense',
       type: ModuleType.cybersecurityRoom,
       track: LanguageTrack.cybersecurity,
+      trackOrder: 4,
       title: 'Cyber Lab: SOC Dashboard Defense',
       description: 'React to scripted network traffic and block real threats.',
       xpReward: 425,
@@ -65,6 +69,7 @@ class Curriculum {
       id: 'cyber-red-blue-capstone',
       type: ModuleType.cybersecurityRoom,
       track: LanguageTrack.cybersecurity,
+      trackOrder: 5,
       title: 'Cyber Lab: Red Team vs Blue Team',
       description: 'Explore a toy weakness, patch it, and re-test the system.',
       xpReward: 450,
@@ -78,6 +83,7 @@ class Curriculum {
       id: 'm1',
       type: ModuleType.logicGrid,
       track: LanguageTrack.python,
+      trackOrder: 1,
       title: 'Module 1: Sequential Steps',
       description: 'Learn basic movement commands to navigate the grid.',
       xpReward: 100,
@@ -89,7 +95,8 @@ class Curriculum {
     CurriculumModule(
       id: 'm2',
       type: ModuleType.sqlTerminal,
-      track: LanguageTrack.python,
+      track: LanguageTrack.sql,
+      trackOrder: 1,
       title: 'Module 2: Intro to SQL',
       description: 'Query a database to extract sensitive information.',
       xpReward: 250,
@@ -107,6 +114,7 @@ class Curriculum {
       id: 'm3',
       type: ModuleType.rocketFlight,
       track: LanguageTrack.python,
+      trackOrder: 2,
       title: 'Module 3: Aerospace Logic',
       description:
           'Use codeblocks to initiate preflight systems and achieve escape velocity.',
@@ -120,6 +128,7 @@ class Curriculum {
       id: 'm4',
       type: ModuleType.logicGrid,
       track: LanguageTrack.python,
+      trackOrder: 3,
       title: 'Module 4: Backtrack Basics',
       description:
           'You start at the bottom-right corner. Retrace your steps with move.left() and move.up().',
@@ -140,6 +149,7 @@ class Curriculum {
       id: 'm5',
       type: ModuleType.logicGrid,
       track: LanguageTrack.python,
+      trackOrder: 4,
       title: 'Module 5: The Long Trek',
       description:
           'A bigger 7x7 frontier. Plan a longer route across the wilderness to the far corner.',
@@ -152,7 +162,8 @@ class Curriculum {
     CurriculumModule(
       id: 'm6',
       type: ModuleType.sqlTerminal,
-      track: LanguageTrack.python,
+      track: LanguageTrack.sql,
+      trackOrder: 2,
       title: 'Module 6: Filtering 101',
       description:
           'Query the student records to list everyone with a perfect grade.',
@@ -177,6 +188,7 @@ class Curriculum {
       id: 'm7',
       type: ModuleType.rocketFlight,
       track: LanguageTrack.python,
+      trackOrder: 5,
       title: 'Module 7: High Orbit',
       description:
           'Mission control needs a satellite parked at 250km. Sequence the launch and keep climbing.',
@@ -190,6 +202,7 @@ class Curriculum {
       id: 'm8',
       type: ModuleType.logicGrid,
       track: LanguageTrack.python,
+      trackOrder: 6,
       title: 'Module 8: Center Escape',
       description:
           'Dropped in the middle of a 6x6 grid, the extraction point is at the top-right. Mix your directions.',
@@ -208,7 +221,8 @@ class Curriculum {
     CurriculumModule(
       id: 'm9',
       type: ModuleType.sqlTerminal,
-      track: LanguageTrack.python,
+      track: LanguageTrack.sql,
+      trackOrder: 3,
       title: 'Module 9: Sorting Secrets',
       description:
           'The tournament board is a mess. Order the score table from best to worst.',
@@ -233,6 +247,7 @@ class Curriculum {
       id: 'm10',
       type: ModuleType.rocketFlight,
       track: LanguageTrack.python,
+      trackOrder: 7,
       title: 'Module 10: Gravity Well',
       description:
           'A heavy payload and a hungry planet: fight your way out to 400km before fuel discipline slips.',
@@ -246,6 +261,7 @@ class Curriculum {
       id: 'm11',
       type: ModuleType.logicGrid,
       track: LanguageTrack.python,
+      trackOrder: 8,
       title: 'Module 11: The Grand Maze',
       description:
           'An 8x8 monster grid. Start at the top-right, finish at the bottom-left. No wrong turns.',
@@ -264,7 +280,8 @@ class Curriculum {
     CurriculumModule(
       id: 'm12',
       type: ModuleType.sqlTerminal,
-      track: LanguageTrack.python,
+      track: LanguageTrack.sql,
+      trackOrder: 4,
       title: 'Module 12: Counting Heads',
       description:
           'Ops needs a headcount. Aggregate the player table instead of eyeballing it.',
@@ -289,6 +306,7 @@ class Curriculum {
       id: 'm13',
       type: ModuleType.rocketFlight,
       track: LanguageTrack.python,
+      trackOrder: 9,
       title: 'Module 13: Escape Velocity',
       description:
           'The graduation flight: leave the planet for good. 600km, one flawless launch sequence.',
@@ -298,11 +316,12 @@ class Curriculum {
       config: RocketFlightConfig(targetAltitude: 600),
       initialCode: '// Final mission: 600km\n\n',
     ),
-    // Java track modules
+    // Additional Java- and SQL-track modules.
     CurriculumModule(
       id: 'j1',
       type: ModuleType.logicGrid,
       track: LanguageTrack.java,
+      trackOrder: 1,
       title: 'Java Level 1: Variables & Method Calls',
       description:
           'Navigate the grid using precise Java-like sequential method calls.',
@@ -315,8 +334,9 @@ class Curriculum {
     CurriculumModule(
       id: 'j2',
       type: ModuleType.sqlTerminal,
-      track: LanguageTrack.java,
-      title: 'Java Level 2: Control Flow Filtering',
+      track: LanguageTrack.sql,
+      trackOrder: 5,
+      title: 'SQL Level 5: Filtering with WHERE',
       description:
           'Filter records from database tables based on structured conditions.',
       xpReward: 250,
@@ -338,6 +358,7 @@ class Curriculum {
       id: 'j3',
       type: ModuleType.rocketFlight,
       track: LanguageTrack.java,
+      trackOrder: 2,
       title: 'Java Level 3: Space Object Control',
       description:
           'Initiate systems and launch the spacecraft to 150km using object properties.',
@@ -348,6 +369,21 @@ class Curriculum {
       initialCode: 'sys.preflight();\nengine.start();\n',
     ),
   ];
+
+  /// Returns a track in its explicit lesson order rather than relying on the
+  /// declaration order of the mixed curriculum list above.
+  static List<CurriculumModule> modulesForTrack(LanguageTrack track) {
+    final trackModules = [
+      for (final module in modules)
+        if (module.track == track) module,
+    ]..sort((a, b) => a.trackOrder.compareTo(b.trackOrder));
+    return List.unmodifiable(trackModules);
+  }
+
+  /// A flattened curriculum grouped by the public track order.
+  static List<CurriculumModule> get sortedModules => List.unmodifiable([
+    for (final track in LanguageTrack.values) ...modulesForTrack(track),
+  ]);
 
   static CurriculumModule byId(String id) =>
       modules.firstWhere((m) => m.id == id);

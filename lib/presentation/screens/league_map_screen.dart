@@ -9,8 +9,8 @@ import '../widgets/landing/landing_surface.dart';
 /// Screen 5 — the League Map / Level Selector, in the terminal noir style.
 /// Presents the curriculum as a numbered mission ledger: locked levels are
 /// dimmed and unlock as the previous one is cleared, and cleared levels
-/// surface the player's best efficiency score plus a star rating. A track
-/// filter switches the map's programming language.
+/// surface the player's best efficiency score plus a star rating. A learning
+/// track filter keeps Python, SQL, Java, and cybersecurity lessons separate.
 class LeagueMapScreen extends StatefulWidget {
   final UserSession user;
   final void Function(CurriculumModule module) onLaunch;
@@ -27,8 +27,7 @@ class LeagueMapScreen extends StatefulWidget {
   State<LeagueMapScreen> createState() => _LeagueMapScreenState();
 }
 
-/// View model for one node on the map. [module] is null for coming-soon
-/// placeholders (the Java track), which carry no playable content.
+/// View model for one playable node on the map.
 class _LevelEntry {
   final int number;
   final String title;
@@ -95,15 +94,13 @@ class _Skin {
 }
 
 class _LeagueMapScreenState extends State<LeagueMapScreen> {
-  // The curriculum's primary learning path is Python.  Starting here also
-  // keeps the map consistent with the dashboard's next-module card.
+  // Start the map on Python; the remaining topic-specific tracks are
+  // available from the selector.
   LanguageTrack _track = LanguageTrack.python;
 
   List<_LevelEntry> _buildEntries() {
     final cleared = widget.user.completedModuleIds;
-    final trackModules = Curriculum.modules
-        .where((m) => m.track == _track)
-        .toList();
+    final trackModules = Curriculum.modulesForTrack(_track);
 
     return [
       for (var i = 0; i < trackModules.length; i++)
@@ -290,7 +287,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// Language filter — switches the map between programming-language tracks.
+/// Learning-track filter for the map.
 class _TrackDropdown extends StatelessWidget {
   final LanguageTrack track;
   final _Skin skin;

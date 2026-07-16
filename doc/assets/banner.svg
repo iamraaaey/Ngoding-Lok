@@ -44,7 +44,7 @@
     <text x="89" y="303" fill="#DCE5E2">21 MISSIONS</text>
     <rect x="214" y="282" width="118" height="34" rx="7" fill="#12181A" stroke="#3B494D"/>
     <circle cx="232" cy="299" r="4" fill="#6FD0FF"/>
-    <text x="245" y="303" fill="#DCE5E2">3 TRACKS</text>
+    <text x="245" y="303" fill="#DCE5E2">4 TRACKS</text>
     <rect x="343" y="282" width="184" height="34" rx="7" fill="#12181A" stroke="#3B494D"/>
     <circle cx="361" cy="299" r="4" fill="#FF5C01" filter="url(#softGlow)"/>
     <text x="374" y="303" fill="#DCE5E2">SAFE CYBER LABS</text>
@@ -75,11 +75,13 @@
   </g>
 
   <g font-family="'SFMono-Regular',Consolas,'Liberation Mono',monospace" font-size="10" font-weight="700" letter-spacing="0.8">
-    <rect x="732" y="270" width="109" height="28" rx="6" fill="#12251C" stroke="#2A6648"/>
-    <text x="751" y="288" fill="#7FF2AE">PYTHON PATH</text>
-    <rect x="851" y="270" width="90" height="28" rx="6" fill="#112027" stroke="#2A5868"/>
-    <text x="870" y="288" fill="#85E0FF">JAVA PATH</text>
-    <rect x="951" y="270" width="161" height="28" rx="6" fill="#2A1810" stroke="#7A482C"/>
-    <text x="969" y="288" fill="#FFB078">CYBERSECURITY</text>
+    <rect x="732" y="270" width="84" height="28" rx="6" fill="#12251C" stroke="#2A6648"/>
+    <text x="742" y="288" fill="#7FF2AE">PYTHON</text>
+    <rect x="824" y="270" width="61" height="28" rx="6" fill="#1C1930" stroke="#5C4C91"/>
+    <text x="838" y="288" fill="#C4B5FD">SQL</text>
+    <rect x="893" y="270" width="75" height="28" rx="6" fill="#112027" stroke="#2A5868"/>
+    <text x="905" y="288" fill="#85E0FF">JAVA</text>
+    <rect x="976" y="270" width="136" height="28" rx="6" fill="#2A1810" stroke="#7A482C"/>
+    <text x="988" y="288" fill="#FFB078">CYBERSECURITY</text>
   </g>
 </svg>

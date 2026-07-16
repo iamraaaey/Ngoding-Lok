@@ -36,7 +36,7 @@
 <table>
   <tr>
     <td align="center"><strong>21</strong><br><sub>playable missions</sub></td>
-    <td align="center"><strong>3</strong><br><sub>learning tracks</sub></td>
+    <td align="center"><strong>4</strong><br><sub>learning tracks</sub></td>
     <td align="center"><strong>4</strong><br><sub>interactive engines</sub></td>
     <td align="center"><strong>3</strong><br><sub>supported targets</sub></td>
   </tr>
@@ -46,14 +46,14 @@
 
 Ngoding Lok is a Flutter Final Year Project that turns beginner-friendly coding exercises into a progression-driven learning experience. It combines a responsive terminal-noir interface with editable code, visual or textual feedback, XP-based progression, achievements, and optional Socratic hints.
 
-The app currently targets **web, Android, and Windows**. Its default learning path is Python-labelled, with additional Java and cybersecurity tracks available from the League Map.
+The app currently targets **web, Android, and Windows**. Its learning paths are grouped into Python, SQL, Java, and cybersecurity tracks on the League Map.
 
 ## Current experience
 
 | Area | What is available now |
 | --- | --- |
 | **Learn by doing** | An editable code editor, live console feedback, timers, and deterministic puzzle engines for grid movement, SQL, and ordered rocket commands. |
-| **Expanded curriculum** | 21 launchable missions across Python, Java, and cybersecurity tracks. |
+| **Expanded curriculum** | 21 launchable missions across Python, SQL, Java, and cybersecurity tracks. |
 | **Safe security practice** | Five self-contained labs with scripted terminal, browser, and decision environments—no system commands, sockets, or real targets are used. |
 | **Progression** | XP, best-score stars, daily streak display, leagues from Wood to Platinum, achievements, and Streak Freeze purchases. |
 | **Player spaces** | Home hub, League Map, Code Golf boards, profile/achievement view, settings, landing, sign-up, and password-recovery screens. |
@@ -64,8 +64,9 @@ The app currently targets **web, Android, and Windows**. Its default learning pa
 
 | Track | Missions | What learners do |
 | --- | ---: | --- |
-| **Python Track** | 13 | Navigate grids with sequential commands, query mock datasets with SQL, and sequence rocket-launch commands. This is the default path used by “Resume Playing.” |
-| **Java Track** | 3 | Work through Java-labelled versions of the same grid, SQL, and stateful-launch learning patterns. |
+| **Python Track** | 9 | Navigate grids with sequential commands and sequence rocket-launch commands. |
+| **SQL Track** | 5 | Query mock datasets with filtering, ordering, and aggregation challenges. |
+| **Java Track** | 2 | Work through Java-labelled grid and stateful-launch learning patterns. |
 | **Cybersecurity Track** | 5 | Explore closed, fictional labs covering service discovery, input handling, evidence-based choices, SOC response, and red/blue remediation. |
 
 Every listed mission is launchable in the current testing-oriented map. Finishing a mission records XP and the best efficiency score locally; cybersecurity rooms also retain their own progress and badges.
@@ -90,10 +91,10 @@ flowchart LR
 
 ## Player progression and interface
 
-The current flow starts with a terminal-style splash and landing page, then moves through authentication into the Home hub. From there, learners can resume the next Python-track mission or open the League Map, Code Golf, profile, and settings.
+The current flow starts with a terminal-style splash and landing page, then moves through authentication into the Home hub. From there, learners can resume the next incomplete mission across the ordered tracks or open the League Map, Code Golf, profile, and settings.
 
 - **Home hub:** identity, level, XP, seeded streak, current league, a next-mission shortcut, and quick navigation.
-- **League Map:** Python, Java, and cybersecurity selectors; completed missions show a best score and star rating.
+- **League Map:** Python, SQL, Java, and cybersecurity selectors; completed missions show a best score and star rating.
 - **Code Golf:** mock Global/Friends standings ranked by byte count. A solution is only revealed after the learner has cleared its mission.
 - **Profile and settings:** achievements, a local streak calendar, XP-purchased Streak Freezes, live dark/light mode, sound preference, account/legal UI, and sign-out.
 

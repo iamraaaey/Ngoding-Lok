@@ -46,6 +46,9 @@ class _CodeGolfScreenState extends State<CodeGolfScreen> {
     final entries = CodeGolf.forTrack(
       _track,
     ).where((e) => !_friendsOnly || e.isFriend).toList();
+    final emptyMessage = _friendsOnly
+        ? 'No friends have posted a score for this track yet.'
+        : 'No Code Golf entries for this track yet.';
 
     return Scaffold(
       backgroundColor: skin.bg,
@@ -84,8 +87,7 @@ class _CodeGolfScreenState extends State<CodeGolfScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _SegTabs(
                         options: [
-                          for (final t in LanguageTrack.values)
-                            t.label.replaceAll(' Track', ''),
+                          for (final t in LanguageTrack.values) t.shortLabel,
                         ],
                         selected: _track.index,
                         skin: skin,
@@ -110,7 +112,7 @@ class _CodeGolfScreenState extends State<CodeGolfScreen> {
                       child: entries.isEmpty
                           ? Center(
                               child: Text(
-                                'No friends on this board yet.',
+                                emptyMessage,
                                 style: LandingTokens.body(
                                   fontSize: 14,
                                   color: skin.sub,
@@ -131,7 +133,8 @@ class _CodeGolfScreenState extends State<CodeGolfScreen> {
                                     return Column(children: rows);
                                   }
                                   const gap = 16.0;
-                                  final tileW = (constraints.maxWidth - gap) / 2;
+                                  final tileW =
+                                      (constraints.maxWidth - gap) / 2;
                                   return Wrap(
                                     spacing: gap,
                                     children: [
@@ -260,9 +263,7 @@ class _GolfRow extends StatelessWidget {
                         '#$rank',
                         style: LandingTokens.mono(
                           fontSize: 12,
-                          color: rank == 1
-                              ? LandingTokens.ember
-                              : skin.faint,
+                          color: rank == 1 ? LandingTokens.ember : skin.faint,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -389,10 +390,7 @@ class _CodeBlock extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         child: Text(
           source,
-          style: LandingTokens.mono(
-            fontSize: 13,
-            color: LandingTokens.signal,
-          ),
+          style: LandingTokens.mono(fontSize: 13, color: LandingTokens.signal),
         ),
       ),
     );

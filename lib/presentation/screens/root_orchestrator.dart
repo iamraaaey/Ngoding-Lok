@@ -108,16 +108,13 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     });
   }
 
-  /// The next puzzle to resume: the first curriculum module the player hasn't
-  /// cleared yet, or null once everything is done. Levels are sequential, so
-  /// this also respects the map's unlock order.
+  /// The next puzzle to resume: the first uncleared lesson in the public
+  /// track order, then in that track's explicit lesson order.
   CurriculumModule? get _nextModule {
-    // Python is the primary path shown by the League Map and is the natural
-    // default for a new learner. The other tracks remain selectable there.
-    for (final module in Curriculum.modules.where(
-      (m) => m.track == LanguageTrack.python,
-    )) {
-      if (!_user!.completedModuleIds.contains(module.id)) return module;
+    for (final track in LanguageTrack.values) {
+      for (final module in Curriculum.modulesForTrack(track)) {
+        if (!_user!.completedModuleIds.contains(module.id)) return module;
+      }
     }
     return null;
   }
@@ -190,9 +187,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     final updated = _user!.withModuleCompleted(module.id, result.finalScore);
     _updateUser(updated);
 
-    final trackModules = Curriculum.modules
-        .where((m) => m.track == module.track)
-        .toList();
+    final trackModules = Curriculum.modulesForTrack(module.track);
     final index = trackModules.indexOf(module);
     final nextModule = (index >= 0 && index < trackModules.length - 1)
         ? trackModules[index + 1]
