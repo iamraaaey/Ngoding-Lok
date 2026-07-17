@@ -7,6 +7,7 @@ import '../../core/ads/adsense_rewarded.dart';
 import '../../core/ads/rewarded_ad_service.dart';
 import '../../core/session/api_service.dart';
 import '../../core/session/app_route.dart';
+import '../../core/session/email_auth_service.dart';
 import '../../core/session/google_auth_service.dart';
 import '../../core/session/leaderboard.dart';
 import '../../core/session/user_session.dart';
@@ -364,6 +365,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       case AppRoute.forgotPassword:
         return ForgotPasswordScreen(
           onBackToLogin: () => setState(() => _route = AppRoute.auth),
+          onSendResetLink: EmailAuthService.sendPasswordResetLink,
         );
 
       case AppRoute.home:

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/session/email_auth_service.dart';
 import '../../core/session/google_auth_service.dart';
 import '../theme/landing_tokens.dart';
 import '../widgets/labeled_text_field.dart';
@@ -38,6 +39,8 @@ class _AuthScreenState extends State<AuthScreen>
   late final AnimationController _entrance;
   bool _googleBusy = false;
   bool _githubBusy = false;
+  bool _emailBusy = false;
+  String? _formError;
 
   @override
   void initState() {
@@ -56,47 +59,96 @@ class _AuthScreenState extends State<AuthScreen>
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final email = _emailController.text.trim();
-    widget.onLogin(email.isNotEmpty ? email : 'student@school.edu');
+    final password = _passwordController.text;
+
+    // Empty credentials keep the prototype's quick guest entry (also how the
+    // widget tests tap through the login screen without typing).
+    if (email.isEmpty || password.isEmpty) {
+      widget.onLogin(email.isNotEmpty ? email : 'student@school.edu');
+      return;
+    }
+
+    setState(() {
+      _emailBusy = true;
+      _formError = null;
+    });
+    try {
+      final result = await EmailAuthService.signIn(
+        email: email,
+        password: password,
+      );
+      if (!mounted) return;
+      setState(() => _emailBusy = false);
+      if (result != null) {
+        widget.onLogin(
+          result.email,
+          name: result.name,
+          photoUrl: result.photoUrl,
+        );
+      } else {
+        // Firebase unavailable here — fall back to the simulated session.
+        widget.onLogin(email);
+      }
+    } on EmailAuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _emailBusy = false;
+        _formError = error.message;
+      });
+    }
   }
 
   Future<void> _signInWithGoogle() async {
     if (_googleBusy) return;
-    setState(() => _googleBusy = true);
-
-    final result = await GoogleAuthService.signIn();
-    if (!mounted) return;
-    setState(() => _googleBusy = false);
-
-    if (result == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Google sign-in was cancelled or is unavailable here — you can use the email option below.',
-          ),
-        ),
+    setState(() {
+      _googleBusy = true;
+      _formError = null;
+    });
+    try {
+      final result = await GoogleAuthService.signIn();
+      if (!mounted) return;
+      setState(() => _googleBusy = false);
+      // A null result means the player closed the popup — nothing to report.
+      if (result == null) return;
+      widget.onLogin(
+        result.email,
+        name: result.name,
+        photoUrl: result.photoUrl,
       );
-      return;
+    } on SocialAuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _googleBusy = false;
+        _formError = error.message;
+      });
     }
-    widget.onLogin(result.email, name: result.name, photoUrl: result.photoUrl);
   }
 
   Future<void> _signInWithGithub() async {
     if (_githubBusy) return;
-    setState(() => _githubBusy = true);
-    final result = await GitHubAuthService.signIn();
-    if (!mounted) return;
-    setState(() => _githubBusy = false);
-    if (result == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('GitHub sign-in was cancelled or is unavailable here.'),
-        ),
+    setState(() {
+      _githubBusy = true;
+      _formError = null;
+    });
+    try {
+      final result = await GitHubAuthService.signIn();
+      if (!mounted) return;
+      setState(() => _githubBusy = false);
+      if (result == null) return;
+      widget.onLogin(
+        result.email,
+        name: result.name,
+        photoUrl: result.photoUrl,
       );
-      return;
+    } on SocialAuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _githubBusy = false;
+        _formError = error.message;
+      });
     }
-    widget.onLogin(result.email, name: result.name, photoUrl: result.photoUrl);
   }
 
   @override
@@ -151,10 +203,22 @@ class _AuthScreenState extends State<AuthScreen>
               ),
               const SizedBox(height: 16),
               GradientButton(
-                label: "Let's Go!",
-                onPressed: _submit,
+                label: _emailBusy ? 'Signing in...' : "Let's Go!",
+                onPressed: _emailBusy ? null : _submit,
                 compact: dense,
               ),
+              if (_formError != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _formError!,
+                  key: const Key('auth-form-error'),
+                  textAlign: TextAlign.center,
+                  style: LandingTokens.mono(
+                    fontSize: 12,
+                    color: const Color(0xFFFF4D5E),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
               Wrap(
                 alignment: WrapAlignment.center,

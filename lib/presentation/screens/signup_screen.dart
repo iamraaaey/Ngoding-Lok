@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../../core/session/email_auth_service.dart';
 import '../../core/session/google_auth_service.dart';
 import '../theme/landing_tokens.dart';
 import '../widgets/labeled_text_field.dart';
@@ -45,8 +46,10 @@ class _SignUpScreenState extends State<SignUpScreen>
   String? _passwordError;
   String? _confirmError;
   String? _consentError;
+  String? _submitError;
   bool _googleBusy = false;
   bool _githubBusy = false;
+  bool _submitBusy = false;
   bool _consentChecked = false;
   bool _newsletterOptIn = false;
 
@@ -69,7 +72,7 @@ class _SignUpScreenState extends State<SignUpScreen>
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text;
@@ -85,6 +88,7 @@ class _SignUpScreenState extends State<SignUpScreen>
           : 'Password must be at least 6 characters.';
       _confirmError = confirm == password ? null : 'Passwords do not match.';
       _consentError = _consentChecked ? null : 'You must agree to continue.';
+      _submitError = null;
     });
 
     final valid =
@@ -93,53 +97,85 @@ class _SignUpScreenState extends State<SignUpScreen>
         _passwordError == null &&
         _confirmError == null &&
         _consentError == null;
-    if (valid) widget.onRegister(email, name: name);
+    if (!valid || _submitBusy) return;
+
+    setState(() => _submitBusy = true);
+    try {
+      final result = await EmailAuthService.signUp(
+        email: email,
+        password: password,
+        name: name,
+      );
+      if (!mounted) return;
+      setState(() => _submitBusy = false);
+      if (result != null) {
+        widget.onRegister(
+          result.email,
+          name: result.name ?? name,
+          photoUrl: result.photoUrl,
+        );
+      } else {
+        // Firebase unavailable here — fall back to the simulated session.
+        widget.onRegister(email, name: name);
+      }
+    } on EmailAuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _submitBusy = false;
+        _submitError = error.message;
+      });
+    }
   }
 
   Future<void> _signUpWithGoogle() async {
     if (_googleBusy) return;
-    setState(() => _googleBusy = true);
-
-    final result = await GoogleAuthService.signIn();
-    if (!mounted) return;
-    setState(() => _googleBusy = false);
-
-    if (result == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Google sign-up was cancelled or is unavailable here — you can register with email below.',
-          ),
-        ),
+    setState(() {
+      _googleBusy = true;
+      _submitError = null;
+    });
+    try {
+      final result = await GoogleAuthService.signIn();
+      if (!mounted) return;
+      setState(() => _googleBusy = false);
+      // A null result means the player closed the popup — nothing to report.
+      if (result == null) return;
+      widget.onRegister(
+        result.email,
+        name: result.name,
+        photoUrl: result.photoUrl,
       );
-      return;
+    } on SocialAuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _googleBusy = false;
+        _submitError = error.message;
+      });
     }
-    widget.onRegister(
-      result.email,
-      name: result.name,
-      photoUrl: result.photoUrl,
-    );
   }
 
   Future<void> _signUpWithGithub() async {
     if (_githubBusy) return;
-    setState(() => _githubBusy = true);
-    final result = await GitHubAuthService.signIn();
-    if (!mounted) return;
-    setState(() => _githubBusy = false);
-    if (result == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('GitHub sign-up was cancelled or is unavailable here.'),
-        ),
+    setState(() {
+      _githubBusy = true;
+      _submitError = null;
+    });
+    try {
+      final result = await GitHubAuthService.signIn();
+      if (!mounted) return;
+      setState(() => _githubBusy = false);
+      if (result == null) return;
+      widget.onRegister(
+        result.email,
+        name: result.name,
+        photoUrl: result.photoUrl,
       );
-      return;
+    } on SocialAuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _githubBusy = false;
+        _submitError = error.message;
+      });
     }
-    widget.onRegister(
-      result.email,
-      name: result.name,
-      photoUrl: result.photoUrl,
-    );
   }
 
   @override
@@ -222,10 +258,19 @@ class _SignUpScreenState extends State<SignUpScreen>
               ),
               const SizedBox(height: 24),
               GradientButton(
-                label: 'Create My Account',
-                onPressed: _submit,
+                label: _submitBusy ? 'Creating account...' : 'Create My Account',
+                onPressed: _submitBusy ? null : _submit,
                 compact: dense,
               ),
+              if (_submitError != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _submitError!,
+                  key: const Key('signup-submit-error'),
+                  textAlign: TextAlign.center,
+                  style: LandingTokens.mono(fontSize: 12, color: _errorRed),
+                ),
+              ],
               const SizedBox(height: 20),
               Wrap(
                 alignment: WrapAlignment.center,

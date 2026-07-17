@@ -230,7 +230,7 @@ AdMob rewarded videos are native full-screen SDK overlays, while AdSense control
 
 This project was built iteratively with Codex. Codex was used to inspect the product reference, refine the SQL learning experience and responsive UI, integrate the real-only rewarded-ad flows, and run the analyzer, test suite, and release web build. Before submitting, copy the `/feedback` Session ID from the primary Codex build thread and document the exact GPT-5.6 contribution from that thread’s model history in your own words; the repository cannot verify a model name by itself.
 
-## Firebase OAuth setup
+## Firebase Authentication setup
 
 Firebase is initialized by the app using the committed generated options. For a fork or a different Firebase project, generate/configure your own options before sharing a build.
 
@@ -242,7 +242,17 @@ Firebase is initialized by the app using the committed generated options. For a 
    flutter run -d chrome --web-port=5000
    ```
 
-Google and GitHub flows return to the app through Firebase Authentication. The email sign-in/sign-up and password-recovery forms are intentionally local prototype flows; they do not create Firebase email/password accounts or send email.
+4. In **Firebase Console → Authentication → Sign-in method**, enable
+   **Email/Password** and save it. The password-recovery screen calls Firebase
+   Auth directly and requires this provider to be enabled.
+5. In **Authentication → Templates → Password reset**, customize the sender
+   name and reset email if needed. Keep `ngoding-lok.web.app` and your local
+   development domain in the project's authorized domains.
+6. Create a test email/password user in **Authentication → Users**. The app's
+   email sign-up form is still a local prototype, so it does not create a
+   Firebase account yet.
+
+Google and GitHub flows return to the app through Firebase Authentication. The password-recovery form sends a real Firebase reset email. The email sign-in/sign-up forms remain local prototype flows for now; enable Email/Password in Firebase Authentication and connect those forms before treating email accounts as production-ready.
 
 ## Optional Socratic Hint Backend
 
@@ -266,7 +276,7 @@ Before exposing the endpoint publicly, add the authentication, authorization, an
 
 | Capability | Current behavior |
 | --- | --- |
-| Email account management | Form validation and confirmation UI only; no Firebase email/password account or reset-email backend. |
+| Email account management | Password reset uses Firebase Auth; email sign-in/sign-up remain local prototype flows and do not yet create Firebase email/password accounts. |
 | Progress sync | XP, completions, scores, badges, freezes, and cyber-room progress are saved only in device-local `SharedPreferences`; there is no cross-device cloud sync. |
 | Leaderboards and Code Golf | Deterministic mock data plus the local player; no live multiplayer service. |
 | XP sync and ads | XP remains device-local; rewarded hints use native AdMob on mobile and AdSense H5 Games on web when configured, with no fake ad fallback. |
