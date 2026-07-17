@@ -4,12 +4,16 @@ import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/language_track.dart';
 import '../../core/session/leaderboard_entry.dart';
 import '../../core/session/user_session.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
+import '../theme/noir_skin.dart';
+import '../widgets/landing/landing_surface.dart';
 import '../widgets/leaderboard_panel.dart';
 import '../widgets/module_card.dart';
 import '../widgets/profile_card.dart';
 import '../widgets/sql_case_files.dart';
 
+/// Curriculum archive in the terminal noir style: profile + rankings in the
+/// sidebar, every learning track's modules in a staggered-entrance grid.
 class DashboardScreen extends StatefulWidget {
   final UserSession user;
   final List<LeaderboardEntry> leaderboard;
@@ -58,154 +62,159 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final bg = dark ? DoodlePalette.dark : DoodlePalette.cream;
-    final onBg = dark ? Colors.white : Colors.black;
-    final onBgMuted = dark ? Colors.white70 : Colors.black54;
+    final skin = NoirSkin.of(context);
     return Scaffold(
-      backgroundColor: bg,
-      body: DoodleDotBackground(
-        backgroundColor: bg,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (widget.onBack != null) ...[
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: GestureDetector(
-                      onTap: widget.onBack,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const DoodleIconBadge(
-                            icon: Icons.arrow_back,
-                            color: DoodlePalette.white,
-                            iconColor: Colors.black,
-                            size: 38,
-                            iconSize: 18,
-                            borderRadius: 12,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Back to Hub',
-                            style: TextStyle(
-                              color: onBg,
-                              fontWeight: FontWeight.w800,
+      backgroundColor: skin.bg,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (skin.isDark) const CinematicBackdrop(),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (widget.onBack != null) ...[
+                    NoirHeader(
+                      title: 'Curriculum Archive',
+                      eyebrow: 'All learning tracks',
+                      skin: skin,
+                      onBack: widget.onBack!,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth > 800;
+                        final sidebar = _FadeSlide(
+                          animation: _interval(0.0, 0.50),
+                          yOffset: 24,
+                          child: SizedBox(
+                            width: isWide ? 300 : double.infinity,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ProfileCard(
+                                  user: widget.user,
+                                  onLogout: widget.onLogout,
+                                ),
+                                const SizedBox(height: 16),
+                                LeaderboardPanel(
+                                  entries: widget.leaderboard,
+                                  currentUserName: widget.user.displayName,
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isWide = constraints.maxWidth > 800;
-                      final sidebar = DoodleFadeSlide(
-                        animation: _interval(0.0, 0.50),
-                        yOffset: 24,
-                        child: SizedBox(
-                          width: isWide ? 300 : double.infinity,
+                        );
+
+                        final content = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _FadeSlide(
+                              animation: _interval(0.10, 0.55),
+                              yOffset: 20,
+                              child: Text(
+                                'ACTIVE CURRICULUM MAPS',
+                                style: LandingTokens.display(
+                                  fontSize: 26,
+                                  color: skin.text,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _FadeSlide(
+                              animation: _interval(0.15, 0.60),
+                              yOffset: 16,
+                              child: Text(
+                                'Select an interactive module to continue your programming journey.',
+                                style: LandingTokens.body(fontSize: 14),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            for (
+                              var i = 0;
+                              i < LanguageTrack.values.length;
+                              i++
+                            ) ...[
+                              _TrackModuleSection(
+                                track: LanguageTrack.values[i],
+                                user: widget.user,
+                                onLaunchModule: widget.onLaunchModule,
+                                isWide: isWide,
+                                parentController: _entrance,
+                              ),
+                              if (i < LanguageTrack.values.length - 1)
+                                const SizedBox(height: 28),
+                            ],
+                          ],
+                        );
+
+                        if (isWide) {
+                          return Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              sidebar,
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: SingleChildScrollView(child: content),
+                              ),
+                            ],
+                          );
+                        }
+                        return SingleChildScrollView(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              ProfileCard(
-                                user: widget.user,
-                                onLogout: widget.onLogout,
-                              ),
+                              sidebar,
                               const SizedBox(height: 16),
-                              LeaderboardPanel(
-                                entries: widget.leaderboard,
-                                currentUserName: widget.user.displayName,
-                              ),
+                              content,
                             ],
                           ),
-                        ),
-                      );
-
-                      final content = Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          DoodleFadeSlide(
-                            animation: _interval(0.10, 0.55),
-                            yOffset: 20,
-                            child: Text(
-                              'Active Curriculum Maps',
-                              style: TextStyle(
-                                color: onBg,
-                                fontSize: 26,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          DoodleFadeSlide(
-                            animation: _interval(0.15, 0.60),
-                            yOffset: 16,
-                            child: Text(
-                              'Select an interactive module to continue your programming journey.',
-                              style: TextStyle(
-                                color: onBgMuted,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          for (
-                            var i = 0;
-                            i < LanguageTrack.values.length;
-                            i++
-                          ) ...[
-                            _TrackModuleSection(
-                              track: LanguageTrack.values[i],
-                              user: widget.user,
-                              onLaunchModule: widget.onLaunchModule,
-                              isWide: isWide,
-                              parentController: _entrance,
-                              onBackground: onBg,
-                            ),
-                            if (i < LanguageTrack.values.length - 1)
-                              const SizedBox(height: 28),
-                          ],
-                        ],
-                      );
-
-                      if (isWide) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            sidebar,
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: SingleChildScrollView(child: content),
-                            ),
-                          ],
                         );
-                      }
-                      return SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            sidebar,
-                            const SizedBox(height: 16),
-                            content,
-                          ],
-                        ),
-                      );
-                    },
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
+    );
+  }
+}
+
+/// Fade + slide entrance driven by an external animation (0 → 1).
+class _FadeSlide extends StatelessWidget {
+  final Widget child;
+  final Animation<double> animation;
+  final double yOffset;
+
+  const _FadeSlide({
+    required this.child,
+    required this.animation,
+    this.yOffset = 28.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (_, child) {
+        final v = animation.value.clamp(0.0, 1.0);
+        return Opacity(
+          opacity: v,
+          child: Transform.translate(
+            offset: Offset(0, yOffset * (1 - v)),
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }
@@ -226,7 +235,7 @@ class _StaggeredCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final start = (0.25 + index * 0.12).clamp(0.0, 0.85);
     final end = (start + 0.45).clamp(0.0, 1.0);
-    return DoodleFadeSlide(
+    return _FadeSlide(
       animation: CurvedAnimation(
         parent: parentController,
         curve: Interval(start, end, curve: Curves.easeOutCubic),
@@ -245,7 +254,6 @@ class _TrackModuleSection extends StatelessWidget {
   final void Function(CurriculumModule module) onLaunchModule;
   final bool isWide;
   final AnimationController parentController;
-  final Color onBackground;
 
   const _TrackModuleSection({
     required this.track,
@@ -253,7 +261,6 @@ class _TrackModuleSection extends StatelessWidget {
     required this.onLaunchModule,
     required this.isWide,
     required this.parentController,
-    required this.onBackground,
   });
 
   @override
@@ -270,12 +277,10 @@ class _TrackModuleSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          track.label.toUpperCase(),
-          style: TextStyle(
-            color: onBackground,
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.8,
+          '// ${track.label.toUpperCase()}',
+          style: LandingTokens.label(
+            fontSize: 10,
+            color: LandingTokens.ember,
           ),
         ),
         const SizedBox(height: 12),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/session/user_session.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
+import 'landing/landing_button.dart';
 
+/// Player identity panel in the terminal noir style: carbon card, hairline
+/// avatar box, mono status labels, and the XP readout as a terminal chip.
 class ProfileCard extends StatelessWidget {
   final UserSession user;
   final VoidCallback onLogout;
@@ -10,9 +13,14 @@ class ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DoodleCard(
+    return Container(
       padding: const EdgeInsets.all(16),
-      borderRadius: 20,
+      decoration: BoxDecoration(
+        color: LandingTokens.carbon,
+        borderRadius: LandingTokens.mediumRadius,
+        border: Border.all(color: LandingTokens.hairline),
+        boxShadow: LandingTokens.cardShadow,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -20,11 +28,11 @@ class ProfileCard extends StatelessWidget {
             children: [
               if (user.photoUrl != null)
                 Container(
-                  width: 48,
-                  height: 48,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.black, width: 2),
+                    borderRadius: LandingTokens.smallRadius,
+                    border: Border.all(color: LandingTokens.hairlineStrong),
                     image: DecorationImage(
                       image: NetworkImage(user.photoUrl!),
                       fit: BoxFit.cover,
@@ -32,12 +40,21 @@ class ProfileCard extends StatelessWidget {
                   ),
                 )
               else
-                const DoodleIconBadge(
-                  icon: Icons.person,
-                  color: DoodlePalette.blue,
-                  size: 48,
-                  iconSize: 24,
-                  borderRadius: 24,
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: LandingTokens.circuit.withValues(alpha: 0.10),
+                    borderRadius: LandingTokens.smallRadius,
+                    border: Border.all(
+                      color: LandingTokens.circuit.withValues(alpha: 0.55),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.person,
+                    color: LandingTokens.circuit,
+                    size: 20,
+                  ),
                 ),
               const SizedBox(width: 12),
               Expanded(
@@ -46,16 +63,21 @@ class ProfileCard extends StatelessWidget {
                   children: [
                     Text(
                       user.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: Colors.black,
+                        color: LandingTokens.textPrimary,
                         fontWeight: FontWeight.w800,
-                        fontSize: 16,
+                        fontSize: 15,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const DoodlePill(
-                      text: 'Enrolled Student',
-                      background: Color(0xFFEFEFEF),
+                    Text(
+                      'ENROLLED STUDENT',
+                      style: LandingTokens.label(
+                        fontSize: 9,
+                        color: LandingTokens.textFaint,
+                      ),
                     ),
                   ],
                 ),
@@ -66,45 +88,37 @@ class ProfileCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: DoodlePalette.yellow,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black, width: 2),
+              color: LandingTokens.voidBlack,
+              borderRadius: LandingTokens.smallRadius,
+              border: Border.all(color: LandingTokens.hairlineStrong),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'PLATFORM XP',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+                  style: LandingTokens.label(
+                    fontSize: 10,
+                    color: LandingTokens.textMuted,
                   ),
                 ),
-                Row(
-                  children: [
-                    const Icon(Icons.star, size: 16, color: Colors.black),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${user.xp}',
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
+                Text(
+                  '${user.xp}',
+                  style: LandingTokens.mono(
+                    fontSize: 14,
+                    color: LandingTokens.ember,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 14),
-          DoodleButton(
-            label: 'Safely Disconnect',
-            color: DoodlePalette.white,
-            onPressed: onLogout,
+          CinematicOutlineButton(
+            label: 'Disconnect',
             icon: Icons.logout,
-            dense: true,
+            compact: true,
+            onPressed: onLogout,
           ),
         ],
       ),

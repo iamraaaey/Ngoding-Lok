@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/session/progression.dart';
-import 'doodle.dart';
+import 'landing_tokens.dart';
 
 /// Presentation-side styling for [LeagueTier]s (color + icon). Kept in the
 /// presentation layer via an extension so the core [Progression] logic stays
@@ -10,8 +10,8 @@ extension LeagueTierStyle on LeagueTier {
         LeagueTier.wood => const Color(0xFF9C6B3F),
         LeagueTier.bronze => const Color(0xFFCD7F32),
         LeagueTier.silver => const Color(0xFFB0BEC5),
-        LeagueTier.gold => DoodlePalette.yellow,
-        LeagueTier.platinum => DoodlePalette.green,
+        LeagueTier.gold => const Color(0xFFFFB300),
+        LeagueTier.platinum => LandingTokens.signal,
       };
 
   IconData get icon => switch (this) {

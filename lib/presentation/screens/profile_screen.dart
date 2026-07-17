@@ -504,9 +504,9 @@ class _BadgesCard extends StatelessWidget {
     'sql_sleuth' => const Color(0xFF9E9CFF),
     'rocket_scientist' => LandingTokens.ember,
     'persistence' => LandingTokens.ember,
-    'polyglot' => const Color(0xFFFFD166),
+    'polyglot' => const Color(0xFFFFB300),
     'high_roller' => LandingTokens.signal,
-    'efficiency_expert' => const Color(0xFFFFD166),
+    'efficiency_expert' => const Color(0xFFFFB300),
     _ => LandingTokens.circuit,
   };
 

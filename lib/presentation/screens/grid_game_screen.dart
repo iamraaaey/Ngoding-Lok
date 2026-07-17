@@ -6,12 +6,13 @@ import '../../core/interpreter/parser.dart';
 import '../../core/session/hint_service.dart';
 import '../../core/state/game_state.dart';
 import '../../core/timer/game_timer_controller.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
 import '../widgets/code_editor.dart';
 import '../widgets/console_log.dart';
 import '../widgets/game_canvas.dart';
 import '../widgets/game_header.dart';
 import '../widgets/hint_banner.dart';
+import '../widgets/landing/landing_surface.dart';
 
 /// Logic-grid gameplay screen: wires the code editor input through the
 /// lexer/parser pipeline and drives the execution queue against the game
@@ -179,39 +180,43 @@ class _GridGameScreenState extends State<GridGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: DoodlePalette.dark,
-      body: DoodleDotBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              GameHeader(
-                title: widget.module.title,
-                icon: Icons.videogame_asset,
-                timerController: _timerController,
-                hasHint: _hasHint,
-                isExecuting: _state.isExecuting,
-                isSyncing: _isSyncing,
-                onBack: widget.onBack,
-                onGetHint: _hasHint ? null : _onGetHint,
-                onRun: _executeCode,
-              ),
-              if (_hasHint)
-                HintBanner(
-                  hint: _dynamicHintMessage ?? widget.module.hint,
-                  isLoading: _isFetchingHint,
+      backgroundColor: LandingTokens.voidBlack,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const CinematicBackdrop(),
+          SafeArea(
+            child: Column(
+              children: [
+                GameHeader(
+                  title: widget.module.title,
+                  icon: Icons.videogame_asset,
+                  timerController: _timerController,
+                  hasHint: _hasHint,
+                  isExecuting: _state.isExecuting,
+                  isSyncing: _isSyncing,
+                  onBack: widget.onBack,
+                  onGetHint: _hasHint ? null : _onGetHint,
+                  onRun: _executeCode,
                 ),
-              Expanded(flex: 3, child: GameCanvas(state: _state)),
-              Expanded(
-                flex: 2,
-                child: CodeEditor(
-                  controller: _codeController,
-                  activeLineIndex: _state.activeLineIndex,
+                if (_hasHint)
+                  HintBanner(
+                    hint: _dynamicHintMessage ?? widget.module.hint,
+                    isLoading: _isFetchingHint,
+                  ),
+                Expanded(flex: 3, child: GameCanvas(state: _state)),
+                Expanded(
+                  flex: 2,
+                  child: CodeEditor(
+                    controller: _codeController,
+                    activeLineIndex: _state.activeLineIndex,
+                  ),
                 ),
-              ),
-              ConsoleLog(logs: _consoleLogs),
-            ],
+                ConsoleLog(logs: _consoleLogs),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

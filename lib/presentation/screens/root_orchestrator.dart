@@ -3,6 +3,7 @@ import '../../core/curriculum/curriculum.dart';
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/language_track.dart';
 import '../../core/curriculum/module_type.dart';
+import '../../core/ads/adsense_rewarded.dart';
 import '../../core/ads/rewarded_ad_service.dart';
 import '../../core/session/api_service.dart';
 import '../../core/session/app_route.dart';
@@ -168,41 +169,59 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     return true;
   }
 
-  /// Shows a real AdMob rewarded overlay on Android/iOS. Web and desktop do
-  /// not support the mobile ads plugin, so they retain the local preview ad.
+  /// Gates every hint behind a real rewarded ad wherever a network is
+  /// available: AdMob on Android/iOS, the AdSense Ad Placement API on web.
+  /// Desktop — and web builds without the AdSense snippet configured — fall
+  /// back to the local sponsor-break preview so the flow never dead-ends.
   void _requestHintAd({
     required VoidCallback onGranted,
     VoidCallback? onCancelled,
   }) {
-    if (!RewardedAdService.isSupported) {
-      setState(() {
-        _adIsRewarded = true;
-        _onAdComplete = () {
-          onGranted();
-          setState(() => _route = AppRoute.game);
-        };
-        _onAdCancel = onCancelled;
-        _route = AppRoute.ad;
-      });
+    if (RewardedAdService.isSupported) {
+      _rewardedAdService.showRewardedAd(
+        onLoading: () {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Preparing your rewarded hint...')),
+          );
+        },
+        onRewarded: onGranted,
+        onUnavailable: (message) {
+          onCancelled?.call();
+          if (!mounted) return;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(message)));
+        },
+      );
       return;
     }
 
-    _rewardedAdService.showRewardedAd(
-      onLoading: () {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Preparing your rewarded hint...')),
-        );
-      },
-      onRewarded: onGranted,
-      onUnavailable: (message) {
-        onCancelled?.call();
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-      },
-    );
+    if (AdSenseRewarded.isAvailable) {
+      AdSenseRewarded.showRewardedAd(
+        onRewarded: onGranted,
+        onDismissed: onCancelled,
+        // No fill from AdSense — keep the promise with the preview break.
+        onUnavailable: (_) => _showPreviewAd(onGranted, onCancelled),
+      );
+      return;
+    }
+
+    _showPreviewAd(onGranted, onCancelled);
+  }
+
+  /// Local simulated sponsor break used where no real ad network can serve.
+  void _showPreviewAd(VoidCallback onGranted, VoidCallback? onCancelled) {
+    if (!mounted) return;
+    setState(() {
+      _adIsRewarded = true;
+      _onAdComplete = () {
+        onGranted();
+        setState(() => _route = AppRoute.game);
+      };
+      _onAdCancel = onCancelled;
+      _route = AppRoute.ad;
+    });
   }
 
   /// Runs the fake XP-sync API, updates the session, then automatically

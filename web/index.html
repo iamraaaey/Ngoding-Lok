@@ -31,6 +31,26 @@
 
   <title>Ngoding Lok</title>
   <link rel="manifest" href="manifest.json">
+
+  <!--
+    AdSense Ad Placement API (H5 rewarded ads) for the hint flow.
+    1. Replace ca-pub-XXXXXXXXXXXXXXXX below with your AdSense publisher ID.
+    2. Uncomment the script tag.
+    Until then the app automatically falls back to the built-in
+    sponsor-break preview screen, so nothing breaks without it.
+  -->
+  <!--
+  <script async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+    crossorigin="anonymous"
+    data-ad-frequency-hint="30s"></script>
+  -->
+  <script>
+    window.adsbygoogle = window.adsbygoogle || [];
+    function adBreak(o) { adsbygoogle.push(o); }
+    function adConfig(o) { adsbygoogle.push(o); }
+    adConfig({ preloadAdBreaks: 'on', sound: 'off' });
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

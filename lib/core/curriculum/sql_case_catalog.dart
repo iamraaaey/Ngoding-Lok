@@ -3,7 +3,26 @@ import 'curriculum_module.dart';
 class SqlCase {
   final String number, title, brief;
   final List<String> objectives;
-  const SqlCase(this.number, this.title, this.brief, this.objectives);
+  final List<SqlCaseTable> tables;
+  final String? solution;
+  final int? xp;
+
+  const SqlCase(
+    this.number,
+    this.title,
+    this.brief,
+    this.objectives, {
+    this.tables = const [],
+    this.solution,
+    this.xp,
+  });
+}
+
+class SqlCaseTable {
+  final String name;
+  final List<String> columns;
+
+  const SqlCaseTable(this.name, this.columns);
 }
 
 class SqlCaseCatalog {
@@ -27,6 +46,28 @@ class SqlCaseCatalog {
         'Identify the suspect matching the witness description.',
         'Verify the suspect using the interview transcript.',
       ],
+      tables: [
+        SqlCaseTable('crime_scene', [
+          'id (INTEGER)',
+          'date (INTEGER)',
+          'type (TEXT)',
+          'description (TEXT)',
+          'location (TEXT)',
+        ]),
+        SqlCaseTable('suspects', [
+          'id (INTEGER)',
+          'name (TEXT)',
+          'attire (TEXT)',
+          'scar (TEXT)',
+        ]),
+        SqlCaseTable('interviews', [
+          'id (INTEGER)',
+          'suspect_id (INTEGER)',
+          'transcript (TEXT)',
+        ]),
+      ],
+      solution: 'Vincent Malone',
+      xp: 50,
     ),
     'm6': SqlCase(
       '002',

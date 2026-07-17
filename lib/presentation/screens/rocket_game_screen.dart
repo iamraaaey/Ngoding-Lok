@@ -6,12 +6,13 @@ import '../../core/interpreter/rocket_parser.dart';
 import '../../core/session/hint_service.dart';
 import '../../core/state/rocket_state.dart';
 import '../../core/timer/game_timer_controller.dart';
-import '../theme/doodle.dart';
+import '../theme/landing_tokens.dart';
 import '../widgets/altitude_gauge.dart';
 import '../widgets/code_editor.dart';
 import '../widgets/console_log.dart';
 import '../widgets/game_header.dart';
 import '../widgets/hint_banner.dart';
+import '../widgets/landing/landing_surface.dart';
 
 /// Rocket-flight gameplay screen: tokenizes/parses the launch script and
 /// steps through the resulting [RocketStep] queue against [RocketState],
@@ -178,41 +179,45 @@ class _RocketGameScreenState extends State<RocketGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: DoodlePalette.dark,
-      body: DoodleDotBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              GameHeader(
-                title: widget.module.title,
-                icon: Icons.rocket_launch,
-                timerController: _timerController,
-                hasHint: _hasHint,
-                isExecuting: _state.isExecuting,
-                isSyncing: _isSyncing,
-                onBack: widget.onBack,
-                onGetHint: _hasHint ? null : _onGetHint,
-                onRun: _executeCode,
-              ),
-              if (_hasHint)
-                HintBanner(
-                  hint: _dynamicHintMessage ?? widget.module.hint,
-                  isLoading: _isFetchingHint,
+      backgroundColor: LandingTokens.voidBlack,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const CinematicBackdrop(),
+          SafeArea(
+            child: Column(
+              children: [
+                GameHeader(
+                  title: widget.module.title,
+                  icon: Icons.rocket_launch,
+                  timerController: _timerController,
+                  hasHint: _hasHint,
+                  isExecuting: _state.isExecuting,
+                  isSyncing: _isSyncing,
+                  onBack: widget.onBack,
+                  onGetHint: _hasHint ? null : _onGetHint,
+                  onRun: _executeCode,
                 ),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: AltitudeGauge(state: _state),
-              ),
-              Expanded(
-                child: CodeEditor(
-                  controller: _codeController,
-                  activeLineIndex: _state.activeLineIndex,
+                if (_hasHint)
+                  HintBanner(
+                    hint: _dynamicHintMessage ?? widget.module.hint,
+                    isLoading: _isFetchingHint,
+                  ),
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: AltitudeGauge(state: _state),
                 ),
-              ),
-              ConsoleLog(logs: _consoleLogs),
-            ],
+                Expanded(
+                  child: CodeEditor(
+                    controller: _codeController,
+                    activeLineIndex: _state.activeLineIndex,
+                  ),
+                ),
+                ConsoleLog(logs: _consoleLogs),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
