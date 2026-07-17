@@ -1,1 +1,55 @@
-{"functions":[{"source":"functions","codebase":"default","ignore":["node_modules",".git","*.log"],"predeploy":["npm --prefix \"$RESOURCE_DIR\" run build"]}],"flutter":{"platforms":{"android":{"default":{"projectId":"ngoding-lok","appId":"1:836022818923:android:2cbabd82442888e688f92e","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"ngoding-lok","configurations":{"android":"1:836022818923:android:2cbabd82442888e688f92e","web":"1:836022818923:web:18076bc7496f2c2b88f92e","windows":"1:836022818923:web:91877030085da79388f92e"}}}}}}
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/privacy",
+        "destination": "/privacy.html"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "*.log"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ],
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ngoding-lok",
+          "appId": "1:836022818923:android:2cbabd82442888e688f92e",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ngoding-lok",
+          "configurations": {
+            "android": "1:836022818923:android:2cbabd82442888e688f92e",
+            "web": "1:836022818923:web:18076bc7496f2c2b88f92e",
+            "windows": "1:836022818923:web:91877030085da79388f92e"
+          }
+        }
+      }
+    }
+  }
+}

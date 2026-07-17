@@ -6,7 +6,12 @@ import 'package:flutter/foundation.dart';
 class AdSenseRewarded {
   AdSenseRewarded._();
 
+  static bool get isConfigured => false;
   static bool get isAvailable => false;
+
+  static Future<bool> waitUntilAvailable({
+    Duration timeout = const Duration(seconds: 8),
+  }) async => false;
 
   static void showRewardedAd({
     required VoidCallback onRewarded,

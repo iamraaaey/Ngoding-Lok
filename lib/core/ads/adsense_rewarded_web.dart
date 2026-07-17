@@ -18,19 +18,50 @@ import 'package:flutter/foundation.dart';
 class AdSenseRewarded {
   AdSenseRewarded._();
 
-  /// True only when the adBreak shim exists AND the real adsbygoogle.js
-  /// loader has finished loading (it stamps `adsbygoogle.loaded = true`).
-  /// Without the publisher script the shim would queue calls forever, so a
-  /// bare shim is treated as unavailable.
-  static bool get isAvailable {
+  /// True when web/index.html has been given a real AdSense publisher ID.
+  /// The page sets this flag before Flutter boots, so the app can distinguish
+  /// "the network is still loading" from "there is no live ad integration".
+  static bool get isConfigured {
     if (!kIsWeb) return false;
+    final configured = globalContext.getProperty<JSAny?>(
+      '__NGECODE_ADSENSE_CONFIGURED__'.toJS,
+    );
+    return configured != null &&
+        configured.isA<JSBoolean>() &&
+        (configured as JSBoolean).toDart;
+  }
+
+  /// True only when the adBreak shim exists and the real adsbygoogle.js
+  /// script has finished loading. The page sets an explicit load flag because
+  /// the fallback adBreak shim exists even before the network script arrives.
+  static bool get isAvailable {
+    if (!kIsWeb || !isConfigured) return false;
     if (!globalContext.has('adBreak')) return false;
+    final scriptLoaded = globalContext.getProperty<JSAny?>(
+      '__NGECODE_ADSENSE_LOADED__'.toJS,
+    );
+    if (scriptLoaded == null ||
+        !scriptLoaded.isA<JSBoolean>() ||
+        !(scriptLoaded as JSBoolean).toDart) {
+      return false;
+    }
     final ads = globalContext.getProperty<JSAny?>('adsbygoogle'.toJS);
-    if (ads == null || !ads.isA<JSObject>()) return false;
-    final loaded = (ads as JSObject).getProperty<JSAny?>('loaded'.toJS);
-    return loaded != null &&
-        loaded.isA<JSBoolean>() &&
-        (loaded as JSBoolean).toDart;
+    return ads != null && ads.isA<JSObject>();
+  }
+
+  /// Waits for the async AdSense script to finish loading. Without this wait,
+  /// a player who taps Hint during the first page load is incorrectly sent to
+  /// the local preview before `adsbygoogle.js` has had time to initialize.
+  static Future<bool> waitUntilAvailable({
+    Duration timeout = const Duration(seconds: 8),
+  }) async {
+    if (!isConfigured) return false;
+    final deadline = DateTime.now().add(timeout);
+    while (DateTime.now().isBefore(deadline)) {
+      if (isAvailable) return true;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    return isAvailable;
   }
 
   /// Requests a rewarded ad break. [onRewarded] fires only when AdSense

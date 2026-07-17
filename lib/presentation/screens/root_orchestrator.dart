@@ -11,7 +11,6 @@ import '../../core/session/google_auth_service.dart';
 import '../../core/session/leaderboard.dart';
 import '../../core/session/user_session.dart';
 import '../../core/session/session_persistence.dart';
-import 'ad_screen.dart';
 import 'arduino_simulator_screen.dart';
 import 'auth_screen.dart';
 import 'code_golf_screen.dart';
@@ -62,9 +61,6 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   UserSession? _user;
   CurriculumModule? _activeModule;
 
-  bool _adIsRewarded = false;
-  VoidCallback? _onAdComplete;
-  VoidCallback? _onAdCancel;
   late final RewardedAdService _rewardedAdService;
 
   /// Streak the player starts a fresh session with. There's no day-tracking
@@ -171,8 +167,9 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
 
   /// Gates every hint behind a real rewarded ad wherever a network is
   /// available: AdMob on Android/iOS, the AdSense Ad Placement API on web.
-  /// Desktop — and web builds without the AdSense snippet configured — fall
-  /// back to the local sponsor-break preview so the flow never dead-ends.
+  /// Every hint is gated by a real rewarded placement. Native builds use the
+  /// AdMob full-screen overlay; web builds use the AdSense H5 Games placement.
+  /// There is deliberately no simulated sponsor card in the production flow.
   void _requestHintAd({
     required VoidCallback onGranted,
     VoidCallback? onCancelled,
@@ -197,31 +194,44 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       return;
     }
 
-    if (AdSenseRewarded.isAvailable) {
-      AdSenseRewarded.showRewardedAd(
-        onRewarded: onGranted,
-        onDismissed: onCancelled,
-        // No fill from AdSense — keep the promise with the preview break.
-        onUnavailable: (_) => _showPreviewAd(onGranted, onCancelled),
+    _requestWebRewardedAd(onGranted, onCancelled);
+  }
+
+  Future<void> _requestWebRewardedAd(
+    VoidCallback onGranted,
+    VoidCallback? onCancelled,
+  ) async {
+    if (!AdSenseRewarded.isConfigured) {
+      _showAdUnavailable(
+        'Live rewarded ads are not configured for this build.',
+        onCancelled,
       );
       return;
     }
 
-    _showPreviewAd(onGranted, onCancelled);
+    final available = await AdSenseRewarded.waitUntilAvailable();
+    if (!mounted) return;
+    if (!available) {
+      _showAdUnavailable(
+        'No live rewarded ad is available right now.',
+        onCancelled,
+      );
+      return;
+    }
+
+    AdSenseRewarded.showRewardedAd(
+      onRewarded: onGranted,
+      onDismissed: onCancelled,
+      onUnavailable: (message) => _showAdUnavailable(message, onCancelled),
+    );
   }
 
-  /// Local simulated sponsor break used where no real ad network can serve.
-  void _showPreviewAd(VoidCallback onGranted, VoidCallback? onCancelled) {
+  void _showAdUnavailable(String message, VoidCallback? onCancelled) {
+    onCancelled?.call();
     if (!mounted) return;
-    setState(() {
-      _adIsRewarded = true;
-      _onAdComplete = () {
-        onGranted();
-        setState(() => _route = AppRoute.game);
-      };
-      _onAdCancel = onCancelled;
-      _route = AppRoute.ad;
-    });
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   /// Runs the fake XP-sync API, updates the session, then automatically
@@ -318,12 +328,12 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           ),
         );
       },
-      child: KeyedSubtree(key: ValueKey(_route), child: _buildCurrentRoute()),
+      child: KeyedSubtree(key: ValueKey(_route), child: _buildRoute(_route)),
     );
   }
 
-  Widget _buildCurrentRoute() {
-    switch (_route) {
+  Widget _buildRoute(AppRoute route) {
+    switch (route) {
       case AppRoute.landing:
         return LandingScreen(
           onGetStarted: () => setState(() => _route = AppRoute.auth),
@@ -406,28 +416,9 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
         return _buildGameScreen(_activeModule!);
 
       case AppRoute.ad:
-        // The game screen is kept mounted underneath the ad overlay for
-        // the hint-ad flow so its in-progress code/timer/hint state
-        // survives the interruption. The win-flow interstitial also
-        // routes through here, but its onComplete discards _activeModule
-        // and returns to the dashboard, so there's nothing to preserve.
-        return Stack(
-          children: [
-            if (_activeModule != null) _buildGameScreen(_activeModule!),
-            AdScreen(
-              isRewarded: _adIsRewarded,
-              onComplete: _onAdComplete!,
-              onCancel: () {
-                _onAdCancel?.call();
-                setState(() {
-                  _route = _activeModule != null
-                      ? AppRoute.game
-                      : AppRoute.home;
-                });
-              },
-            ),
-          ],
-        );
+        // The ad is rendered as an overlay in build(), so it is never the
+        // content route — the screen underneath (game/home) is what shows.
+        return const SizedBox.shrink();
     }
   }
 }

@@ -33,22 +33,32 @@
   <link rel="manifest" href="manifest.json">
 
   <!--
-    AdSense Ad Placement API (H5 rewarded ads) for the hint flow.
-    1. Replace ca-pub-XXXXXXXXXXXXXXXX below with your AdSense publisher ID.
-    2. Uncomment the script tag.
-    Until then the app automatically falls back to the built-in
-    sponsor-break preview screen, so nothing breaks without it.
+    AdSense H5 Games / Ad Placement API configuration.
+
+    The async tag below is the exact snippet AdSense issued for site
+    verification (publisher ca-pub-2836563830601298); placing it statically
+    in <head> is what Google's site review looks for. Its onload sets the
+    load flag the Flutter app checks before offering a live rewarded ad, so
+    the app never mistakes "still loading" for "no ads", and never pretends
+    the local fallback is a live ad. Ad Placement API docs:
+    https://developers.google.com/ad-placement
   -->
-  <!--
   <script async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-    crossorigin="anonymous"
-    data-ad-frequency-hint="30s"></script>
-  -->
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2836563830601298"
+      crossorigin="anonymous"
+      data-ad-frequency-hint="30s"
+      onload="window.__NGECODE_ADSENSE_LOADED__ = true;"></script>
   <script>
+    window.__NGECODE_ADSENSE_PUBLISHER_ID__ = 'ca-pub-2836563830601298';
+    // Flip to true only after H5 Games approval to preview test ad breaks.
+    window.__NGECODE_ADSENSE_TEST_MODE__ = false;
+    window.__NGECODE_ADSENSE_CONFIGURED__ = true;
+    // Preserve the flag if adsbygoogle.js already fired its onload above.
+    window.__NGECODE_ADSENSE_LOADED__ =
+      window.__NGECODE_ADSENSE_LOADED__ === true;
     window.adsbygoogle = window.adsbygoogle || [];
-    function adBreak(o) { adsbygoogle.push(o); }
-    function adConfig(o) { adsbygoogle.push(o); }
+    function adBreak(o) { window.adsbygoogle.push(o); }
+    function adConfig(o) { window.adsbygoogle.push(o); }
     adConfig({ preloadAdBreaks: 'on', sound: 'off' });
   </script>
 </head>

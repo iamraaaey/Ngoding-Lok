@@ -36,6 +36,10 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Firebase (local hosting deploy cache; keep firebase.json and .firebaserc)
+.firebase/
+firebase-debug.log
+
 # Symbolication related
 app.*.symbols
 
