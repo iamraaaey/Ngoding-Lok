@@ -1,0 +1,29 @@
+{
+  "id": "free-wifi-trap",
+  "title": "The Free WiFi Trap",
+  "points": 550,
+  "badge": "Connection Guardian",
+  "environment": "mitm",
+  "topicTitle": "Public WiFi is not automatically private",
+  "topicBrief": "On an untrusted network, an attacker may sit between your device and a website. A Man-in-the-Middle attack can alter pages, downgrade a secure connection, or steal credentials. Check the address and certificate before signing in. This is a fictional, offline simulation.",
+  "scenario": "At a local cafe, you joined Free_Cafe_WiFi and need to submit an assignment through your fictional university portal. Inspect the connection before entering any credentials.",
+  "environmentData": {
+    "flag": "FLAG{tr4st_th3_tunn3l_n0t_th3_h0tsp0t}",
+    "instructions": ["You are connected to an untrusted network. Inspect the browser's security indicators before entering your credentials.", "Step 2: The connection is intercepted. Choose the safest way to proceed."],
+    "hints": ["Secure websites encrypt your data. Check whether this connection is encrypted.", "Click the padlock icon to inspect the digital certificate's issuer."],
+    "browser": {"url": "http://university-portal-login.thm/submit", "officialUrl": "https://portal.university.thm/submit", "title": "University Student Portal", "body": "Sign in to submit your assignment before the 23:59 deadline.", "certificate": "Issued to: university-portal-login.thm\nIssuer: Cafe Network Test Authority\nStatus: Untrusted certificate"},
+    "clickableRegions": [
+      {"id": "url", "area": "url", "isThreatIndicator": true, "explanation": "Good catch - this uses http:// instead of encrypted https:// and the domain does not match the official portal."},
+      {"id": "lock", "area": "lock", "isThreatIndicator": true, "explanation": "Correct - the certificate is issued by an unknown authority, not the university's trusted issuer."},
+      {"id": "content", "area": "content", "isThreatIndicator": true, "explanation": "Nice observation - the urgent deadline language tries to make you sign in before checking the connection."},
+      {"id": "title", "area": "title", "isThreatIndicator": false, "explanation": "The page title can be copied. Check the address and certificate for stronger evidence."}
+    ],
+    "options": [
+      {"id": "proceed", "label": "Proceed anyway (the assignment is due soon!)", "detail": "Keep using the intercepted page.", "scriptedOutcome": "Credentials Compromised: the simulated interceptor reads the password before it reaches the portal.", "isCorrect": false},
+      {"id": "cookies", "label": "Clear browser cookies and try again", "detail": "Change a local browser setting only.", "scriptedOutcome": "Clearing cookies cannot repair a compromised router or encrypt traffic on this network.", "isCorrect": false},
+      {"id": "secure", "label": "Disconnect from WiFi and use a VPN or mobile hotspot", "detail": "Leave the untrusted path and use an encrypted connection.", "scriptedOutcome": "Secure tunnel established. The portal reloads over encrypted HTTPS.", "isCorrect": true}
+    ]
+  },
+  "tasks": [], "terminalScript": {}, "commandHints": {},
+  "learn": {"title": "Treat public networks as zero trust", "body": "The missing HTTPS, lookalike domain, and untrusted certificate each showed that this connection could not be trusted. SSL/TLS protects data in transit; a VPN or mobile hotspot adds a trusted encrypted path when public WiFi is the only option."}
+}

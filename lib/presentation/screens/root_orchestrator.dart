@@ -60,6 +60,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   AppRoute _route = AppRoute.landing;
   UserSession? _user;
   CurriculumModule? _activeModule;
+  LanguageTrack _leagueMapTrack = LanguageTrack.python;
 
   late final RewardedAdService _rewardedAdService;
 
@@ -234,8 +235,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  /// Runs the fake XP-sync API, updates the session, then automatically
-  /// launches the next module in the track (if any) directly without displaying ads.
+  /// Runs the fake XP-sync API and updates the session. Cybersecurity rooms
+  /// return to their League Map tab; the other tracks keep auto-progression.
   Future<void> _handleModuleWin({
     required int linesUsed,
     required int executionMs,
@@ -250,19 +251,24 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     final updated = _user!.withModuleCompleted(module.id, result.finalScore);
     _updateUser(updated);
 
-    final trackModules = Curriculum.modulesForTrack(module.track);
-    final index = trackModules.indexOf(module);
-    final nextModule = (index >= 0 && index < trackModules.length - 1)
-        ? trackModules[index + 1]
-        : null;
-
     setState(() {
-      if (nextModule != null) {
-        _activeModule = nextModule;
-        _route = AppRoute.game;
-      } else {
+      if (module.track == LanguageTrack.cybersecurity) {
         _activeModule = null;
-        _route = AppRoute.home;
+        _leagueMapTrack = LanguageTrack.cybersecurity;
+        _route = AppRoute.leagueMap;
+      } else {
+        final trackModules = Curriculum.modulesForTrack(module.track);
+        final index = trackModules.indexOf(module);
+        final nextModule = (index >= 0 && index < trackModules.length - 1)
+            ? trackModules[index + 1]
+            : null;
+        if (nextModule != null) {
+          _activeModule = nextModule;
+          _route = AppRoute.game;
+        } else {
+          _activeModule = null;
+          _route = AppRoute.home;
+        }
       }
     });
   }
@@ -365,7 +371,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           user: _user!,
           nextModule: _nextModule,
           onResume: _launchModule,
-          onOpenMap: () => setState(() => _route = AppRoute.leagueMap),
+          onOpenMap: () => setState(() { _leagueMapTrack = LanguageTrack.python; _route = AppRoute.leagueMap; }),
           onOpenCodeGolf: () => setState(() => _route = AppRoute.codeGolf),
           onOpenProfile: () => setState(() => _route = AppRoute.profile),
           onOpenSettings: () => setState(() => _route = AppRoute.settings),
@@ -401,6 +407,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           user: _user!,
           onLaunch: _launchModule,
           onBack: () => setState(() => _route = AppRoute.home),
+          initialTrack: _leagueMapTrack,
         );
 
       case AppRoute.dashboard:

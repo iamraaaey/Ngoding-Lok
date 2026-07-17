@@ -1,10 +1,12 @@
 {
-  "id":"sql-login","title":"Training Portal Login","scenario":"A fictional student portal uses an unsafe, simulated login check. Explore how a fixed training input can change the result without touching a real website.","points":375,"badge":"Query Spotter","environment":"browser",
-  "environmentData":{"url":"https://portal.training.thm/login","siteTitle":"Campus Portal","injection":"' OR '1'='1","flag":"FLAG{v4l1d4t3_1nputs}"},
+  "id":"vulnerable-website", "title":"Vulnerable Website", "points":375, "badge":"Query Spotter", "environment":"browser",
+  "topicTitle":"A login check must treat input as data", "topicBrief":"Websites check usernames and passwords against a database. When an app mixes input directly into the check, input can change what the check means. This old, widely taught problem is SQL injection. This room is only a local mockup — no database exists.",
+  "scenario":"A fictional company's admin login page does not sanitise its input. Use the one fixed training payload shown by the hints, then inspect the simulated admin page.",
+  "environmentData":{"url":"https://portal.training.thm/login","injection":"' OR '1'='1","flag":"FLAG{p4r4m3t3r1z3_1t}"},
   "tasks":[
-    {"prompt":"What does SQL stand for?","hint1":"It is a language commonly used with databases.","hint2":"Structured Query Language.","answer":"Structured Query Language","acceptedAnswers":["SQL"],"caseSensitive":false},
-    {"prompt":"What is the training input shown in the browser-mockup hint?","hint1":"It is a fixed string in this safe simulator.","hint2":"Try ' OR '1'='1","answer":"' OR '1'='1","caseSensitive":true},
-    {"prompt":"Use that training input in either field and sign in. What panel appears?","hint1":"The mockup switches screens after its local check.","hint2":"It says Admin panel.","answer":"Admin panel","acceptedAnswers":["admin"],"caseSensitive":false},
-    {"prompt":"Open the simulated Inspect panel and submit its flag.","hint1":"There is an Inspect panel button on the mock admin page.","hint2":"The flag starts FLAG{v4...}","answer":"FLAG{v4l1d4t3_1nputs}","caseSensitive":true,"learn":{"title":"Safe input handling","body":"SQL means Structured Query Language. When a website mixes untrusted input into a database query, the input can change what the query means. Real applications avoid this with parameterized queries and careful validation."}}
-  ],"terminalScript":{},"commandHints":{}
+    {"prompt":"What does SQL stand for?","hint1":"It is a language applications use with databases.","hint2":"Structured Query Language.","answer":"Structured Query Language","acceptedAnswers":["SQL"],"caseSensitive":false},
+    {"prompt":"What is the shape of the fixed training input?","hint1":"It uses OR to make a comparison always true.","hint2":"It begins with a quote, then OR, then compares 1 to 1.","answer":"' OR '1'='1","caseSensitive":true},
+    {"prompt":"After the mock login succeeds, inspect the simulated page and submit its flag.","hint1":"Use the Inspect Element button in the mock admin panel.","hint2":"The flag begins FLAG{p4r...}.","answer":"FLAG{p4r4m3t3r1z3_1t}","caseSensitive":true}
+  ], "terminalScript":{}, "commandHints":{},
+  "learn":{"title":"Parameterised queries prevent this","body":"When an application mixes untrusted input into a query, the input can alter the query's meaning. Parameterised queries keep the instructions separate from the supplied data, which prevents this class of bug."}
 }

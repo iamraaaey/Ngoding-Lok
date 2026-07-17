@@ -1,0 +1,61 @@
+{
+  "id": "save-your-laptop",
+  "title": "Save Your Laptop",
+  "points": 500,
+  "badge": "Incident Responder",
+  "environment": "malware",
+  "topicTitle": "Contain an attack in the right order",
+  "topicBrief": "Malware can run quietly in the background to steal data, create a backdoor, or damage files. Incident responders first identify the malicious process, cut its network access, and contain the damaged data. This is a fully scripted training simulation - no real process, file, or connection is touched.",
+  "scenario": "Critical Alert: Unauthorized system modifications detected. A fictional payload is active on this laptop. Use the available response tools to stop it before the integrity meter falls further.",
+  "environmentData": {
+    "startingIntegrity": 100,
+    "penalty": 10,
+    "flag": "FLAG{c0nt41n_b3f0r3_1t_spre4ds}",
+    "stages": [
+      {
+        "tool": "process",
+        "title": "Process Analyzer",
+        "instruction": "Step 1: Open the Process Analyzer and terminate the rogue application.",
+        "actionLabel": "Terminate Process",
+        "hint1": "Look for a process without a verified publisher before deciding it is malicious.",
+        "hint2": "The rogue process is consuming more than 80% of the CPU and has no verified signature.",
+        "items": [
+          {"id": "update", "name": "sys_update_agent.exe", "icon": "warning", "metadata": "CPU 87%  |  Memory 612 MB", "publisher": "Publisher: Unverified", "detail": "Spawned from a temporary folder and repeatedly changes its process name.", "malicious": true},
+          {"id": "backup", "name": "cloud-backup.exe", "icon": "backup", "metadata": "CPU 74%  |  Memory 410 MB", "publisher": "Publisher: Northstar Backup Ltd. (verified)", "detail": "A scheduled backup is compressing files. High activity is expected during its daily window.", "malicious": false},
+          {"id": "defender", "name": "endpoint-protection.exe", "icon": "shield", "metadata": "CPU 63%  |  Memory 298 MB", "publisher": "Publisher: Training Security Labs (verified)", "detail": "The antivirus scan is checking the Downloads folder after the alert.", "malicious": false},
+          {"id": "explorer", "name": "explorer.exe", "icon": "folder", "metadata": "CPU 2%  |  Memory 92 MB", "publisher": "Publisher: System Components (verified)", "detail": "Normal desktop shell process.", "malicious": false},
+          {"id": "notes", "name": "notes-sync.exe", "icon": "note", "metadata": "CPU 4%  |  Memory 56 MB", "publisher": "Publisher: Noteshelf Training (verified)", "detail": "Normal cloud note synchronization.", "malicious": false}
+        ]
+      },
+      {
+        "tool": "firewall",
+        "title": "Network Firewall",
+        "instruction": "Step 2: The malware opened a backdoor. Open the Network Firewall to block its communication.",
+        "actionLabel": "Block IP Address",
+        "hint1": "Prioritise an unusual destination or port that is sending a large amount of data outward.",
+        "hint2": "The backdoor uses port 8088 and has sent far more data than the normal connections.",
+        "items": [
+          {"id": "backdoor", "name": "sys_update_agent.exe -> 198.51.100.77:8088", "icon": "warning", "metadata": "Outbound  |  842 MB transferred", "publisher": "Unknown destination / custom encrypted traffic", "detail": "The unverified process is sending a large, persistent outbound stream over an unusual port.", "malicious": true},
+          {"id": "telemetry", "name": "system-service -> updates.training.thm:443", "icon": "cloud", "metadata": "Outbound  |  4 MB transferred", "publisher": "Verified system update telemetry", "detail": "Encrypted HTTPS telemetry is expected for the simulated operating system.", "malicious": false},
+          {"id": "backup", "name": "cloud-backup.exe -> vault.training.thm:443", "icon": "backup", "metadata": "Outbound  |  126 MB transferred", "publisher": "Northstar Backup Ltd. (verified)", "detail": "The scheduled backup is using its normal verified cloud destination.", "malicious": false},
+          {"id": "dns", "name": "resolver -> dns.training.thm:53", "icon": "network", "metadata": "Outbound  |  82 KB transferred", "publisher": "Local network resolver", "detail": "Normal DNS lookups for the laptop.", "malicious": false}
+        ]
+      },
+      {
+        "tool": "quarantine",
+        "title": "File Quarantine",
+        "instruction": "Step 3: Secure compromised data. Open File Quarantine.",
+        "actionLabel": "Apply Response",
+        "hint1": "A safe response preserves evidence and restores trusted copies instead of destroying everything.",
+        "hint2": "Choose the action that quarantines the payload and restores files from a known-good backup.",
+        "items": [
+          {"id": "quarantine", "name": "Quarantine malicious payload & restore from backup", "icon": "shield", "metadata": "Preserve evidence and recover trusted copies", "publisher": "Recommended incident-response procedure", "detail": "Isolates the payload for investigation and restores staged documents from the verified backup.", "malicious": true},
+          {"id": "delete", "name": "Delete files entirely", "icon": "delete", "metadata": "Remove all affected documents", "publisher": "Destructive action", "detail": "Deleting user files destroys recoverable data and evidence; it is not the first remediation step.", "malicious": false},
+          {"id": "ignore", "name": "Ignore warnings", "icon": "warning", "metadata": "Leave staged files in place", "publisher": "No containment", "detail": "The malware could continue encrypting or exfiltrating files if warnings are ignored.", "malicious": false}
+        ]
+      }
+    ]
+  },
+  "tasks": [], "terminalScript": {}, "commandHints": {},
+  "learn": {"title": "EDR is an orderly response", "body": "Endpoint Detection and Response is not about clicking the most alarming item. Identify the malicious process, isolate its communication, and preserve and restore data from trusted backups. Verified publishers and normal context help prevent damage to legitimate software."}
+}

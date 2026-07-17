@@ -16,12 +16,14 @@ class LeagueMapScreen extends StatefulWidget {
   final UserSession user;
   final void Function(CurriculumModule module) onLaunch;
   final VoidCallback onBack;
+  final LanguageTrack initialTrack;
 
   const LeagueMapScreen({
     super.key,
     required this.user,
     required this.onLaunch,
     required this.onBack,
+    this.initialTrack = LanguageTrack.python,
   });
 
   @override
@@ -97,7 +99,13 @@ class _Skin {
 class _LeagueMapScreenState extends State<LeagueMapScreen> {
   // Start the map on Python; the remaining topic-specific tracks are
   // available from the selector.
-  LanguageTrack _track = LanguageTrack.python;
+  late LanguageTrack _track;
+
+  @override
+  void initState() {
+    super.initState();
+    _track = widget.initialTrack;
+  }
 
   List<_LevelEntry> _buildEntries() {
     final cleared = widget.user.completedModuleIds;

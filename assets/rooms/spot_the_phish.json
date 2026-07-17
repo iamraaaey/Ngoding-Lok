@@ -1,0 +1,36 @@
+{
+  "id": "spot-the-phish",
+  "title": "Spot the Phish",
+  "points": 400,
+  "badge": "Phish Spotter",
+  "environment": "phish",
+  "topicTitle": "Phishing hides clues in plain sight",
+  "topicBrief": "Phishing messages impersonate people or services you trust. Pause before acting: check who sent it, where a link actually leads, and whether the wording is trying to rush you. This is a fictional email inside a safe simulation.",
+  "scenario": "A suspicious email has arrived in your fictional company inbox. Click the details that do not add up. Every other part is safe to inspect too.",
+  "environmentData": {
+    "hintLimit": 3,
+    "completionFlag": "FLAG{p4us3_b3f0r3_y0u_cl1ck}",
+    "emailContent": {
+      "sender": "Northstar IT <security@northstarr-it.thm>",
+      "subject": "Action needed: mailbox storage notice",
+      "greeting": "Hello colleague,",
+      "body": "Our mail team is performing its normal monthly storage review.",
+      "urgentPhrase": "Your mailbox will be closed today unless you verify it in the next 15 minutes.",
+      "linkLabel": "Verify mailbox storage",
+      "linkDestination": "https://northstarr-it.thm/verify",
+      "attachment": "storage-policy.pdf",
+      "closing": "Thanks,\nNorthstar IT Service Desk"
+    },
+    "clickableRegions": [
+      {"id": "sender", "area": "sender", "isRedFlag": true, "explanation": "Nice catch - the real fictional company is Northstar IT, but this sender adds an extra r in the domain."},
+      {"id": "subject", "area": "subject", "isRedFlag": false, "explanation": "The subject is ordinary on its own. Check it against other details."},
+      {"id": "greeting", "area": "greeting", "isRedFlag": true, "explanation": "Good eye - a real internal support team would normally address you by name, not a generic greeting."},
+      {"id": "urgency", "area": "urgency", "isRedFlag": true, "explanation": "Exactly - artificial urgency is designed to make you act before you verify the message."},
+      {"id": "link", "area": "link", "isRedFlag": true, "explanation": "Nice catch - the link preview leads to northstarr-it.thm, not the normal northstar-it.thm site."},
+      {"id": "attachment", "area": "attachment", "isRedFlag": false, "explanation": "A PDF attachment can be normal. It is not a warning sign by itself."},
+      {"id": "closing", "area": "closing", "isRedFlag": false, "explanation": "The closing looks polished, but it does not outweigh the sender and link mismatches."}
+    ]
+  },
+  "tasks": [], "terminalScript": {}, "commandHints": {},
+  "learn": {"title": "Pause, inspect, then decide", "body": "You found a lookalike sender domain, a generic greeting, pressure to act quickly, and a link that leads somewhere different. These are useful categories to check in any unexpected email: sender spoofing, link mismatches, and urgency language."}
+}
