@@ -3,8 +3,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/iamraaaey/NgeCode-Juh/actions/workflows/web-deploy.yml">
-    <img src="https://github.com/iamraaaey/NgeCode-Juh/actions/workflows/web-deploy.yml/badge.svg" alt="CI status">
+  <a href="https://ngoding-lok.web.app">
+    <img src="https://img.shields.io/badge/Live%20demo-ngoding--lok.web.app-FF5C01?logo=googlechrome&amp;logoColor=white" alt="Live demo">
+  </a>
+  <a href="https://github.com/iamraaaey/Ngoding-Lok/actions/workflows/web-deploy.yml">
+    <img src="https://github.com/iamraaaey/Ngoding-Lok/actions/workflows/web-deploy.yml/badge.svg" alt="CI status">
   </a>
   <a href="https://flutter.dev">
     <img src="https://img.shields.io/badge/Flutter-Dart%203.10%2B-02569B?logo=flutter&amp;logoColor=white" alt="Flutter and Dart">
@@ -15,6 +18,11 @@
   <a href="https://www.anthropic.com">
     <img src="https://img.shields.io/badge/Hints-Claude%20Haiku-D97757" alt="Claude Haiku hints">
   </a>
+</p>
+
+<p align="center">
+  <strong>▶ Live web build:</strong> <a href="https://ngoding-lok.web.app">ngoding-lok.web.app</a>
+  &nbsp;·&nbsp; <a href="https://ngoding-lok.web.app/privacy">Privacy policy</a>
 </p>
 
 <p align="center">
@@ -29,7 +37,7 @@
   <a href="#current-prototype-boundaries">Prototype boundaries</a>
 </p>
 
-> **Naming note:** the user-facing application is branded **Ngoding Lok**. This repository and its Dart package retain the name **NgeCode-Juh**.
+> **Naming note:** the user-facing application, the GitHub repository, and the Firebase project are branded **Ngoding Lok**. The Dart package and the Android application ID retain the original **NgeCode-Juh** / `com.ngecodejuh.ngecode_juh` identifiers.
 
 ---
 
@@ -100,7 +108,7 @@ The current flow starts with a terminal-style splash and landing page, then move
 
 ## Socratic hints
 
-The three core code-game engines can request a contextual hint after the simulated rewarded-hint flow. The client sends the level objective and the learner’s current code to a Firebase HTTPS Function. The function asks Claude Haiku for one short, non-solution-revealing prompt and validates the structured response.
+The three core code-game engines can request a contextual hint after a live rewarded-ad flow. Android and iOS use the native AdMob rewarded overlay; web uses the AdSense H5 Games Ad Placement API. If live ads are not configured or there is no fill, the request ends with an availability message and never renders a fake sponsor card. After the reward, the client sends the level objective and the learner’s current code to a Firebase HTTPS Function. The function asks Claude Haiku for one short, non-solution-revealing prompt and validates the structured response.
 
 ```mermaid
 flowchart LR
@@ -191,7 +199,7 @@ flutter run -d windows
 flutter run -d android
 ```
 
-The client can be explored immediately. When OAuth or AI hints are not configured, the applicable UI follows its local/static fallback instead of preventing play.
+The client can be explored immediately. When OAuth or AI hints are not configured, the applicable UI follows its local/static fallback instead of preventing play. Rewarded hints require configured live ad inventory; the app does not substitute a fake ad preview.
 
 ### Run quality checks
 
@@ -202,6 +210,25 @@ flutter build web --release
 ```
 
 The CI workflow runs these same Flutter checks for pushes and pull requests, then uploads `build/web` as an artifact. It does **not** deploy web hosting or the Cloud Function.
+
+## Rewarded ad setup
+
+Rewarded hints are configured for real ad providers only:
+
+- **Web:** `web/index.html` contains the AdSense publisher ID and Ad Placement API bootstrap. A public, approved AdSense H5 Games domain and account approval are required before `adBreak()` can return a live rewarded placement. See [`DEPLOY.md`](DEPLOY.md) for the Firebase Hosting deployment loop.
+- **Android/iOS:** development builds use Google’s official rewarded test units. Production builds must use the real AdMob application ID in [`AndroidManifest.xml`](android/app/src/main/AndroidManifest.xml) and the rewarded unit IDs supplied through build-time defines:
+
+  ```powershell
+  flutter build apk --release `
+    --dart-define=ADMOB_LIVE_ADS=true `
+    --dart-define=ADMOB_ANDROID_REWARDED_AD_UNIT_ID=ca-app-pub-YOUR_ID/YOUR_REWARDED_UNIT
+  ```
+
+AdMob rewarded videos are native full-screen SDK overlays, while AdSense controls web playback. No fake `SPONSOR MESSAGE` or local-preview card is used.
+
+## Build Week disclosure
+
+This project was built iteratively with Codex. Codex was used to inspect the product reference, refine the SQL learning experience and responsive UI, integrate the real-only rewarded-ad flows, and run the analyzer, test suite, and release web build. Before submitting, copy the `/feedback` Session ID from the primary Codex build thread and document the exact GPT-5.6 contribution from that thread’s model history in your own words; the repository cannot verify a model name by itself.
 
 ## Firebase OAuth setup
 
@@ -242,7 +269,7 @@ Before exposing the endpoint publicly, add the authentication, authorization, an
 | Email account management | Form validation and confirmation UI only; no Firebase email/password account or reset-email backend. |
 | Progress sync | XP, completions, scores, badges, freezes, and cyber-room progress are saved only in device-local `SharedPreferences`; there is no cross-device cloud sync. |
 | Leaderboards and Code Golf | Deterministic mock data plus the local player; no live multiplayer service. |
-| XP sync and ads | A local score calculator and simulated rewarded-hint/ad screen, not production services or an ad SDK. |
+| XP sync and ads | XP remains device-local; rewarded hints use native AdMob on mobile and AdSense H5 Games on web when configured, with no fake ad fallback. |
 | AI hints | Optional Cloud Function with a static per-level fallback when unavailable. |
 | Cybersecurity labs | Closed, fictional simulations for learning; no live systems are accessed. |
 
@@ -257,7 +284,7 @@ Run the checks in [Run quality checks](#run-quality-checks) before submitting ch
 - Add a real persistent backend for cross-device progress, live rankings, and Code Golf submissions.
 - Implement Firebase-backed email/password account management and recovery.
 - Harden the hint endpoint with authenticated access, abuse controls, monitoring, and deployment configuration.
-- Replace mock XP/ad/social behaviors with production services only when the learning experience and privacy model are ready.
+- Replace mock XP/social behaviors with production services only when the learning experience and privacy model are ready; complete ad-account approval and operational monitoring for live inventory.
 - Continue expanding authored missions and accessibility testing across screen sizes and platforms.
 
 ## Project context

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Ngoding Lok">
+  <rect width="512" height="512" rx="120" fill="#FF5C01"/>
+  <path d="M156 176 L250 256 L156 336" fill="none" stroke="#0A0A0B" stroke-width="48"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="276" y="312" width="120" height="44" rx="22" fill="#0A0A0B"/>
+</svg>

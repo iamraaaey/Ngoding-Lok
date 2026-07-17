@@ -21,7 +21,7 @@ void main() {
     WidgetTester tester,
   ) async {
     // Force an unsupported platform. The app must not grant a hint through
-    // a simulated sponsor card when no real ad SDK is available.
+    // a fake sponsor card when no real ad SDK is available.
     addTearDown(() => tester.binding.setSurfaceSize(null));
     debugDefaultTargetPlatformOverride = TargetPlatform.linux;
     try {

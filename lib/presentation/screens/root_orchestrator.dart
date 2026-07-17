@@ -414,11 +414,6 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
 
       case AppRoute.game:
         return _buildGameScreen(_activeModule!);
-
-      case AppRoute.ad:
-        // The ad is rendered as an overlay in build(), so it is never the
-        // content route — the screen underneath (game/home) is what shows.
-        return const SizedBox.shrink();
     }
   }
 }

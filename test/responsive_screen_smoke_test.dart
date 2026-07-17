@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ngecode_juh/core/curriculum/curriculum.dart';
 import 'package:ngecode_juh/core/session/leaderboard.dart';
 import 'package:ngecode_juh/core/session/user_session.dart';
-import 'package:ngecode_juh/presentation/screens/ad_screen.dart';
 import 'package:ngecode_juh/presentation/screens/arduino_simulator_screen.dart';
 import 'package:ngecode_juh/presentation/screens/auth_screen.dart';
 import 'package:ngecode_juh/presentation/screens/code_golf_screen.dart';
@@ -93,7 +92,6 @@ void main() {
       onLogout: () {},
       onBack: () {},
     ),
-    'ad': () => AdScreen(isRewarded: false, onComplete: () {}, onCancel: () {}),
     'grid game': () => _game(
       GridGameScreen(
         module: Curriculum.byId('m1'),

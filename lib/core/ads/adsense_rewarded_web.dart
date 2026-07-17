@@ -13,8 +13,8 @@ import 'package:flutter/foundation.dart';
 ///
 /// plus the `adBreak`/`adConfig` shim (already present in index.html). When
 /// the snippet is missing or the account has no fill, [isAvailable] is false
-/// or [showRewardedAd] reports unavailable, and callers fall back to the
-/// local preview screen — the hint flow never dead-ends.
+/// or [showRewardedAd] reports unavailable. The caller reports the unavailable
+/// state; it never substitutes a fake ad card.
 class AdSenseRewarded {
   AdSenseRewarded._();
 
@@ -50,8 +50,8 @@ class AdSenseRewarded {
   }
 
   /// Waits for the async AdSense script to finish loading. Without this wait,
-  /// a player who taps Hint during the first page load is incorrectly sent to
-  /// the local preview before `adsbygoogle.js` has had time to initialize.
+  /// a player who taps Hint during the first page load is incorrectly told
+  /// that no live ad is available before `adsbygoogle.js` has initialized.
   static Future<bool> waitUntilAvailable({
     Duration timeout = const Duration(seconds: 8),
   }) async {
@@ -67,7 +67,7 @@ class AdSenseRewarded {
   /// Requests a rewarded ad break. [onRewarded] fires only when AdSense
   /// reports the ad was fully viewed; [onDismissed] when the player closed
   /// it early; [onUnavailable] when there is no fill (callers should fall
-  /// back to the preview flow). Exactly one of the three is invoked.
+  /// back to the hint flow). Exactly one of the three is invoked.
   static void showRewardedAd({
     required VoidCallback onRewarded,
     VoidCallback? onDismissed,

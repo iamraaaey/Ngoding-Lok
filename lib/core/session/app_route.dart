@@ -11,5 +11,4 @@ enum AppRoute {
   settings,
   dashboard,
   game,
-  ad,
 }
