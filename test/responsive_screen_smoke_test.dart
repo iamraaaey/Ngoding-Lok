@@ -57,7 +57,10 @@ void main() {
       onRegister: (_, {name, photoUrl}) {},
       onBackToLogin: () {},
     ),
-    'forgot password': () => ForgotPasswordScreen(onBackToLogin: () {}),
+    'forgot password': () => ForgotPasswordScreen(
+      onBackToLogin: () {},
+      onSendResetLink: (_) async {},
+    ),
     'home': () => HomeDashboardScreen(
       user: _user,
       nextModule: Curriculum.byId('m1'),
