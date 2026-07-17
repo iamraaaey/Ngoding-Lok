@@ -18,8 +18,16 @@ import '../widgets/hint_banner.dart';
 /// mirroring [GridGameScreen]'s execution-loop shape.
 class RocketGameScreen extends StatefulWidget {
   final CurriculumModule module;
-  final void Function({required VoidCallback onGranted}) onRequestHintAd;
-  final Future<void> Function({required int linesUsed, required int executionMs}) onWin;
+  final void Function({
+    required VoidCallback onGranted,
+    VoidCallback? onCancelled,
+  })
+  onRequestHintAd;
+  final Future<void> Function({
+    required int linesUsed,
+    required int executionMs,
+  })
+  onWin;
   final VoidCallback onBack;
 
   const RocketGameScreen({
@@ -35,8 +43,9 @@ class RocketGameScreen extends StatefulWidget {
 }
 
 class _RocketGameScreenState extends State<RocketGameScreen> {
-  late final TextEditingController _codeController =
-      TextEditingController(text: widget.module.initialCode);
+  late final TextEditingController _codeController = TextEditingController(
+    text: widget.module.initialCode,
+  );
   final RocketLexer _lexer = RocketLexer();
   final List<String> _consoleLogs = [];
   final GameTimerController _timerController = GameTimerController();
@@ -76,6 +85,7 @@ class _RocketGameScreenState extends State<RocketGameScreen> {
         _timerController.start();
         _loadDynamicHint();
       },
+      onCancelled: () => _timerController.start(),
     );
   }
 
@@ -123,7 +133,12 @@ class _RocketGameScreenState extends State<RocketGameScreen> {
           _log('Line ${step.line}: Thrust applied. Altitude ${step.altitude}m');
           break;
         case RocketResultType.exploded:
-          setState(() => _state = _state.copyWith(exploded: true, altitude: step.altitude));
+          setState(
+            () => _state = _state.copyWith(
+              exploded: true,
+              altitude: step.altitude,
+            ),
+          );
           _log('CATASTROPHIC FAILURE: ${step.detail}');
           break;
         case RocketResultType.invalidThrottle:
@@ -131,19 +146,28 @@ class _RocketGameScreenState extends State<RocketGameScreen> {
           _log('Line ${step.line}: Error - ${step.detail}');
           break;
         case RocketResultType.goalReached:
-          setState(() => _state = _state.copyWith(altitude: step.altitude, goalReached: true));
+          setState(
+            () => _state = _state.copyWith(
+              altitude: step.altitude,
+              goalReached: true,
+            ),
+          );
           _log('ORBIT REACHED. Mission Success!');
           break;
       }
     }
 
-    setState(() => _state = _state.copyWith(isExecuting: false, activeLineIndex: -1));
+    setState(
+      () => _state = _state.copyWith(isExecuting: false, activeLineIndex: -1),
+    );
 
     if (_state.goalReached) {
       _timerController.stop();
       setState(() => _isSyncing = true);
-      final validLines =
-          _codeController.text.split('\n').where((l) => l.trim().isNotEmpty).length;
+      final validLines = _codeController.text
+          .split('\n')
+          .where((l) => l.trim().isNotEmpty)
+          .length;
       await widget.onWin(
         linesUsed: validLines,
         executionMs: _timerController.elapsedSeconds.value * 1000,
@@ -156,36 +180,38 @@ class _RocketGameScreenState extends State<RocketGameScreen> {
     return Scaffold(
       backgroundColor: DoodlePalette.dark,
       body: DoodleDotBackground(
-        child: Column(
-          children: [
-            GameHeader(
-              title: widget.module.title,
-              icon: Icons.rocket_launch,
-              timerController: _timerController,
-              hasHint: _hasHint,
-              isExecuting: _state.isExecuting,
-              isSyncing: _isSyncing,
-              onBack: widget.onBack,
-              onGetHint: _hasHint ? null : _onGetHint,
-              onRun: _executeCode,
-            ),
-            if (_hasHint)
-              HintBanner(
-                hint: _dynamicHintMessage ?? widget.module.hint,
-                isLoading: _isFetchingHint,
+        child: SafeArea(
+          child: Column(
+            children: [
+              GameHeader(
+                title: widget.module.title,
+                icon: Icons.rocket_launch,
+                timerController: _timerController,
+                hasHint: _hasHint,
+                isExecuting: _state.isExecuting,
+                isSyncing: _isSyncing,
+                onBack: widget.onBack,
+                onGetHint: _hasHint ? null : _onGetHint,
+                onRun: _executeCode,
               ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: AltitudeGauge(state: _state),
-            ),
-            Expanded(
-              child: CodeEditor(
-                controller: _codeController,
-                activeLineIndex: _state.activeLineIndex,
+              if (_hasHint)
+                HintBanner(
+                  hint: _dynamicHintMessage ?? widget.module.hint,
+                  isLoading: _isFetchingHint,
+                ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: AltitudeGauge(state: _state),
               ),
-            ),
-            ConsoleLog(logs: _consoleLogs),
-          ],
+              Expanded(
+                child: CodeEditor(
+                  controller: _codeController,
+                  activeLineIndex: _state.activeLineIndex,
+                ),
+              ),
+              ConsoleLog(logs: _consoleLogs),
+            ],
+          ),
         ),
       ),
     );

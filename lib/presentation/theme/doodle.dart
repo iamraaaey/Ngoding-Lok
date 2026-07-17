@@ -33,7 +33,7 @@ class DoodleCard extends StatelessWidget {
     required this.child,
     this.color = DoodlePalette.white,
     this.borderRadius = 24,
-    this.padding = const EdgeInsets.all(24),
+    this.padding = const EdgeInsets.all(18),
     this.shadowOffset = 6,
   });
 
@@ -45,7 +45,12 @@ class DoodleCard extends StatelessWidget {
         color: color,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(color: Colors.black, width: 3),
-        boxShadow: [BoxShadow(color: Colors.black, offset: Offset(shadowOffset, shadowOffset))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black,
+            offset: Offset(shadowOffset, shadowOffset),
+          ),
+        ],
       ),
       child: child,
     );
@@ -93,13 +98,22 @@ class _DoodleButtonState extends State<DoodleButton> {
         opacity: _enabled ? 1 : 0.6,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 90),
-          padding: EdgeInsets.symmetric(horizontal: widget.dense ? 20 : 32, vertical: widget.dense ? 12 : 18),
-          transform: Matrix4.translationValues(_pressed && _enabled ? 3 : 0, _pressed && _enabled ? 3 : 0, 0),
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.dense ? 10 : 32,
+            vertical: widget.dense ? 12 : 18,
+          ),
+          transform: Matrix4.translationValues(
+            _pressed && _enabled ? 3 : 0,
+            _pressed && _enabled ? 3 : 0,
+            0,
+          ),
           decoration: BoxDecoration(
             color: widget.color,
             borderRadius: BorderRadius.circular(widget.dense ? 12 : 16),
             border: Border.all(color: Colors.black, width: 3),
-            boxShadow: [BoxShadow(color: Colors.black, offset: Offset(shadow, shadow))],
+            boxShadow: [
+              BoxShadow(color: Colors.black, offset: Offset(shadow, shadow)),
+            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -110,7 +124,12 @@ class _DoodleButtonState extends State<DoodleButton> {
                   widget.label.toUpperCase(),
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
-                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.w800, letterSpacing: 0.6, fontSize: widget.dense ? 13 : 17),
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.6,
+                    fontSize: widget.dense ? 13 : 17,
+                  ),
                 ),
               ),
               if (widget.isLoading) ...[
@@ -118,11 +137,18 @@ class _DoodleButtonState extends State<DoodleButton> {
                 SizedBox(
                   width: widget.dense ? 12 : 16,
                   height: widget.dense ? 12 : 16,
-                  child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.black,
+                  ),
                 ),
               ] else if (widget.icon != null) ...[
                 const SizedBox(width: 8),
-                Icon(widget.icon, color: Colors.black, size: widget.dense ? 16 : 20),
+                Icon(
+                  widget.icon,
+                  color: Colors.black,
+                  size: widget.dense ? 16 : 20,
+                ),
               ],
             ],
           ),
@@ -153,8 +179,20 @@ class DoodlePill extends StatelessWidget {
       angle: rotation,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(color: background, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.black, width: 2)),
-        child: Text(text.toUpperCase(), style: TextStyle(color: textColor, fontWeight: FontWeight.w800, fontSize: 12, letterSpacing: 0.5)),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.black, width: 2),
+        ),
+        child: Text(
+          text.toUpperCase(),
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.w800,
+            fontSize: 12,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
     );
   }
@@ -184,7 +222,11 @@ class DoodleIconBadge extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(borderRadius), border: Border.all(color: Colors.black, width: 3)),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(color: Colors.black, width: 3),
+      ),
       child: Icon(icon, color: iconColor, size: iconSize),
     );
   }
@@ -196,7 +238,11 @@ class DoodleDotBackground extends StatelessWidget {
   final Widget child;
   final Color backgroundColor;
 
-  const DoodleDotBackground({super.key, required this.child, this.backgroundColor = DoodlePalette.dark});
+  const DoodleDotBackground({
+    super.key,
+    required this.child,
+    this.backgroundColor = DoodlePalette.dark,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -204,7 +250,11 @@ class DoodleDotBackground extends StatelessWidget {
       color: backgroundColor,
       child: Stack(
         children: [
-          const Positioned.fill(child: RepaintBoundary(child: CustomPaint(painter: DoodleDotGridPainter()))),
+          const Positioned.fill(
+            child: RepaintBoundary(
+              child: CustomPaint(painter: DoodleDotGridPainter()),
+            ),
+          ),
           child,
         ],
       ),
@@ -246,17 +296,22 @@ class AnimatedDoodleDotBackground extends StatefulWidget {
   });
 
   @override
-  State<AnimatedDoodleDotBackground> createState() => _AnimatedDoodleDotBackgroundState();
+  State<AnimatedDoodleDotBackground> createState() =>
+      _AnimatedDoodleDotBackgroundState();
 }
 
-class _AnimatedDoodleDotBackgroundState extends State<AnimatedDoodleDotBackground>
+class _AnimatedDoodleDotBackgroundState
+    extends State<AnimatedDoodleDotBackground>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 8))..repeat();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 8),
+    )..repeat();
   }
 
   @override
@@ -275,7 +330,8 @@ class _AnimatedDoodleDotBackgroundState extends State<AnimatedDoodleDotBackgroun
             child: RepaintBoundary(
               child: AnimatedBuilder(
                 animation: _ctrl,
-                builder: (context, _) => CustomPaint(painter: _TwinklingDotPainter(_ctrl.value)),
+                builder: (context, _) =>
+                    CustomPaint(painter: _TwinklingDotPainter(_ctrl.value)),
               ),
             ),
           ),
@@ -325,14 +381,16 @@ class FloatingWidget extends StatefulWidget {
   State<FloatingWidget> createState() => _FloatingWidgetState();
 }
 
-class _FloatingWidgetState extends State<FloatingWidget> with SingleTickerProviderStateMixin {
+class _FloatingWidgetState extends State<FloatingWidget>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _curved;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: widget.period)..repeat(reverse: true);
+    _ctrl = AnimationController(vsync: this, duration: widget.period)
+      ..repeat(reverse: true);
     _curved = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
   }
 
@@ -372,14 +430,17 @@ class PulsingGlow extends StatefulWidget {
   State<PulsingGlow> createState() => _PulsingGlowState();
 }
 
-class _PulsingGlowState extends State<PulsingGlow> with SingleTickerProviderStateMixin {
+class _PulsingGlowState extends State<PulsingGlow>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))
-      ..repeat(reverse: true);
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
   }
 
   @override
@@ -397,7 +458,9 @@ class _PulsingGlowState extends State<PulsingGlow> with SingleTickerProviderStat
           borderRadius: BorderRadius.circular(widget.borderRadius),
           boxShadow: [
             BoxShadow(
-              color: widget.glowColor.withValues(alpha: 0.10 + _ctrl.value * 0.25),
+              color: widget.glowColor.withValues(
+                alpha: 0.10 + _ctrl.value * 0.25,
+              ),
               blurRadius: 14 + _ctrl.value * 22,
               spreadRadius: _ctrl.value * 4,
             ),

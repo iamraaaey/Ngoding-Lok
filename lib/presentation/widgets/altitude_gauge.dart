@@ -32,8 +32,10 @@ class AltitudeGauge extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            spacing: 12,
+            runSpacing: 6,
             children: [
               Text(
                 'ALT: ${state.altitude}m / ${state.targetAltitude}m',

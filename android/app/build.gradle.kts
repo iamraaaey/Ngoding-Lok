@@ -27,7 +27,8 @@ android {
         applicationId = "com.ngecodejuh.ngecode_juh"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Google Mobile Ads SDK requires Android API 23 or newer.
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

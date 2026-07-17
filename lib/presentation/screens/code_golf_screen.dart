@@ -59,7 +59,7 @@ class _CodeGolfScreenState extends State<CodeGolfScreen> {
           SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1400),
+                constraints: const BoxConstraints(maxWidth: 1800),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

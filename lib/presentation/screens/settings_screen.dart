@@ -128,7 +128,7 @@ class SettingsScreen extends StatelessWidget {
     );
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -138,7 +138,7 @@ class SettingsScreen extends StatelessWidget {
             skin: skin,
             onBack: onBack,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
               // Wide: account + app settings on the left, legal on the right.
@@ -199,7 +199,7 @@ class SettingsScreen extends StatelessWidget {
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1500),
+                constraints: const BoxConstraints(maxWidth: 1800),
                 child: _buildBody(context, skin),
               ),
             ),
@@ -231,7 +231,10 @@ class _SettingsGroup extends StatelessWidget {
         children: [
           Text(
             '// ${title.toUpperCase()}',
-            style: LandingTokens.label(fontSize: 10, color: LandingTokens.ember),
+            style: LandingTokens.label(
+              fontSize: 10,
+              color: LandingTokens.ember,
+            ),
           ),
           const SizedBox(height: 8),
           for (var i = 0; i < children.length; i++) ...[

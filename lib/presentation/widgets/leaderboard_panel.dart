@@ -17,7 +17,7 @@ class LeaderboardPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: LandingTokens.carbon,
         borderRadius: LandingTokens.mediumRadius,
@@ -82,7 +82,10 @@ class LeaderboardPanel extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Text(entry.avatar, style: const TextStyle(fontSize: 16)),
+                        Text(
+                          entry.avatar,
+                          style: const TextStyle(fontSize: 16),
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(

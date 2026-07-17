@@ -163,7 +163,7 @@ class LandingGlassPanel extends StatelessWidget {
   const LandingGlassPanel({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(LandingTokens.space24),
+    this.padding = const EdgeInsets.all(LandingTokens.space16),
     this.borderRadius = LandingTokens.mediumRadius,
     this.color,
     this.highEmphasis = false,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/curriculum/curriculum.dart';
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/language_track.dart';
+import '../../core/curriculum/sql_case_catalog.dart';
 import '../../core/session/user_session.dart';
 import '../theme/landing_tokens.dart';
 import '../widgets/landing/landing_surface.dart';
@@ -106,8 +107,12 @@ class _LeagueMapScreenState extends State<LeagueMapScreen> {
       for (var i = 0; i < trackModules.length; i++)
         _LevelEntry(
           number: i + 1,
-          title: trackModules[i].title,
-          subtitle: trackModules[i].description,
+          title: _track == LanguageTrack.sql
+              ? 'Case #${SqlCaseCatalog.forModule(trackModules[i]).number}: ${SqlCaseCatalog.forModule(trackModules[i]).title}'
+              : trackModules[i].title,
+          subtitle: _track == LanguageTrack.sql
+              ? SqlCaseCatalog.forModule(trackModules[i]).brief
+              : trackModules[i].description,
           module: trackModules[i],
           // Testing mode: every module is launchable without completing a
           // previous module. Completion still records scores and badges.
@@ -240,9 +245,9 @@ class _Header extends StatelessWidget {
         border: Border.all(color: skin.border),
         boxShadow: LandingTokens.cardShadow,
       ),
-      child: Row(
-        children: [
-          MouseRegion(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final backButton = MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
               onTap: onBack,
@@ -256,32 +261,59 @@ class _Header extends StatelessWidget {
                 child: Icon(Icons.arrow_back, color: skin.text, size: 18),
               ),
             ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          );
+          final title = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '// LEVEL SELECT',
+                style: LandingTokens.label(
+                  fontSize: 9,
+                  color: LandingTokens.ember,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'LEAGUE MAP',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: LandingTokens.display(fontSize: 20, color: skin.text),
+              ),
+            ],
+          );
+          final compact = constraints.maxWidth < 430;
+          final dropdown = _TrackDropdown(
+            track: track,
+            skin: skin,
+            onChanged: onTrackChanged,
+            compact: compact,
+          );
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  '// LEVEL SELECT',
-                  style: LandingTokens.label(
-                    fontSize: 9,
-                    color: LandingTokens.ember,
-                  ),
+                Row(
+                  children: [
+                    backButton,
+                    const SizedBox(width: 14),
+                    Expanded(child: title),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'LEAGUE MAP',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: LandingTokens.display(fontSize: 20, color: skin.text),
-                ),
+                const SizedBox(height: 10),
+                Align(alignment: Alignment.centerRight, child: dropdown),
               ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          _TrackDropdown(track: track, skin: skin, onChanged: onTrackChanged),
-        ],
+            );
+          }
+          return Row(
+            children: [
+              backButton,
+              const SizedBox(width: 14),
+              Expanded(child: title),
+              const SizedBox(width: 8),
+              dropdown,
+            ],
+          );
+        },
       ),
     );
   }
@@ -292,15 +324,52 @@ class _TrackDropdown extends StatelessWidget {
   final LanguageTrack track;
   final _Skin skin;
   final ValueChanged<LanguageTrack> onChanged;
+  final bool compact;
 
   const _TrackDropdown({
     required this.track,
     required this.skin,
     required this.onChanged,
+    required this.compact,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (compact) {
+      return Tooltip(
+        message: 'Choose learning track',
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: LandingTokens.smallRadius,
+            border: Border.all(
+              color: LandingTokens.ember.withValues(alpha: 0.6),
+            ),
+            color: LandingTokens.ember.withValues(alpha: 0.08),
+          ),
+          child: PopupMenuButton<LanguageTrack>(
+            tooltip: 'Choose learning track',
+            icon: const Icon(Icons.tune, color: LandingTokens.ember),
+            color: skin.panel,
+            onSelected: onChanged,
+            itemBuilder: (context) => [
+              for (final t in LanguageTrack.values)
+                PopupMenuItem(
+                  value: t,
+                  child: Text(
+                    t.shortLabel.toUpperCase(),
+                    style: LandingTokens.label(
+                      fontSize: 11,
+                      color: t == track
+                          ? LandingTokens.ember
+                          : LandingTokens.textPrimary,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(

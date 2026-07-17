@@ -21,8 +21,16 @@ import '../widgets/hint_banner.dart';
 /// timer, hint, win-flow) is new.
 class GridGameScreen extends StatefulWidget {
   final CurriculumModule module;
-  final void Function({required VoidCallback onGranted}) onRequestHintAd;
-  final Future<void> Function({required int linesUsed, required int executionMs}) onWin;
+  final void Function({
+    required VoidCallback onGranted,
+    VoidCallback? onCancelled,
+  })
+  onRequestHintAd;
+  final Future<void> Function({
+    required int linesUsed,
+    required int executionMs,
+  })
+  onWin;
   final VoidCallback onBack;
 
   const GridGameScreen({
@@ -38,8 +46,9 @@ class GridGameScreen extends StatefulWidget {
 }
 
 class _GridGameScreenState extends State<GridGameScreen> {
-  late final TextEditingController _codeController =
-      TextEditingController(text: widget.module.initialCode);
+  late final TextEditingController _codeController = TextEditingController(
+    text: widget.module.initialCode,
+  );
   final Lexer _lexer = Lexer();
   final List<String> _consoleLogs = [];
   final GameTimerController _timerController = GameTimerController();
@@ -85,6 +94,7 @@ class _GridGameScreenState extends State<GridGameScreen> {
         _timerController.start();
         _loadDynamicHint();
       },
+      onCancelled: () => _timerController.start(),
     );
   }
 
@@ -126,15 +136,19 @@ class _GridGameScreenState extends State<GridGameScreen> {
 
       switch (step.result) {
         case ExecutionResultType.moved:
-          setState(() => _state = _state.copyWith(playerX: step.x, playerY: step.y));
+          setState(
+            () => _state = _state.copyWith(playerX: step.x, playerY: step.y),
+          );
           _log('Line ${step.line}: Moved to (${step.x}, ${step.y})');
           break;
         case ExecutionResultType.goalReached:
-          setState(() => _state = _state.copyWith(
-                playerX: step.x,
-                playerY: step.y,
-                goalReached: true,
-              ));
+          setState(
+            () => _state = _state.copyWith(
+              playerX: step.x,
+              playerY: step.y,
+              goalReached: true,
+            ),
+          );
           _log('Success! Goal reached successfully.');
           break;
         case ExecutionResultType.outOfBounds:
@@ -144,13 +158,17 @@ class _GridGameScreenState extends State<GridGameScreen> {
       }
     }
 
-    setState(() => _state = _state.copyWith(isExecuting: false, activeLineIndex: -1));
+    setState(
+      () => _state = _state.copyWith(isExecuting: false, activeLineIndex: -1),
+    );
 
     if (_state.goalReached) {
       _timerController.stop();
       setState(() => _isSyncing = true);
-      final validLines =
-          _codeController.text.split('\n').where((l) => l.trim().isNotEmpty).length;
+      final validLines = _codeController.text
+          .split('\n')
+          .where((l) => l.trim().isNotEmpty)
+          .length;
       await widget.onWin(
         linesUsed: validLines,
         executionMs: _timerController.elapsedSeconds.value * 1000,
@@ -163,37 +181,36 @@ class _GridGameScreenState extends State<GridGameScreen> {
     return Scaffold(
       backgroundColor: DoodlePalette.dark,
       body: DoodleDotBackground(
-        child: Column(
-          children: [
-            GameHeader(
-              title: widget.module.title,
-              icon: Icons.videogame_asset,
-              timerController: _timerController,
-              hasHint: _hasHint,
-              isExecuting: _state.isExecuting,
-              isSyncing: _isSyncing,
-              onBack: widget.onBack,
-              onGetHint: _hasHint ? null : _onGetHint,
-              onRun: _executeCode,
-            ),
-            if (_hasHint)
-              HintBanner(
-                hint: _dynamicHintMessage ?? widget.module.hint,
-                isLoading: _isFetchingHint,
+        child: SafeArea(
+          child: Column(
+            children: [
+              GameHeader(
+                title: widget.module.title,
+                icon: Icons.videogame_asset,
+                timerController: _timerController,
+                hasHint: _hasHint,
+                isExecuting: _state.isExecuting,
+                isSyncing: _isSyncing,
+                onBack: widget.onBack,
+                onGetHint: _hasHint ? null : _onGetHint,
+                onRun: _executeCode,
               ),
-            Expanded(
-              flex: 3,
-              child: GameCanvas(state: _state),
-            ),
-            Expanded(
-              flex: 2,
-              child: CodeEditor(
-                controller: _codeController,
-                activeLineIndex: _state.activeLineIndex,
+              if (_hasHint)
+                HintBanner(
+                  hint: _dynamicHintMessage ?? widget.module.hint,
+                  isLoading: _isFetchingHint,
+                ),
+              Expanded(flex: 3, child: GameCanvas(state: _state)),
+              Expanded(
+                flex: 2,
+                child: CodeEditor(
+                  controller: _codeController,
+                  activeLineIndex: _state.activeLineIndex,
+                ),
               ),
-            ),
-            ConsoleLog(logs: _consoleLogs),
-          ],
+              ConsoleLog(logs: _consoleLogs),
+            ],
+          ),
         ),
       ),
     );

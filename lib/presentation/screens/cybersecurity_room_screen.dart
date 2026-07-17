@@ -178,7 +178,7 @@ class _CybersecurityRoomScreenState extends State<CybersecurityRoomScreen> {
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1400),
+              constraints: const BoxConstraints(maxWidth: 1800),
               child: Column(
                 children: [
                   _Header(
@@ -191,6 +191,7 @@ class _CybersecurityRoomScreenState extends State<CybersecurityRoomScreen> {
                       builder: (context, box) {
                         final tasks = _TaskPanel(
                           room: room,
+                          scrollable: box.maxWidth > 860,
                           answers: _answers,
                           done: _done,
                           wrong: _wrong,
@@ -272,8 +273,9 @@ class _Header extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 360;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: const BoxDecoration(
         color: Color(0xFF0C0C0C),
         border: Border(bottom: BorderSide(color: Color(0x1AFFFFFF))),
@@ -295,6 +297,8 @@ class _Header extends StatelessWidget {
                   children: [
                     Text(
                       room.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xFFF4F3EF),
                         fontSize: 20,
@@ -304,6 +308,8 @@ class _Header extends StatelessWidget {
                     Text(
                       'SAFE SIMULATION · ${room.points} XP · BADGE: ${room.badge}'
                           .toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xFF908F88),
                         fontSize: 10,
@@ -352,12 +358,14 @@ class _Header extends StatelessWidget {
 
 class _TaskPanel extends StatelessWidget {
   final CyberRoom room;
+  final bool scrollable;
   final List<TextEditingController> answers;
   final Set<int> done, wrong, hint1, hint2;
   final void Function(int, bool) onHint;
   final ValueChanged<int> onSubmit;
   const _TaskPanel({
     required this.room,
+    required this.scrollable,
     required this.answers,
     required this.done,
     required this.wrong,
@@ -398,6 +406,10 @@ class _TaskPanel extends StatelessWidget {
         border: Border.all(color: const Color(0x1AFFFFFF)),
       ),
       child: ListView(
+        shrinkWrap: !scrollable,
+        physics: scrollable
+            ? const AlwaysScrollableScrollPhysics()
+            : const NeverScrollableScrollPhysics(),
         children: [
           Text(
             room.scenario,

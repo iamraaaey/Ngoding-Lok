@@ -88,13 +88,17 @@ class _Skin {
       Theme.of(context).brightness == Brightness.dark ? dark : light;
 }
 
-class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTickerProviderStateMixin {
+class _HomeDashboardScreenState extends State<HomeDashboardScreen>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _entrance;
 
   @override
   void initState() {
     super.initState();
-    _entrance = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..forward();
+    _entrance = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..forward();
   }
 
   @override
@@ -103,8 +107,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
     super.dispose();
   }
 
-  Animation<double> _interval(double begin, double end) =>
-      CurvedAnimation(parent: _entrance, curve: Interval(begin, end, curve: Curves.easeOutCubic));
+  Animation<double> _interval(double begin, double end) => CurvedAnimation(
+    parent: _entrance,
+    curve: Interval(begin, end, curve: Curves.easeOutCubic),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -160,14 +166,14 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1500),
+                constraints: const BoxConstraints(maxWidth: 1800),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       appBar,
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           // Wide screens: hero + league share the top row, nav
@@ -180,11 +186,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen> with SingleTi
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Expanded(flex: 3, child: hero),
-                                    const SizedBox(width: 20),
+                                    const SizedBox(width: 16),
                                     Expanded(flex: 2, child: league),
                                   ],
                                 ),
-                                const SizedBox(height: 20),
+                                const SizedBox(height: 16),
                                 nav,
                               ],
                             );
@@ -219,7 +225,11 @@ class _FadeSlide extends StatelessWidget {
   final double yOffset;
   final Widget child;
 
-  const _FadeSlide({required this.animation, required this.yOffset, required this.child});
+  const _FadeSlide({
+    required this.animation,
+    required this.yOffset,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +255,11 @@ class _Panel extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
 
-  const _Panel({required this.skin, required this.child, this.padding = const EdgeInsets.all(20)});
+  const _Panel({
+    required this.skin,
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -300,7 +314,11 @@ class _TopAppBar extends StatelessWidget {
                   user.displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: skin.text, fontWeight: FontWeight.w800, fontSize: 16),
+                  style: TextStyle(
+                    color: skin.text,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -343,7 +361,10 @@ class _TopAppBar extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: LandingTokens.smallRadius,
           border: Border.all(color: skin.borderStrong),
-          image: DecorationImage(image: NetworkImage(user.photoUrl!), fit: BoxFit.cover),
+          image: DecorationImage(
+            image: NetworkImage(user.photoUrl!),
+            fit: BoxFit.cover,
+          ),
         ),
       );
     }
@@ -377,11 +398,19 @@ class _StreakChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.local_fire_department, size: 16, color: LandingTokens.ember),
+          const Icon(
+            Icons.local_fire_department,
+            size: 16,
+            color: LandingTokens.ember,
+          ),
           const SizedBox(width: 5),
           Text(
             'x$streak',
-            style: LandingTokens.mono(fontSize: 12, color: LandingTokens.ember, fontWeight: FontWeight.w700),
+            style: LandingTokens.mono(
+              fontSize: 12,
+              color: LandingTokens.ember,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -426,7 +455,9 @@ class _HeroSection extends StatelessWidget {
             child: AnimatedIridescence(borderRadius: BorderRadius.zero),
           ),
           Padding(
-            padding: const EdgeInsets.all(22),
+            padding: EdgeInsets.all(
+              MediaQuery.sizeOf(context).width < 400 ? 16 : 22,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -434,9 +465,18 @@ class _HeroSection extends StatelessWidget {
                   children: [
                     const PulsingDot(color: LandingTokens.ember, size: 5),
                     const SizedBox(width: 8),
-                    Text(
-                      next == null ? '// ALL CLEARED' : '// UP NEXT — MISSION QUEUE',
-                      style: LandingTokens.label(fontSize: 10, color: LandingTokens.ember),
+                    Expanded(
+                      child: Text(
+                        next == null
+                            ? '// ALL CLEARED'
+                            : '// UP NEXT — MISSION QUEUE',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: LandingTokens.label(
+                          fontSize: 10,
+                          color: LandingTokens.ember,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -506,18 +546,30 @@ class _LeagueTracker extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('// LEAGUE', style: LandingTokens.label(fontSize: 9, color: skin.faint)),
+                    Text(
+                      '// LEAGUE',
+                      style: LandingTokens.label(
+                        fontSize: 9,
+                        color: skin.faint,
+                      ),
+                    ),
                     const SizedBox(height: 3),
                     Text(
                       '${tier.label.toUpperCase()} TIER',
-                      style: LandingTokens.display(fontSize: 18, color: skin.text),
+                      style: LandingTokens.display(
+                        fontSize: 18,
+                        color: skin.text,
+                      ),
                     ),
                   ],
                 ),
               ),
               if (next != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     borderRadius: LandingTokens.smallRadius,
                     border: Border.all(color: skin.borderStrong),
@@ -539,7 +591,12 @@ class _LeagueTracker extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   color: tier.color,
-                  boxShadow: [BoxShadow(color: tier.color.withValues(alpha: 0.45), blurRadius: 8)],
+                  boxShadow: [
+                    BoxShadow(
+                      color: tier.color.withValues(alpha: 0.45),
+                      blurRadius: 8,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -578,10 +635,38 @@ class _HubNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tiles = [
-      _NavTile(icon: Icons.map, accent: LandingTokens.circuit, title: 'Level Map', subtitle: 'Pick your next challenge', skin: skin, onTap: onOpenMap),
-      _NavTile(icon: Icons.emoji_events, accent: LandingTokens.ember, title: 'Code Golf', subtitle: 'Byte-count leaderboards', skin: skin, onTap: onOpenCodeGolf),
-      _NavTile(icon: Icons.person, accent: LandingTokens.signal, title: 'Profile', subtitle: 'Badges & streaks', skin: skin, onTap: onOpenProfile),
-      _NavTile(icon: Icons.settings, accent: Color(0xFF9E9CFF), title: 'Settings', subtitle: 'Theme, account & legal', skin: skin, onTap: onOpenSettings),
+      _NavTile(
+        icon: Icons.map,
+        accent: LandingTokens.circuit,
+        title: 'Level Map',
+        subtitle: 'Pick your next challenge',
+        skin: skin,
+        onTap: onOpenMap,
+      ),
+      _NavTile(
+        icon: Icons.emoji_events,
+        accent: LandingTokens.ember,
+        title: 'Code Golf',
+        subtitle: 'Byte-count leaderboards',
+        skin: skin,
+        onTap: onOpenCodeGolf,
+      ),
+      _NavTile(
+        icon: Icons.person,
+        accent: LandingTokens.signal,
+        title: 'Profile',
+        subtitle: 'Badges & streaks',
+        skin: skin,
+        onTap: onOpenProfile,
+      ),
+      _NavTile(
+        icon: Icons.settings,
+        accent: Color(0xFF9E9CFF),
+        title: 'Settings',
+        subtitle: 'Theme, account & legal',
+        skin: skin,
+        onTap: onOpenSettings,
+      ),
     ];
 
     return LayoutBuilder(
@@ -592,13 +677,15 @@ class _HubNav extends StatelessWidget {
         final cols = constraints.maxWidth > 1000
             ? 4
             : constraints.maxWidth > 520
-                ? 2
-                : 1;
+            ? 2
+            : 1;
         final tileWidth = (constraints.maxWidth - gap * (cols - 1)) / cols;
         return Wrap(
           spacing: gap,
           runSpacing: 12,
-          children: [for (final t in tiles) SizedBox(width: tileWidth, child: t)],
+          children: [
+            for (final t in tiles) SizedBox(width: tileWidth, child: t),
+          ],
         );
       },
     );
@@ -632,7 +719,10 @@ class _NavTileState extends State<_NavTile> {
   @override
   Widget build(BuildContext context) {
     final skin = widget.skin;
-    final motion = LandingTokens.motionFor(context, LandingTokens.motionStandard);
+    final motion = LandingTokens.motionFor(
+      context,
+      LandingTokens.motionStandard,
+    );
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -649,7 +739,9 @@ class _NavTileState extends State<_NavTile> {
             color: skin.panel,
             borderRadius: LandingTokens.mediumRadius,
             border: Border.all(
-              color: _hovered ? widget.accent.withValues(alpha: 0.65) : skin.border,
+              color: _hovered
+                  ? widget.accent.withValues(alpha: 0.65)
+                  : skin.border,
             ),
             boxShadow: LandingTokens.cardShadow,
           ),
@@ -661,7 +753,9 @@ class _NavTileState extends State<_NavTile> {
                 decoration: BoxDecoration(
                   color: widget.accent.withValues(alpha: 0.1),
                   borderRadius: LandingTokens.smallRadius,
-                  border: Border.all(color: widget.accent.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: widget.accent.withValues(alpha: 0.5),
+                  ),
                 ),
                 child: Icon(widget.icon, color: widget.accent, size: 21),
               ),
@@ -685,7 +779,10 @@ class _NavTileState extends State<_NavTile> {
                       widget.subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: LandingTokens.body(fontSize: 12, color: skin.faint),
+                      style: LandingTokens.body(
+                        fontSize: 12,
+                        color: skin.faint,
+                      ),
                     ),
                   ],
                 ),

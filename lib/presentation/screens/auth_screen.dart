@@ -386,6 +386,7 @@ class AuthPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 400;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -403,7 +404,12 @@ class AuthPanel extends StatelessWidget {
             child: AnimatedIridescence(borderRadius: BorderRadius.zero),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
+            padding: EdgeInsets.fromLTRB(
+              compact ? 20 : 28,
+              32,
+              compact ? 20 : 28,
+              28,
+            ),
             child: child,
           ),
         ],
@@ -432,11 +438,15 @@ class AuthHeading extends StatelessWidget {
       children: [
         Row(
           children: [
-            Text(
-              '// ${eyebrow.toUpperCase()}',
-              style: LandingTokens.label(color: LandingTokens.ember),
+            Expanded(
+              child: Text(
+                '// ${eyebrow.toUpperCase()}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: LandingTokens.label(color: LandingTokens.ember),
+              ),
             ),
-            const Spacer(),
+            const SizedBox(width: 12),
             const BlinkingCursor(width: 8, height: 14),
           ],
         ),

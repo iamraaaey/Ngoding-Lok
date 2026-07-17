@@ -34,7 +34,7 @@ class ModuleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DoodleCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       borderRadius: 20,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

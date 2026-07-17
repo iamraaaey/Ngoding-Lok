@@ -98,8 +98,8 @@ class _AdScreenState extends State<AdScreen> {
             clipBehavior: Clip.none,
             children: [
               DoodleCard(
-                padding: const EdgeInsets.fromLTRB(28, 36, 28, 28),
-                borderRadius: 24,
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                borderRadius: 18,
                 color: DoodlePalette.yellow,
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 380),
@@ -109,31 +109,48 @@ class _AdScreenState extends State<AdScreen> {
                       const DoodleIconBadge(
                         icon: Icons.play_circle_fill,
                         color: DoodlePalette.purple,
-                        size: 64,
-                        iconSize: 32,
-                        borderRadius: 18,
+                        size: 52,
+                        iconSize: 26,
+                        borderRadius: 15,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
                       Text(
-                        widget.isRewarded ? 'Sponsored Hint Unlocking...' : 'Advertisement',
-                        style: const TextStyle(color: Colors.black54, fontSize: 12, fontWeight: FontWeight.w700),
+                        widget.isRewarded
+                            ? 'Sponsored Hint Unlocking...'
+                            : 'Advertisement',
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 10),
                       Text(
                         _jokeSetup,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w800, height: 1.35),
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          height: 1.35,
+                        ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       if (_isLoadingJoke)
                         const SizedBox(
                           width: 24,
                           height: 24,
-                          child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 3,
+                            color: Colors.black,
+                          ),
                         )
                       else if (canContinue && _jokePunchline.isNotEmpty)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: DoodlePalette.white,
                             borderRadius: BorderRadius.circular(16),
@@ -161,7 +178,10 @@ class _AdScreenState extends State<AdScreen> {
                         )
                       else
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
@@ -177,12 +197,15 @@ class _AdScreenState extends State<AdScreen> {
                             ),
                           ),
                         ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 14),
                       DoodleButton(
                         onPressed: canContinue ? widget.onComplete : null,
                         color: DoodlePalette.green,
                         icon: Icons.skip_next,
-                        label: canContinue ? (widget.isRewarded ? 'Unlock Hint' : 'Skip Ad') : 'Please wait...',
+                        dense: true,
+                        label: canContinue
+                            ? (widget.isRewarded ? 'Unlock Hint' : 'Skip Ad')
+                            : 'Please wait...',
                       ),
                     ],
                   ),

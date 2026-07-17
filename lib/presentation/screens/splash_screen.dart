@@ -13,7 +13,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with TickerProviderStateMixin {
   late final AnimationController _logoCtrl;
   late final AnimationController _progressCtrl;
   late final AnimationController _exitCtrl;
@@ -32,14 +33,22 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   void initState() {
     super.initState();
 
-    _logoCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
+    _logoCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
     _progressCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2600),
     );
-    _exitCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
-    _cursorCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 550))
-      ..repeat(reverse: true);
+    _exitCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _cursorCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 550),
+    )..repeat(reverse: true);
 
     _logoCtrl.forward();
 
@@ -74,7 +83,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _exitCtrl,
-      builder: (_, child) => Opacity(opacity: (1 - _exitCtrl.value).clamp(0.0, 1.0), child: child),
+      builder: (_, child) =>
+          Opacity(opacity: (1 - _exitCtrl.value).clamp(0.0, 1.0), child: child),
       child: Scaffold(
         backgroundColor: LandingTokens.voidBlack,
         body: Stack(
@@ -89,7 +99,10 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 520),
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 40,
+                        ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,10 +111,16 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                             FadeTransition(
                               opacity: _logoCtrl,
                               child: SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(0, -0.6),
-                                  end: Offset.zero,
-                                ).animate(CurvedAnimation(parent: _logoCtrl, curve: Curves.easeOutCubic)),
+                                position:
+                                    Tween<Offset>(
+                                      begin: const Offset(0, -0.6),
+                                      end: Offset.zero,
+                                    ).animate(
+                                      CurvedAnimation(
+                                        parent: _logoCtrl,
+                                        curve: Curves.easeOutCubic,
+                                      ),
+                                    ),
                                 child: Row(
                                   children: [
                                     Container(
@@ -109,35 +128,50 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                       height: 56,
                                       decoration: const BoxDecoration(
                                         color: LandingTokens.ember,
-                                        borderRadius: LandingTokens.mediumRadius,
+                                        borderRadius:
+                                            LandingTokens.mediumRadius,
                                       ),
-                                      child: const Icon(Icons.terminal, color: Color(0xFF0A0500), size: 30),
+                                      child: const Icon(
+                                        Icons.terminal,
+                                        color: Color(0xFF0A0500),
+                                        size: 30,
+                                      ),
                                     ),
                                     const SizedBox(width: 20),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
                                               Flexible(
                                                 child: Text(
                                                   'NGODING LOK',
-                                                  overflow: TextOverflow.ellipsis,
-                                                  style: LandingTokens.display(fontSize: 30),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: LandingTokens.display(
+                                                    fontSize: 30,
+                                                  ),
                                                 ),
                                               ),
                                               const SizedBox(width: 10),
                                               AnimatedBuilder(
                                                 animation: _cursorCtrl,
-                                                builder: (context, _) => Opacity(
-                                                  opacity: _cursorCtrl.value > 0.5 ? 1 : 0,
-                                                  child: Container(
-                                                    width: 12,
-                                                    height: 24,
-                                                    color: LandingTokens.ember,
-                                                  ),
-                                                ),
+                                                builder: (context, _) =>
+                                                    Opacity(
+                                                      opacity:
+                                                          _cursorCtrl.value >
+                                                              0.5
+                                                          ? 1
+                                                          : 0,
+                                                      child: Container(
+                                                        width: 12,
+                                                        height: 24,
+                                                        color:
+                                                            LandingTokens.ember,
+                                                      ),
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -162,20 +196,28 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
                             // ── Terminal box ──────────────────────────────
                             FadeTransition(
-                              opacity: CurvedAnimation(parent: _logoCtrl, curve: const Interval(0.45, 1.0)),
+                              opacity: CurvedAnimation(
+                                parent: _logoCtrl,
+                                curve: const Interval(0.45, 1.0),
+                              ),
                               child: Container(
                                 width: double.infinity,
                                 decoration: BoxDecoration(
                                   color: LandingTokens.carbon,
                                   borderRadius: LandingTokens.mediumRadius,
-                                  border: Border.all(color: LandingTokens.hairline),
+                                  border: Border.all(
+                                    color: LandingTokens.hairline,
+                                  ),
                                   boxShadow: LandingTokens.cardShadow,
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
                                       child: Row(
                                         children: [
                                           _dot(LandingTokens.hairlineStrong),
@@ -183,12 +225,17 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                           _dot(LandingTokens.hairlineStrong),
                                           const SizedBox(width: 5),
                                           _dot(LandingTokens.ember),
-                                          const Spacer(),
-                                          Text(
-                                            'NGODING_LOK — TERMINAL',
-                                            style: LandingTokens.label(
-                                              fontSize: 9,
-                                              color: LandingTokens.textFaint,
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              'NGODING_LOK — TERMINAL',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.right,
+                                              style: LandingTokens.label(
+                                                fontSize: 9,
+                                                color: LandingTokens.textFaint,
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -198,22 +245,30 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                     Padding(
                                       padding: const EdgeInsets.all(16),
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           // Animated code lines
-                                          for (int i = 0; i < _lines.length; i++)
+                                          for (
+                                            int i = 0;
+                                            i < _lines.length;
+                                            i++
+                                          )
                                             if (i < _visibleLines)
                                               _TerminalLine(
                                                 key: ValueKey(i),
                                                 text: _lines[i],
-                                                isSuccess: i == _lines.length - 1,
+                                                isSuccess:
+                                                    i == _lines.length - 1,
                                               ),
                                           // Blinking cursor while typing
                                           if (_visibleLines < _lines.length)
                                             AnimatedBuilder(
                                               animation: _cursorCtrl,
                                               builder: (context, _) => Opacity(
-                                                opacity: _cursorCtrl.value > 0.5 ? 1 : 0,
+                                                opacity: _cursorCtrl.value > 0.5
+                                                    ? 1
+                                                    : 0,
                                                 child: Container(
                                                   width: 8,
                                                   height: 15,
@@ -233,7 +288,10 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
 
                             // ── Progress bar ──────────────────────────────
                             FadeTransition(
-                              opacity: CurvedAnimation(parent: _logoCtrl, curve: const Interval(0.5, 1.0)),
+                              opacity: CurvedAnimation(
+                                parent: _logoCtrl,
+                                curve: const Interval(0.5, 1.0),
+                              ),
                               child: AnimatedBuilder(
                                 animation: _progressCtrl,
                                 builder: (context, _) {
@@ -242,10 +300,12 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                     curve: Curves.easeInOut,
                                   ).value;
                                   return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
                                             'LOADING APP RESOURCES',
@@ -269,7 +329,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                         height: 4,
                                         decoration: BoxDecoration(
                                           color: LandingTokens.panel,
-                                          border: Border.all(color: LandingTokens.hairline),
+                                          border: Border.all(
+                                            color: LandingTokens.hairline,
+                                          ),
                                         ),
                                         alignment: Alignment.centerLeft,
                                         child: FractionallySizedBox(
@@ -279,7 +341,8 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                               color: LandingTokens.ember,
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: LandingTokens.ember.withValues(alpha: 0.5),
+                                                  color: LandingTokens.ember
+                                                      .withValues(alpha: 0.5),
                                                   blurRadius: 8,
                                                 ),
                                               ],
@@ -320,13 +383,17 @@ class _TerminalLine extends StatefulWidget {
   State<_TerminalLine> createState() => _TerminalLineState();
 }
 
-class _TerminalLineState extends State<_TerminalLine> with SingleTickerProviderStateMixin {
+class _TerminalLineState extends State<_TerminalLine>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 280));
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
     _ctrl.forward();
   }
 
@@ -351,7 +418,9 @@ class _TerminalLineState extends State<_TerminalLine> with SingleTickerProviderS
             widget.text,
             style: LandingTokens.mono(
               fontSize: 13,
-              color: widget.isSuccess ? LandingTokens.signal : LandingTokens.textMuted,
+              color: widget.isSuccess
+                  ? LandingTokens.signal
+                  : LandingTokens.textMuted,
             ),
           ),
         ),

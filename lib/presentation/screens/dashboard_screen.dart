@@ -8,6 +8,7 @@ import '../theme/doodle.dart';
 import '../widgets/leaderboard_panel.dart';
 import '../widgets/module_card.dart';
 import '../widgets/profile_card.dart';
+import '../widgets/sql_case_files.dart';
 
 class DashboardScreen extends StatefulWidget {
   final UserSession user;
@@ -257,6 +258,13 @@ class _TrackModuleSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (track == LanguageTrack.sql) {
+      return SqlCaseFiles(
+        modules: Curriculum.modulesForTrack(track),
+        user: user,
+        onLaunchModule: onLaunchModule,
+      );
+    }
     final modules = Curriculum.modulesForTrack(track);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -49,33 +49,38 @@ class _GradientButtonState extends State<GradientButton> {
           child: FilledButton(
             onPressed: widget.onPressed,
             style: _style(),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    widget.label.toUpperCase(),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: LandingTokens.label(
-                      color: const Color(0xFF0A0500),
-                      fontSize: widget.compact ? 11 : 12,
-                      fontWeight: FontWeight.w700,
+            child: LayoutBuilder(
+              builder: (context, constraints) => Row(
+                mainAxisSize: constraints.hasBoundedWidth
+                    ? MainAxisSize.max
+                    : MainAxisSize.min,
+                children: [
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: Text(
+                      widget.label.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: LandingTokens.label(
+                        color: const Color(0xFF0A0500),
+                        fontSize: widget.compact ? 11 : 12,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: widget.compact ? 8 : 10),
-                AnimatedSlide(
-                  duration: motion,
-                  offset: _hovered ? const Offset(0.18, 0) : Offset.zero,
-                  child: Icon(
-                    icon,
-                    size: widget.compact ? 15 : 17,
-                    color: const Color(0xFF0A0500),
+                  SizedBox(width: widget.compact ? 8 : 10),
+                  AnimatedSlide(
+                    duration: motion,
+                    offset: _hovered ? const Offset(0.18, 0) : Offset.zero,
+                    child: Icon(
+                      icon,
+                      size: widget.compact ? 15 : 17,
+                      color: const Color(0xFF0A0500),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -157,30 +162,39 @@ class _CinematicOutlineButtonState extends State<CinematicOutlineButton> {
         child: OutlinedButton(
           onPressed: widget.onPressed,
           style: _style(),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: AnimatedDefaultTextStyle(
-                  duration: motion,
-                  style: LandingTokens.label(
-                    color: color,
-                    fontSize: widget.compact ? 11 : 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  child: Text(
-                    '[ ${widget.label.toUpperCase()} ]',
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+          child: LayoutBuilder(
+            builder: (context, constraints) => Row(
+              mainAxisSize: constraints.hasBoundedWidth
+                  ? MainAxisSize.max
+                  : MainAxisSize.min,
+              children: [
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: AnimatedDefaultTextStyle(
+                    duration: motion,
+                    style: LandingTokens.label(
+                      color: color,
+                      fontSize: widget.compact ? 11 : 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    child: Text(
+                      '[ ${widget.label.toUpperCase()} ]',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
-              ),
-              if (widget.icon != null) ...[
-                SizedBox(width: widget.compact ? 8 : 10),
-                Icon(widget.icon, size: widget.compact ? 15 : 17, color: color),
+                if (widget.icon != null) ...[
+                  SizedBox(width: widget.compact ? 8 : 10),
+                  Icon(
+                    widget.icon,
+                    size: widget.compact ? 15 : 17,
+                    color: color,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

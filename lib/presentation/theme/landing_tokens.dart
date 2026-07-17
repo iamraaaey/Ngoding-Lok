@@ -74,7 +74,7 @@ abstract final class LandingTokens {
   static const double space96 = 96;
   static const double space120 = 120;
 
-  static const double contentMaxWidth = 1240;
+  static const double contentMaxWidth = 1800;
   static const double readingMaxWidth = 640;
   static const double heroArtMaxWidth = 560;
 
@@ -92,16 +92,16 @@ abstract final class LandingTokens {
 
   static EdgeInsets pagePaddingFor(double width) {
     if (width >= wideBreakpoint) {
-      return const EdgeInsets.symmetric(horizontal: 64);
+      return const EdgeInsets.symmetric(horizontal: 32);
     }
     if (width >= tabletBreakpoint) {
-      return const EdgeInsets.symmetric(horizontal: 40);
+      return const EdgeInsets.symmetric(horizontal: 24);
     }
-    return const EdgeInsets.symmetric(horizontal: 20);
+    return const EdgeInsets.symmetric(horizontal: 16);
   }
 
   static double sectionVerticalPaddingFor(double width) {
-    return width >= tabletBreakpoint ? space96 : space64;
+    return width >= tabletBreakpoint ? space64 : 40;
   }
 
   static int moduleColumnsFor(double width) {

@@ -3,6 +3,7 @@ import '../../core/curriculum/curriculum.dart';
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/language_track.dart';
 import '../../core/curriculum/module_type.dart';
+import '../../core/ads/rewarded_ad_service.dart';
 import '../../core/session/api_service.dart';
 import '../../core/session/app_route.dart';
 import '../../core/session/google_auth_service.dart';
@@ -62,6 +63,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
 
   bool _adIsRewarded = false;
   VoidCallback? _onAdComplete;
+  VoidCallback? _onAdCancel;
+  late final RewardedAdService _rewardedAdService;
 
   /// Streak the player starts a fresh session with. There's no day-tracking
   /// backend in this prototype, so this stands in for a returning player's
@@ -71,7 +74,14 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   @override
   void initState() {
     super.initState();
+    _rewardedAdService = RewardedAdService()..initialize();
     _loadPersistedSession();
+  }
+
+  @override
+  void dispose() {
+    _rewardedAdService.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPersistedSession() async {
@@ -158,18 +168,41 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     return true;
   }
 
-  /// Pauses the active game screen (which stays mounted under a Stack
-  /// overlay, see [build]) and shows the rewarded-ad screen. On completion,
-  /// grants the hint and returns to the game route.
-  void _requestHintAd({required VoidCallback onGranted}) {
-    setState(() {
-      _adIsRewarded = true;
-      _onAdComplete = () {
-        onGranted();
-        setState(() => _route = AppRoute.game);
-      };
-      _route = AppRoute.ad;
-    });
+  /// Shows a real AdMob rewarded overlay on Android/iOS. Web and desktop do
+  /// not support the mobile ads plugin, so they retain the local preview ad.
+  void _requestHintAd({
+    required VoidCallback onGranted,
+    VoidCallback? onCancelled,
+  }) {
+    if (!RewardedAdService.isSupported) {
+      setState(() {
+        _adIsRewarded = true;
+        _onAdComplete = () {
+          onGranted();
+          setState(() => _route = AppRoute.game);
+        };
+        _onAdCancel = onCancelled;
+        _route = AppRoute.ad;
+      });
+      return;
+    }
+
+    _rewardedAdService.showRewardedAd(
+      onLoading: () {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Preparing your rewarded hint...')),
+        );
+      },
+      onRewarded: onGranted,
+      onUnavailable: (message) {
+        onCancelled?.call();
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      },
+    );
   }
 
   /// Runs the fake XP-sync API, updates the session, then automatically
@@ -366,6 +399,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
               isRewarded: _adIsRewarded,
               onComplete: _onAdComplete!,
               onCancel: () {
+                _onAdCancel?.call();
                 setState(() {
                   _route = _activeModule != null
                       ? AppRoute.game

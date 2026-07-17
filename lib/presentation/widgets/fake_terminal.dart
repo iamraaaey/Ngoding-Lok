@@ -86,17 +86,21 @@ class _FakeTerminalState extends State<FakeTerminal> {
             color: Color(0xFF161616),
             border: Border(bottom: BorderSide(color: Color(0x1AFFFFFF))),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.terminal, color: Color(0xFF43FFA4), size: 18),
-              SizedBox(width: 8),
-              Text(
-                'SIMULATED TERMINAL',
-                style: TextStyle(
-                  color: Color(0xFF908F88),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  letterSpacing: 1,
+              const Icon(Icons.terminal, color: Color(0xFF43FFA4), size: 18),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'SIMULATED TERMINAL',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Color(0xFF908F88),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
             ],

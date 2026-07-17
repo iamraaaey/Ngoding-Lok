@@ -64,9 +64,9 @@ class ProfileScreen extends StatelessWidget {
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1500),
+                constraints: const BoxConstraints(maxWidth: 1800),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -76,7 +76,7 @@ class ProfileScreen extends StatelessWidget {
                         skin: skin,
                         onBack: onBack,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           // Wide: identity + streak on the left, the badge wall
@@ -162,7 +162,10 @@ class _ProfileCard extends StatelessWidget {
                       user.email,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: LandingTokens.mono(fontSize: 12, color: skin.faint),
+                      style: LandingTokens.mono(
+                        fontSize: 12,
+                        color: skin.faint,
+                      ),
                     ),
                   ],
                 ),
@@ -360,7 +363,10 @@ class _StreakCard extends StatelessWidget {
                     Text(
                       'OWNED: ${user.streakFreezes} · PROTECTS A MISSED DAY',
                       maxLines: 2,
-                      style: LandingTokens.label(fontSize: 9, color: skin.faint),
+                      style: LandingTokens.label(
+                        fontSize: 9,
+                        color: skin.faint,
+                      ),
                     ),
                   ],
                 ),
@@ -445,8 +451,8 @@ class _StreakCalendar extends StatelessWidget {
               color: isFuture
                   ? Colors.transparent
                   : isActive
-                      ? LandingTokens.ember
-                      : skin.panelRaised,
+                  ? LandingTokens.ember
+                  : skin.panelRaised,
               borderRadius: LandingTokens.smallRadius,
               border: Border.all(
                 color: isToday ? LandingTokens.ember : skin.border,
