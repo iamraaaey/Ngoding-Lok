@@ -129,48 +129,53 @@ class _SignUpScreenState extends State<SignUpScreen>
 
   Future<void> _signUpWithGoogle() async {
     if (_googleBusy) return;
-    setState(() => _googleBusy = true);
-
-    final result = await GoogleAuthService.signIn();
-    if (!mounted) return;
-    setState(() => _googleBusy = false);
-
-    if (result == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Google sign-up was cancelled or is unavailable here — you can register with email below.',
-          ),
-        ),
+    setState(() {
+      _googleBusy = true;
+      _submitError = null;
+    });
+    try {
+      final result = await GoogleAuthService.signIn();
+      if (!mounted) return;
+      setState(() => _googleBusy = false);
+      // A null result means the player closed the popup — nothing to report.
+      if (result == null) return;
+      widget.onRegister(
+        result.email,
+        name: result.name,
+        photoUrl: result.photoUrl,
       );
-      return;
+    } on SocialAuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _googleBusy = false;
+        _submitError = error.message;
+      });
     }
-    widget.onRegister(
-      result.email,
-      name: result.name,
-      photoUrl: result.photoUrl,
-    );
   }
 
   Future<void> _signUpWithGithub() async {
     if (_githubBusy) return;
-    setState(() => _githubBusy = true);
-    final result = await GitHubAuthService.signIn();
-    if (!mounted) return;
-    setState(() => _githubBusy = false);
-    if (result == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('GitHub sign-up was cancelled or is unavailable here.'),
-        ),
+    setState(() {
+      _githubBusy = true;
+      _submitError = null;
+    });
+    try {
+      final result = await GitHubAuthService.signIn();
+      if (!mounted) return;
+      setState(() => _githubBusy = false);
+      if (result == null) return;
+      widget.onRegister(
+        result.email,
+        name: result.name,
+        photoUrl: result.photoUrl,
       );
-      return;
+    } on SocialAuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _githubBusy = false;
+        _submitError = error.message;
+      });
     }
-    widget.onRegister(
-      result.email,
-      name: result.name,
-      photoUrl: result.photoUrl,
-    );
   }
 
   @override
