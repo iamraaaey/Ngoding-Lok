@@ -203,6 +203,17 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     VoidCallback onGranted,
     VoidCallback? onCancelled,
   ) async {
+    // Debug mode: skip ads and go straight to hint when in development.
+    const bool kDebugHintFlow = bool.fromEnvironment('DEBUG_HINT_FLOW', defaultValue: false);
+    if (kDebugHintFlow) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('[DEBUG] Ad skipped, requesting hint...')),
+      );
+      onGranted();
+      return;
+    }
+
     if (!AdSenseRewarded.isConfigured) {
       _showAdUnavailable(
         'Live rewarded ads are not configured for this build.',
