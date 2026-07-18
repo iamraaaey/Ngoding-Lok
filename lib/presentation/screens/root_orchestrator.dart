@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/curriculum/curriculum.dart';
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/language_track.dart';
@@ -12,6 +13,7 @@ import '../../core/session/google_auth_service.dart';
 import '../../core/session/leaderboard.dart';
 import '../../core/session/user_session.dart';
 import '../../core/session/session_persistence.dart';
+import '../../data/repositories/user_repository.dart';
 import 'arduino_simulator_screen.dart';
 import 'auth_screen.dart';
 import 'code_golf_screen.dart';
@@ -64,6 +66,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   LanguageTrack _leagueMapTrack = LanguageTrack.python;
 
   late final RewardedAdService _rewardedAdService;
+  late final UserRepository _userRepository;
 
   /// Streak the player starts a fresh session with. There's no day-tracking
   /// backend in this prototype, so this stands in for a returning player's
@@ -73,6 +76,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   @override
   void initState() {
     super.initState();
+    _userRepository = UserRepository();
     _rewardedAdService = RewardedAdService()..initialize();
     _loadPersistedSession();
   }
@@ -100,19 +104,43 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     });
     if (user != null) {
       SessionPersistence.saveSession(user);
+      // Sync to Firestore if user is authenticated
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        _userRepository.saveUserToFirestore(user, currentUser.uid).catchError(
+          (e) => print('Failed to sync user to Firestore: $e'),
+        );
+      }
     } else {
       SessionPersistence.clearSession();
     }
   }
 
-  void _login(String email, {String? name, String? photoUrl}) {
+  void _login(String email, {String? name, String? photoUrl}) async {
     final session = UserSession(
       email: email,
       name: name,
       photoUrl: photoUrl,
       streak: _seededStreak,
     );
-    _updateUser(session);
+
+    // Sync with Firestore if user is authenticated
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      try {
+        final mergedSession = await _userRepository.syncUserSession(
+          currentUser.uid,
+          session,
+        );
+        _updateUser(mergedSession);
+      } catch (e) {
+        print('Firestore sync failed, using local session: $e');
+        _updateUser(session);
+      }
+    } else {
+      _updateUser(session);
+    }
+
     setState(() {
       _route = AppRoute.home;
     });
@@ -258,6 +286,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       baseXp: module.xpReward,
       linesUsed: linesUsed,
       executionMs: executionMs,
+      moduleId: module.id,
     );
 
     final updated = _user!.withModuleCompleted(module.id, result.finalScore);

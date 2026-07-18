@@ -168,12 +168,12 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1800),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       appBar,
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           // Wide screens: hero + league share the top row, nav
@@ -186,11 +186,11 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Expanded(flex: 3, child: hero),
-                                    const SizedBox(width: 16),
+                                    const SizedBox(width: 8),
                                     Expanded(flex: 2, child: league),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 8),
                                 nav,
                               ],
                             );
@@ -199,9 +199,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               hero,
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 8),
                               league,
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 8),
                               nav,
                             ],
                           );
@@ -258,7 +258,7 @@ class _Panel extends StatelessWidget {
   const _Panel({
     required this.skin,
     required this.child,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(8),
   });
 
   @override
@@ -298,14 +298,14 @@ class _TopAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return _Panel(
       skin: skin,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(8),
       child: Row(
         children: [
           MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(onTap: onAvatarTap, child: _avatar()),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -734,7 +734,7 @@ class _NavTileState extends State<_NavTile> {
           duration: motion,
           curve: Curves.easeOutCubic,
           transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: skin.panel,
             borderRadius: LandingTokens.mediumRadius,
