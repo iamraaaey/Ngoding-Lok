@@ -88,7 +88,7 @@ class _FakeTerminalState extends State<FakeTerminal> {
           ),
           child: Row(
             children: [
-              const Icon(Icons.terminal, color: Color(0xFF43FFA4), size: 18),
+              const Icon(Icons.terminal, color: Color(0xFFFF5C01), size: 18),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
@@ -120,7 +120,7 @@ class _FakeTerminalState extends State<FakeTerminal> {
                       fontSize: 13,
                       height: 1.35,
                       color: line.startsWith('student@')
-                          ? const Color(0xFF43FFA4)
+                          ? const Color(0xFFFF5C01)
                           : const Color(0xFFCFCEC7),
                     ),
                   ),
@@ -136,7 +136,7 @@ class _FakeTerminalState extends State<FakeTerminal> {
                 'student@target:~\$ ',
                 style: TextStyle(
                   fontFamily: 'monospace',
-                  color: Color(0xFF43FFA4),
+                  color: Color(0xFFFF5C01),
                   fontSize: 13,
                 ),
               ),
@@ -162,7 +162,7 @@ class _FakeTerminalState extends State<FakeTerminal> {
                       color: Color(0xFFF4F3EF),
                       fontSize: 13,
                     ),
-                    cursorColor: const Color(0xFF43FFA4),
+                    cursorColor: const Color(0xFFFF5C01),
                     decoration: const InputDecoration(
                       border: InputBorder.none,
                       isDense: true,

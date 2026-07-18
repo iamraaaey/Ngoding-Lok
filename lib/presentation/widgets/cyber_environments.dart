@@ -113,7 +113,7 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
                 Icon(
                   _loggedIn ? Icons.lock_open : Icons.lock,
                   color: _loggedIn
-                      ? const Color(0xFF43FFA4)
+                      ? const Color(0xFFFF5C01)
                       : const Color(0xFFFF7A2F),
                 ),
                 const SizedBox(width: 10),
@@ -132,7 +132,7 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
                   Text(
                     '${widget.data['flag']}',
                     style: const TextStyle(
-                      color: Color(0xFF43FFA4),
+                      color: Color(0xFFFF5C01),
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -186,7 +186,7 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
                       line,
                       style: TextStyle(
                         color: line.endsWith('✓')
-                            ? const Color(0xFF43FFA4)
+                            ? const Color(0xFFFF5C01)
                             : const Color(0xFFCFCEC7),
                         fontFamily: 'monospace',
                         height: 1.4,
@@ -213,7 +213,7 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
               icon: const Icon(Icons.login),
               label: const Text('Use Credentials'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF43FFA4),
+                backgroundColor: const Color(0xFFFF5C01),
                 foregroundColor: const Color(0xFF0A0500),
               ),
             )
@@ -222,12 +222,12 @@ class _FakeBruteForceState extends State<FakeBruteForceSimulator> {
               width: double.infinity,
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: const Color(0x1443FFA4),
+                color: const Color(0x14FF5C01),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SelectableText(
                 'Learn: ${widget.data['learnTitle']}\n\n${widget.data['learnBody']}',
-                style: const TextStyle(color: Color(0xFF43FFA4), height: 1.3),
+                style: const TextStyle(color: Color(0xFFFF5C01), height: 1.3),
               ),
             ),
         ],
@@ -313,7 +313,7 @@ class _SocState extends State<FakeSocDashboard> {
                 _feedback!,
                 style: TextStyle(
                   color: _feedback!.startsWith('Threat')
-                      ? const Color(0xFF43FFA4)
+                      ? const Color(0xFFFF5C01)
                       : const Color(0xFFFF7A2F),
                   fontWeight: FontWeight.w700,
                 ),
@@ -323,13 +323,13 @@ class _SocState extends State<FakeSocDashboard> {
             Container(
               padding: const EdgeInsets.all(11),
               decoration: BoxDecoration(
-                color: const Color(0x1443FFA4),
+                color: const Color(0x14FF5C01),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SelectableText(
                 'Breach Prevented!\n${widget.data['flag']}\n\nLearn: ${widget.data['learnBody']}',
                 style: const TextStyle(
-                  color: Color(0xFF43FFA4),
+                  color: Color(0xFFFF5C01),
                   height: 1.3,
                   fontWeight: FontWeight.w700,
                 ),
@@ -364,7 +364,7 @@ class _TrafficRow extends StatelessWidget {
         item['malicious'] == true ? Icons.warning_amber : Icons.check_circle,
         color: item['malicious'] == true
             ? const Color(0xFFFF6B6B)
-            : const Color(0xFF43FFA4),
+            : const Color(0xFFFF5C01),
       ),
       title: Text(
         item['text'] as String,
@@ -451,7 +451,7 @@ class _RedBlueState extends State<FakeRedBlueScenario> {
               value: _complete ? 1 : (_phase * 3 + _step) / 6,
               color: _phase == 0
                   ? const Color(0xFFFF6B6B)
-                  : const Color(0xFF43FFA4),
+                  : const Color(0xFFFF5C01),
               backgroundColor: const Color(0xFF161616),
             ),
             const SizedBox(height: 16),
@@ -461,7 +461,7 @@ class _RedBlueState extends State<FakeRedBlueScenario> {
                 decoration: BoxDecoration(
                   color: _phase == 0
                       ? const Color(0x1FFF6B6B)
-                      : const Color(0x1443FFA4),
+                      : const Color(0x14FF5C01),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -480,18 +480,18 @@ class _RedBlueState extends State<FakeRedBlueScenario> {
                 style: FilledButton.styleFrom(
                   backgroundColor: _phase == 0
                       ? const Color(0xFFFF6B6B)
-                      : const Color(0xFF43FFA4),
+                      : const Color(0xFFFF5C01),
                   foregroundColor: const Color(0xFF0A0500),
                 ),
               ),
             ] else
               Container(
                 padding: const EdgeInsets.all(12),
-                color: const Color(0x1443FFA4),
+                color: const Color(0x14FF5C01),
                 child: SelectableText(
                   'Captured flag: ${widget.data['flag1']}\nPatched-system flag: ${widget.data['flag2']}\n\nLearn: ${widget.data['learnBody']}',
                   style: const TextStyle(
-                    color: Color(0xFF43FFA4),
+                    color: Color(0xFFFF5C01),
                     height: 1.35,
                     fontWeight: FontWeight.w700,
                   ),
@@ -544,13 +544,13 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
   Widget _learn() => Container(
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
-      color: const Color(0x1443FFA4),
+      color: const Color(0x14FF5C01),
       borderRadius: BorderRadius.circular(9),
     ),
     child: SelectableText(
       'Learn: ${widget.data['learnBody']}\n\n${widget.data['flag'] ?? '${widget.data['flag1']}\n${widget.data['flag2'] ?? ''}'}',
       style: const TextStyle(
-        color: Color(0xFF43FFA4),
+        color: Color(0xFFFF5C01),
         height: 1.35,
         fontWeight: FontWeight.w700,
       ),
@@ -734,7 +734,7 @@ class _DecisionTreeState extends State<DecisionTreeEnvironment> {
         for (var i = 0; i < feed.length; i++)
           Card(
             color: _blocked.contains(i)
-                ? const Color(0x1443FFA4)
+                ? const Color(0x14FF5C01)
                 : const Color(0xFF101010),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
@@ -1025,7 +1025,7 @@ class _BrowserState extends State<FakeBrowserMock> {
               Text(
                 '<!-- ${widget.data['flag']} -->',
                 style: const TextStyle(
-                  color: Color(0xFF43FFA4),
+                  color: Color(0xFFFF5C01),
                   fontFamily: 'monospace',
                   fontWeight: FontWeight.w700,
                 ),
@@ -1118,7 +1118,7 @@ class _InboxState extends State<FakeInboxMock> {
               child: Text(
                 'Nice spotting! ${widget.data['flag']}',
                 style: const TextStyle(
-                  color: Color(0xFF43FFA4),
+                  color: Color(0xFFFF5C01),
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1173,7 +1173,7 @@ class _CipherState extends State<FakeCipherTool> {
             Text(
               'Decoded: ${widget.data['decoded']}\n${widget.data['flag']}',
               style: const TextStyle(
-                color: Color(0xFF43FFA4),
+                color: Color(0xFFFF5C01),
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -1243,7 +1243,7 @@ class _FilesState extends State<FakeFileExplorer> {
               child: Text(
                 opened!,
                 style: const TextStyle(
-                  color: Color(0xFF43FFA4),
+                  color: Color(0xFFFF5C01),
                   fontFamily: 'monospace',
                   fontWeight: FontWeight.w700,
                 ),
