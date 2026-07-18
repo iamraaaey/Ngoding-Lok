@@ -138,7 +138,12 @@ class _ProfileBody extends StatelessWidget {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1800),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(
+                    MediaQuery.sizeOf(context).width < 600 ? 12 : 20,
+                    12,
+                    MediaQuery.sizeOf(context).width < 600 ? 12 : 20,
+                    24,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -305,8 +310,7 @@ class _ProfileCard extends StatelessWidget {
                   ? 2
                   : 1;
               const gap = 10.0;
-              final tileW =
-                  (constraints.maxWidth - gap * (cols - 1)) / cols;
+              final tileW = (constraints.maxWidth - gap * (cols - 1)) / cols;
               final tiles = [
                 _StatTile(
                   icon: Icons.bolt,
@@ -964,11 +968,51 @@ class _BadgesCard extends StatelessWidget {
           const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
-              final cols = constraints.maxWidth > 720
+              final progress = badges.isEmpty
+                  ? 0.0
+                  : unlockedCount / badges.length;
+              final meter = ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 7,
+                  backgroundColor: skin.panelRaised,
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    LandingTokens.ember,
+                  ),
+                ),
+              );
+              final copy = Text(
+                unlockedCount == badges.length
+                    ? 'ALL ACHIEVEMENTS UNLOCKED'
+                    : '${badges.length - unlockedCount} challenges remain',
+                style: LandingTokens.label(fontSize: 9, color: skin.faint),
+              );
+              if (constraints.maxWidth < 430) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [copy, const SizedBox(height: 8), meter],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: copy),
+                  const SizedBox(width: 18),
+                  SizedBox(width: 150, child: meter),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cols = constraints.maxWidth > 620
                   ? 4
-                  : constraints.maxWidth > 380
+                  : constraints.maxWidth > 360
                   ? 3
-                  : 2;
+                  : constraints.maxWidth > 320
+                  ? 2
+                  : 1;
               const gap = 12.0;
               final tileW = (constraints.maxWidth - gap * (cols - 1)) / cols;
               return Wrap(
@@ -1023,9 +1067,12 @@ class _BadgeTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Opacity(
-      opacity: unlocked ? 1 : 0.5,
+      // Locked achievements should still be legible enough to explain what
+      // the player is working toward.
+      opacity: unlocked ? 1 : 0.78,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        constraints: const BoxConstraints(minHeight: 154),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
         decoration: BoxDecoration(
           color: unlocked ? skin.panelRaised : skin.panel,
           borderRadius: LandingTokens.smallRadius,
@@ -1090,15 +1137,36 @@ class _BadgeTile extends StatelessWidget {
             Text(
               description,
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: LandingTokens.body(fontSize: 10, color: skin.faint),
             ),
-            if (!unlocked && target > 1) ...[
+            if (target > 1) ...[
               const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: (progress / target).clamp(0.0, 1.0),
+                  minHeight: 4,
+                  backgroundColor: skin.panelRaised,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    unlocked ? color : color.withValues(alpha: 0.7),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
               Text(
                 '${progress.clamp(0, target)} / $target',
                 style: LandingTokens.mono(fontSize: 9, color: skin.faint),
+              ),
+            ] else ...[
+              const SizedBox(height: 6),
+              Text(
+                unlocked ? 'UNLOCKED' : 'LOCKED',
+                style: LandingTokens.label(
+                  fontSize: 8,
+                  color: unlocked ? color : skin.faint,
+                ),
               ),
             ],
           ],

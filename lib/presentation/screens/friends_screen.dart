@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -39,10 +41,12 @@ class FriendsScreen extends StatefulWidget {
 class _FriendsScreenState extends State<FriendsScreen> {
   final _codeController = TextEditingController();
   bool _redeeming = false;
+  Stream<List<FriendSummary>>? _liveFriends;
 
   @override
   void initState() {
     super.initState();
+    _bindFirebaseFriends();
     // A code carried in from an invite link (`?ref=CODE`) is normally
     // redeemed automatically at login; if it is still pending (e.g. the
     // user was offline), surface it here ready to submit.
@@ -55,6 +59,27 @@ class _FriendsScreenState extends State<FriendsScreen> {
   @override
   void didUpdateWidget(covariant FriendsScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.uid != widget.uid ||
+        oldWidget.repository != widget.repository) {
+      _bindFirebaseFriends();
+    }
+  }
+
+  void _bindFirebaseFriends() {
+    final uid = widget.uid;
+    _liveFriends = uid == null
+        ? Stream.value(const <FriendSummary>[])
+        : widget.repository.streamFriendsForUser(uid);
+
+    // Also repair links created before the stale-session overwrite fix. This
+    // is idempotent and is protected by the redemption document in rules.
+    if (uid != null) {
+      unawaited(
+        widget.repository.reconcileReferralFriendLink(uid).catchError((error) {
+          debugPrint('Referral link reconciliation skipped: $error');
+        }),
+      );
+    }
   }
 
   @override
@@ -64,10 +89,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   }
 
   Stream<List<FriendSummary>> _friendsStream() {
-    if (widget.uid == null) {
-      return Stream.value(const <FriendSummary>[]);
-    }
-    return widget.repository.streamFriends(widget.user.friendIds);
+    return _liveFriends ?? Stream.value(const <FriendSummary>[]);
   }
 
   Future<void> _redeemCode() async {
@@ -225,9 +247,16 @@ class _FriendsScreenState extends State<FriendsScreen> {
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1000),
+                // The social hub is intentionally edge-to-edge on desktop so
+                // invite controls and the crew list have room to breathe.
+                constraints: const BoxConstraints(maxWidth: 1800),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.fromLTRB(
+                    MediaQuery.sizeOf(context).width < 600 ? 12 : 20,
+                    12,
+                    MediaQuery.sizeOf(context).width < 600 ? 12 : 20,
+                    24,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -330,72 +359,27 @@ class _InvitePanel extends StatelessWidget {
             style: TextStyle(color: skin.sub, height: 1.45),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: skin.panelRaised,
-                    borderRadius: LandingTokens.smallRadius,
-                    border: Border.all(color: skin.borderStrong),
-                  ),
-                  child: Text(
-                    code ?? 'SIGN IN TO GET A CODE',
-                    style: LandingTokens.mono(
-                      fontSize: 15,
-                      color: code == null ? skin.faint : LandingTokens.ember,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              CinematicOutlineButton(
-                label: 'Copy',
-                icon: Icons.copy,
-                compact: true,
-                onPressed: enabled ? onCopy : null,
-              ),
-            ],
+          _InviteValueRow(
+            value: code ?? 'SIGN IN TO GET A CODE',
+            valueColor: code == null ? skin.faint : LandingTokens.ember,
+            button: CinematicOutlineButton(
+              label: 'Copy',
+              icon: Icons.copy,
+              compact: true,
+              onPressed: enabled ? onCopy : null,
+            ),
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: skin.panelRaised,
-                    borderRadius: LandingTokens.smallRadius,
-                    border: Border.all(color: skin.borderStrong),
-                  ),
-                  child: Text(
-                    inviteLink ?? 'Sign in to get your invite link',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: LandingTokens.mono(
-                      fontSize: 11,
-                      color: inviteLink == null
-                          ? skin.faint
-                          : LandingTokens.circuit,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              CinematicOutlineButton(
-                label: 'Copy Link',
-                icon: Icons.link,
-                compact: true,
-                onPressed: enabled ? onCopyLink : null,
-              ),
-            ],
+          _InviteValueRow(
+            value: inviteLink ?? 'Sign in to get your invite link',
+            valueColor: inviteLink == null ? skin.faint : LandingTokens.circuit,
+            fontSize: 11,
+            button: CinematicOutlineButton(
+              label: 'Copy Link',
+              icon: Icons.link,
+              compact: true,
+              onPressed: enabled ? onCopyLink : null,
+            ),
           ),
           const SizedBox(height: 18),
           TextField(
@@ -423,8 +407,8 @@ class _InvitePanel extends StatelessWidget {
             onSubmitted: (_) => onRedeem(),
           ),
           const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
+          SizedBox(
+            width: double.infinity,
             child: GradientButton(
               label: redeeming ? 'Syncing...' : 'Add Friend +50 XP',
               icon: redeeming ? Icons.sync : Icons.person_add,
@@ -434,6 +418,58 @@ class _InvitePanel extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Keeps copy controls usable on a phone by stacking the action below the
+/// value, while retaining the compact two-column layout on larger screens.
+class _InviteValueRow extends StatelessWidget {
+  final String value;
+  final Color valueColor;
+  final double fontSize;
+  final Widget button;
+
+  const _InviteValueRow({
+    required this.value,
+    required this.valueColor,
+    required this.button,
+    this.fontSize = 15,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final field = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: NoirSkin.of(context).panelRaised,
+        borderRadius: LandingTokens.smallRadius,
+        border: Border.all(color: NoirSkin.of(context).borderStrong),
+      ),
+      child: Text(
+        value,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: LandingTokens.mono(fontSize: fontSize, color: valueColor),
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 560) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [field, const SizedBox(height: 8), button],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: field),
+            const SizedBox(width: 10),
+            button,
+          ],
+        );
+      },
     );
   }
 }
@@ -479,7 +515,10 @@ class _FriendsPanel extends StatelessWidget {
                       ),
                       Text(
                         '${friends.length} FRIEND${friends.length == 1 ? '' : 'S'}',
-                        style: LandingTokens.label(fontSize: 9, color: skin.faint),
+                        style: LandingTokens.label(
+                          fontSize: 9,
+                          color: skin.faint,
+                        ),
                       ),
                     ],
                   ),

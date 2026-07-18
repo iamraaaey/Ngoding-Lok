@@ -16,6 +16,7 @@ Future<void> main() async {
     details.stack?.toString(),
   );
 
+  var bootCompleted = false;
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
@@ -29,10 +30,16 @@ Future<void> main() async {
         debugPrint('Firebase.initializeApp failed: $error\n$stack');
       }
       runApp(const NgeCodeJuhApp());
+      bootCompleted = true;
     },
     (error, stack) {
-      debugPrint('Uncaught startup error: $error\n$stack');
-      runApp(_StartupErrorApp(error.toString(), stack.toString()));
+      debugPrint('Uncaught error: $error\n$stack');
+      // Only replace the UI when boot itself failed. A stray async error
+      // after a successful start (a failed share, an ad SDK hiccup) must not
+      // tear down a running session with the full-screen error page.
+      if (!bootCompleted) {
+        runApp(_StartupErrorApp(error.toString(), stack.toString()));
+      }
     },
   );
 }

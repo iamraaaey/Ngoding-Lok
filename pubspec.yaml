@@ -51,6 +51,9 @@ dependencies:
   google_mobile_ads: ^9.0.0
   # Opens the real LinkedIn share-offsite flow on web and native platforms.
   url_launcher: ^6.3.2
+  # Generates a portable credential file and exposes browser/native download.
+  pdf: ^3.11.3
+  printing: ^5.14.2
 
   # Typed browser DOM APIs for the web-only Wokwi iframe.
   web: ^1.1.1
