@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../core/session/email_auth_service.dart';
 import '../../core/session/google_auth_service.dart';
@@ -6,6 +7,7 @@ import '../widgets/labeled_text_field.dart';
 import '../widgets/landing/landing_button.dart';
 import '../widgets/landing/landing_hero.dart';
 import '../widgets/landing/landing_surface.dart';
+import '../widgets/mfa_sign_in_dialog.dart';
 import '../widgets/sso_buttons.dart';
 
 /// "Join the Quest" auth card in the terminal noir style. The Google button
@@ -91,6 +93,24 @@ class _AuthScreenState extends State<AuthScreen>
         // Firebase unavailable here — fall back to the simulated session.
         widget.onLogin(email);
       }
+    } on MfaRequiredException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _emailBusy = false;
+        _formError = null;
+      });
+      final credential = await showDialog<UserCredential>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => MfaSignInDialog(resolver: error.resolver),
+      );
+      if (!mounted || credential?.user == null) return;
+      final user = credential!.user!;
+      widget.onLogin(
+        user.email ?? email,
+        name: user.displayName,
+        photoUrl: user.photoURL,
+      );
     } on EmailAuthException catch (error) {
       if (!mounted) return;
       setState(() {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../core/session/email_auth_service.dart';
 import '../../core/session/user_session.dart';
 import '../theme/landing_tokens.dart';
 import '../theme/noir_skin.dart';
+import '../widgets/account_security_dialogs.dart';
 import '../widgets/labeled_text_field.dart';
 import '../widgets/landing/landing_button.dart';
 import '../widgets/landing/landing_surface.dart';
@@ -45,6 +47,48 @@ class SettingsScreen extends StatelessWidget {
           onTap: () => showNoirDialog<void>(
             context,
             builder: (_) => const ChangePasswordDialog(),
+          ),
+        ),
+        _SettingRow(
+          icon: Icons.verified_user_outlined,
+          label: 'Email Verification',
+          subtitle: EmailAuthService.emailVerified
+              ? 'Verified'
+              : 'Verify your address',
+          skin: skin,
+          onTap: () => showNoirDialog<void>(
+            context,
+            builder: (_) => const EmailVerificationDialog(),
+          ),
+        ),
+        _SettingRow(
+          icon: Icons.alternate_email,
+          label: 'Change Email',
+          subtitle: 'Confirm the new address',
+          skin: skin,
+          onTap: () => showNoirDialog<void>(
+            context,
+            builder: (_) => const ChangeEmailDialog(),
+          ),
+        ),
+        _SettingRow(
+          icon: Icons.sms_outlined,
+          label: 'SMS Verification',
+          subtitle: 'Link a phone number',
+          skin: skin,
+          onTap: () => showNoirDialog<void>(
+            context,
+            builder: (_) => const PhoneLinkDialog(),
+          ),
+        ),
+        _SettingRow(
+          icon: Icons.security_outlined,
+          label: 'Enroll SMS MFA',
+          subtitle: 'Add a second sign-in factor',
+          skin: skin,
+          onTap: () => showNoirDialog<void>(
+            context,
+            builder: (_) => const MfaEnrollmentDialog(),
           ),
         ),
         _SettingRow(
@@ -364,9 +408,8 @@ class _SwitchRow extends StatelessWidget {
   }
 }
 
-/// Functional "Change Password" dialog. There is no auth backend in this
-/// prototype, so a valid form updates the in-memory session by confirming
-/// success; it never transmits credentials anywhere.
+/// Changes the password for a Firebase email/password account after recent
+/// credential reauthentication. OAuth-only accounts receive a clear error.
 class ChangePasswordDialog extends StatefulWidget {
   const ChangePasswordDialog({super.key});
 
@@ -382,6 +425,8 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   String? _currentError;
   String? _nextError;
   String? _confirmError;
+  String? _formError;
+  bool _busy = false;
 
   @override
   void dispose() {
@@ -391,7 +436,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final current = _current.text;
     final next = _next.text;
     final confirm = _confirm.text;
@@ -404,11 +449,29 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 : null)
           : 'New password must be at least 6 characters.';
       _confirmError = confirm == next ? null : 'Passwords do not match.';
+      _formError = null;
     });
 
-    if (_currentError == null && _nextError == null && _confirmError == null) {
+    if (_currentError != null || _nextError != null || _confirmError != null) {
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      await EmailAuthService.updatePassword(
+        currentPassword: current,
+        newPassword: next,
+      );
+      if (!mounted) return;
+      setState(() => _busy = false);
       Navigator.of(context).pop();
       showNoirSnack(context, 'Password updated.');
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _formError = accountSecurityMessage(error);
+      });
     }
   }
 
@@ -423,9 +486,13 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         CinematicOutlineButton(
           label: 'Cancel',
           compact: true,
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _busy ? null : () => Navigator.of(context).pop(),
         ),
-        GradientButton(label: 'Update', compact: true, onPressed: _submit),
+        GradientButton(
+          label: _busy ? 'Working...' : 'Update',
+          compact: true,
+          onPressed: _busy ? null : _submit,
+        ),
       ],
       child: SingleChildScrollView(
         child: Column(
@@ -455,6 +522,17 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
               obscure: true,
               errorText: _confirmError,
             ),
+            if (_formError != null) ...[
+              const SizedBox(height: 14),
+              Text(
+                _formError!,
+                textAlign: TextAlign.center,
+                style: LandingTokens.mono(
+                  fontSize: 12,
+                  color: const Color(0xFFFF4D5E),
+                ),
+              ),
+            ],
           ],
         ),
       ),
