@@ -1,10 +1,13 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
+import { initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod/v4";
 
 const anthropicApiKey = defineSecret("ANTHROPIC_API_KEY");
+initializeApp();
 
 const HintResponseSchema = z.object({
   hintTitle: z.string(),
@@ -55,13 +58,36 @@ export const generateSocraticHint = onRequest(
       return;
     }
 
-    const body = req.body as HintRequestBody;
-    const moduleType = body.moduleType ?? "";
-    const levelObjective = body.levelObjective ?? "";
-    const currentCode = body.currentCode ?? "";
+    const authorization = req.get("authorization") ?? "";
+    if (!authorization.startsWith("Bearer ")) {
+      res.status(401).json({ error: "Firebase authentication is required" });
+      return;
+    }
+
+    try {
+      await getAuth().verifyIdToken(authorization.substring("Bearer ".length));
+    } catch (_) {
+      res.status(401).json({ error: "Invalid Firebase authentication token" });
+      return;
+    }
+
+    const body = (req.body ?? {}) as HintRequestBody;
+    const moduleType = typeof body.moduleType === "string"
+      ? body.moduleType.trim()
+      : "";
+    const levelObjective = typeof body.levelObjective === "string"
+      ? body.levelObjective.trim()
+      : "";
+    const currentCode = typeof body.currentCode === "string"
+      ? body.currentCode.trim()
+      : "";
 
     if (!levelObjective) {
       res.status(400).json({ error: "levelObjective is required" });
+      return;
+    }
+    if (levelObjective.length > 2000 || currentCode.length > 12000) {
+      res.status(413).json({ error: "Hint input is too large" });
       return;
     }
 

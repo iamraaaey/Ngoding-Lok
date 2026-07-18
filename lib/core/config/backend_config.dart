@@ -1,8 +1,9 @@
 /// Deployed Cloud Function endpoint for the Socratic Hint Engine.
 ///
-/// Update this after running `firebase deploy` from `functions/` (see
-/// `functions/README.md`). Until it points at a real deployment, hint
-/// requests fail fast and every game screen falls back to the module's
-/// static hint text.
-const String hintEndpointUrl =
-    'https://us-central1-YOUR-PROJECT-ID.cloudfunctions.net/generateSocraticHint';
+/// The default points at this repository's Firebase project. A fork can use
+/// `--dart-define=HINT_ENDPOINT_URL=...` without editing source code.
+const String hintEndpointUrl = String.fromEnvironment(
+  'HINT_ENDPOINT_URL',
+  defaultValue:
+      'https://us-central1-ngoding-lok.cloudfunctions.net/generateSocraticHint',
+);

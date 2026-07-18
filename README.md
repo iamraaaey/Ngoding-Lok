@@ -243,20 +243,38 @@ Firebase is initialized by the app using the committed generated options. For a 
    ```
 
 4. In **Firebase Console → Authentication → Sign-in method**, enable
-   **Email/Password** and save it. The password-recovery screen calls Firebase
-   Auth directly and requires this provider to be enabled.
+   **Email/Password** and **Phone** and save them. Email sign-in/sign-up,
+   password reset, SMS phone linking, and SMS verification use Firebase Auth
+   directly.
 5. In **Authentication → Templates → Password reset**, customize the sender
-   name and reset email if needed. Keep `ngoding-lok.web.app` and your local
-   development domain in the project's authorized domains.
+   name and reset email if needed. Also customize **Email address verification**,
+   **Email address change**, and **Multi-factor enrolment notification** when
+   MFA is enabled. Keep `ngoding-lok.web.app` and your local development domain
+   in the project's authorized domains.
 6. Create a test email/password user in **Authentication → Users**. The app's
-   email sign-up form is still a local prototype, so it does not create a
-   Firebase account yet.
+   email sign-up form now creates a Firebase email/password account and sends
+   the verification message.
+7. Add Firebase test phone numbers under the Phone provider settings. Test
+   numbers avoid sending real SMS while still exercising the verification flow.
+8. For SMS MFA, upgrade the project to **Identity Platform**, enable SMS MFA
+   under **Authentication → Sign-in method → Advanced**, and configure
+   Android SHA-256, iOS APNs, and an authorized web domain. MFA enrollment also
+   requires a verified email address.
+9. SMTP is not configured by Flutter code. Configure the sender/domain and
+   custom SMTP settings in Firebase Authentication/Identity Platform, then
+   publish the required DNS records. The app only calls Firebase Auth, which
+   sends the configured templates.
 
-Google and GitHub flows return to the app through Firebase Authentication. The password-recovery form sends a real Firebase reset email. The email sign-in/sign-up forms remain local prototype flows for now; enable Email/Password in Firebase Authentication and connect those forms before treating email accounts as production-ready.
+Google, GitHub, and email/password flows return to the app through Firebase
+Authentication. The password-recovery form sends a real Firebase reset email.
+Settings contains Firebase-backed email verification, verified email change,
+password change, SMS phone linking, and SMS MFA enrollment flows.
 
-## Optional Socratic Hint Backend
+## Socratic Hint Backend
 
-Deploy the function only when you want live Claude-powered hints. It requires Node.js 20, the Firebase CLI, a Firebase project, and an Anthropic API key.
+Deploy this function to enable live Claude-powered hints after the rewarded-ad
+gate. It requires Node.js 20, the Firebase CLI, a Firebase project, and an
+Anthropic API key.
 
 ```bash
 cd functions
@@ -268,15 +286,22 @@ firebase functions:secrets:set ANTHROPIC_API_KEY
 npm run deploy
 ```
 
-After deployment, copy the printed function URL into [`lib/core/config/backend_config.dart`](lib/core/config/backend_config.dart). It starts as a `YOUR-PROJECT-ID` placeholder, so live hints are not enabled by default. See [functions/README.md](functions/README.md) for the local emulator command and request/response contract.
+After deployment, the app uses the `ngoding-lok` function URL from
+[`lib/core/config/backend_config.dart`](lib/core/config/backend_config.dart).
+For another Firebase project, pass
+`--dart-define=HINT_ENDPOINT_URL=https://.../generateSocraticHint` at build
+time. See [functions/README.md](functions/README.md) for the local emulator
+command and request/response contract.
 
-Before exposing the endpoint publicly, add the authentication, authorization, and rate-limiting controls appropriate for your deployment. The current prototype function accepts CORS-enabled POST requests and does not verify a Firebase Auth token.
+The function verifies the signed-in Firebase user's ID token before calling
+Claude. Add production rate limiting and monitoring appropriate for your
+deployment before opening the feature to a large audience.
 
 ## Current prototype boundaries
 
 | Capability | Current behavior |
 | --- | --- |
-| Email account management | Password reset uses Firebase Auth; email sign-in/sign-up remain local prototype flows and do not yet create Firebase email/password accounts. |
+| Email account management | Firebase handles email sign-in/sign-up, verification, password reset, verified email change, and password change when the required providers are enabled. |
 | Progress sync | XP, completions, scores, badges, freezes, and cyber-room progress are saved only in device-local `SharedPreferences`; there is no cross-device cloud sync. |
 | Leaderboards and Code Golf | Deterministic mock data plus the local player; no live multiplayer service. |
 | XP sync and ads | XP remains device-local; rewarded hints use native AdMob on mobile and AdSense H5 Games on web when configured, with no fake ad fallback. |
@@ -292,7 +317,7 @@ Run the checks in [Run quality checks](#run-quality-checks) before submitting ch
 ## Roadmap
 
 - Add a real persistent backend for cross-device progress, live rankings, and Code Golf submissions.
-- Implement Firebase-backed email/password account management and recovery.
+- Add production account-management observability and test the Firebase email/SMS flows on each supported platform.
 - Harden the hint endpoint with authenticated access, abuse controls, monitoring, and deployment configuration.
 - Replace mock XP/social behaviors with production services only when the learning experience and privacy model are ready; complete ad-account approval and operational monitoring for live inventory.
 - Continue expanding authored missions and accessibility testing across screen sizes and platforms.

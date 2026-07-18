@@ -55,13 +55,19 @@ Firebase prints the deployed HTTPS URL, e.g.:
 https://us-central1-<project-id>.cloudfunctions.net/generateSocraticHint
 ```
 
-Copy that URL into `lib/core/config/backend_config.dart` on the Flutter side
-(`hintEndpointUrl`) so the app calls your deployed function.
+The Flutter app defaults to the `ngoding-lok` function URL in
+`lib/core/config/backend_config.dart`. For another project, build with
+`--dart-define=HINT_ENDPOINT_URL=https://.../generateSocraticHint`.
+
+The function requires an `Authorization: Bearer <Firebase ID token>` header.
+The Flutter client adds the current signed-in user's token automatically;
+local demo sessions intentionally fall back to the authored static hint.
 
 ## Response contract
 
 `POST` with `{ moduleType, levelObjective, currentCode }` →
-`200 { hintTitle, hintMessage }` on success, non-2xx on any failure. The
+`200 { hintTitle, hintMessage }` on success, non-2xx on any failure.
+Requests without a valid Firebase ID token receive `401`. The
 Flutter client (`HintService`) treats any non-2xx or malformed response as a
 soft failure and falls back to the module's static hint text — so a
 misconfigured or undeployed function degrades gracefully instead of breaking

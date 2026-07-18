@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import '../config/backend_config.dart';
 
@@ -25,10 +26,11 @@ class HintService {
     required String currentCode,
   }) async {
     try {
+      final headers = await _requestHeaders();
       final response = await _client
           .post(
             Uri.parse(hintEndpointUrl),
-            headers: const {'Content-Type': 'application/json'},
+            headers: headers,
             body: jsonEncode({
               'moduleType': moduleType,
               'levelObjective': levelObjective,
@@ -49,5 +51,20 @@ class HintService {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<Map<String, String>> _requestHeaders() async {
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    } catch (_) {
+      // Local/demo sessions have no Firebase token and intentionally use the
+      // authored static hint when the protected backend cannot be reached.
+    }
+    return headers;
   }
 }
