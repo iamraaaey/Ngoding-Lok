@@ -27,6 +27,7 @@ class RocketGameScreen extends StatefulWidget {
   final Future<void> Function({
     required int linesUsed,
     required int executionMs,
+    String? sourceCode,
   })
   onWin;
   final VoidCallback onBack;
@@ -172,6 +173,7 @@ class _RocketGameScreenState extends State<RocketGameScreen> {
       await widget.onWin(
         linesUsed: validLines,
         executionMs: _timerController.elapsedSeconds.value * 1000,
+        sourceCode: _codeController.text,
       );
     }
   }

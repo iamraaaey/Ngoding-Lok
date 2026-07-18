@@ -12,7 +12,7 @@ import '../widgets/landing/landing_button.dart';
 /// state; each environment is a reusable, config-driven training component.
 class CybersecurityRoomScreen extends StatefulWidget {
   final CurriculumModule module;
-  final Future<void> Function({required int linesUsed, required int executionMs}) onWin;
+  final Future<void> Function({required int linesUsed, required int executionMs, String? sourceCode}) onWin;
   final VoidCallback onBack;
   final CyberRoomProgress? savedProgress;
   final ValueChanged<CyberRoomProgress> onProgressChanged;

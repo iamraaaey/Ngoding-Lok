@@ -1,5 +1,6 @@
 import '../../core/cybersecurity/cyber_room.dart';
 import '../../core/session/user_session.dart';
+import '../../core/session/module_performance.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Firestore-compatible representation of user data. Mirrors UserSession
@@ -12,10 +13,18 @@ class FirestoreUser {
   final int xp;
   final List<String> completedModuleIds;
   final int streak;
+  final int bestStreak;
+  final String? lastActivityDate;
   final Map<String, int> moduleScores;
+  final Map<String, ModulePerformance> modulePerformance;
   final int streakFreezes;
   final Map<String, CyberRoomProgress> cyberRoomProgress;
   final List<String> badges;
+  final List<String> achievementIds;
+  final String? referralCode;
+  final String? referredBy;
+  final bool referralRewardClaimed;
+  final List<String> friendIds;
   final DateTime updatedAt;
 
   const FirestoreUser({
@@ -26,10 +35,18 @@ class FirestoreUser {
     this.xp = 0,
     this.completedModuleIds = const [],
     this.streak = 1,
+    this.bestStreak = 1,
+    this.lastActivityDate,
     this.moduleScores = const {},
+    this.modulePerformance = const {},
     this.streakFreezes = 0,
     this.cyberRoomProgress = const {},
     this.badges = const [],
+    this.achievementIds = const [],
+    this.referralCode,
+    this.referredBy,
+    this.referralRewardClaimed = false,
+    this.friendIds = const [],
     required this.updatedAt,
   });
 
@@ -42,10 +59,18 @@ class FirestoreUser {
       xp: xp,
       completedModuleIds: completedModuleIds,
       streak: streak,
+      bestStreak: bestStreak,
+      lastActivityDate: lastActivityDate,
       moduleScores: moduleScores,
+      modulePerformance: modulePerformance,
       streakFreezes: streakFreezes,
       cyberRoomProgress: cyberRoomProgress,
       badges: badges,
+      achievementIds: achievementIds,
+      referralCode: referralCode,
+      referredBy: referredBy,
+      referralRewardClaimed: referralRewardClaimed,
+      friendIds: friendIds,
     );
   }
 
@@ -59,10 +84,18 @@ class FirestoreUser {
       xp: session.xp,
       completedModuleIds: session.completedModuleIds,
       streak: session.streak,
+      bestStreak: session.bestStreak,
+      lastActivityDate: session.lastActivityDate,
       moduleScores: session.moduleScores,
+      modulePerformance: session.modulePerformance,
       streakFreezes: session.streakFreezes,
       cyberRoomProgress: session.cyberRoomProgress,
       badges: session.badges,
+      achievementIds: session.achievementIds,
+      referralCode: session.referralCode,
+      referredBy: session.referredBy,
+      referralRewardClaimed: session.referralRewardClaimed,
+      friendIds: session.friendIds,
       updatedAt: DateTime.now(),
     );
   }
@@ -76,12 +109,22 @@ class FirestoreUser {
       'xp': xp,
       'completedModuleIds': completedModuleIds,
       'streak': streak,
+      'bestStreak': bestStreak,
+      'lastActivityDate': lastActivityDate,
       'moduleScores': moduleScores,
+      'modulePerformance': modulePerformance.map(
+        (key, value) => MapEntry(key, value.toMap()),
+      ),
       'streakFreezes': streakFreezes,
       'cyberRoomProgress': cyberRoomProgress.map(
         (key, value) => MapEntry(key, value.toJson()),
       ),
       'badges': badges,
+      'achievementIds': achievementIds,
+      'referralCode': referralCode,
+      'referredBy': referredBy,
+      'referralRewardClaimed': referralRewardClaimed,
+      'friendIds': friendIds,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
@@ -94,17 +137,29 @@ class FirestoreUser {
       email: data['email'] as String? ?? '',
       name: data['name'] as String?,
       photoUrl: data['photoUrl'] as String?,
-      xp: data['xp'] as int? ?? 0,
-      completedModuleIds: (data['completedModuleIds'] as List<dynamic>?)
+      xp: (data['xp'] as num?)?.toInt() ?? 0,
+      completedModuleIds:
+          (data['completedModuleIds'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],
-      streak: data['streak'] as int? ?? 1,
-      moduleScores: (data['moduleScores'] as Map<String, dynamic>?)?.map(
-            (k, v) => MapEntry(k, v as int),
+      streak: (data['streak'] as num?)?.toInt() ?? 1,
+      bestStreak:
+          (data['bestStreak'] as num?)?.toInt() ??
+          (data['streak'] as num?)?.toInt() ??
+          1,
+      lastActivityDate: data['lastActivityDate'] as String?,
+      moduleScores:
+          (data['moduleScores'] as Map<String, dynamic>?)?.map(
+            (k, v) => MapEntry(k, (v as num).toInt()),
           ) ??
           const {},
-      streakFreezes: data['streakFreezes'] as int? ?? 0,
+      modulePerformance:
+          (data['modulePerformance'] as Map<String, dynamic>?)?.map(
+            (key, value) => MapEntry(key, ModulePerformance.fromMap(value)),
+          ) ??
+          const {},
+      streakFreezes: (data['streakFreezes'] as num?)?.toInt() ?? 0,
       cyberRoomProgress:
           (data['cyberRoomProgress'] as Map<String, dynamic>?)?.map(
             (key, value) => MapEntry(
@@ -114,6 +169,14 @@ class FirestoreUser {
           ) ??
           const {},
       badges: (data['badges'] as List<dynamic>?)?.cast<String>() ?? const [],
+      achievementIds:
+          (data['achievementIds'] as List<dynamic>?)?.cast<String>() ??
+          const [],
+      referralCode: data['referralCode'] as String?,
+      referredBy: data['referredBy'] as String?,
+      referralRewardClaimed: data['referralRewardClaimed'] as bool? ?? false,
+      friendIds:
+          (data['friendIds'] as List<dynamic>?)?.cast<String>() ?? const [],
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
@@ -126,10 +189,18 @@ class FirestoreUser {
     int? xp,
     List<String>? completedModuleIds,
     int? streak,
+    int? bestStreak,
+    String? lastActivityDate,
     Map<String, int>? moduleScores,
+    Map<String, ModulePerformance>? modulePerformance,
     int? streakFreezes,
     Map<String, CyberRoomProgress>? cyberRoomProgress,
     List<String>? badges,
+    List<String>? achievementIds,
+    String? referralCode,
+    String? referredBy,
+    bool? referralRewardClaimed,
+    List<String>? friendIds,
     DateTime? updatedAt,
   }) {
     return FirestoreUser(
@@ -140,10 +211,19 @@ class FirestoreUser {
       xp: xp ?? this.xp,
       completedModuleIds: completedModuleIds ?? this.completedModuleIds,
       streak: streak ?? this.streak,
+      bestStreak: bestStreak ?? this.bestStreak,
+      lastActivityDate: lastActivityDate ?? this.lastActivityDate,
       moduleScores: moduleScores ?? this.moduleScores,
+      modulePerformance: modulePerformance ?? this.modulePerformance,
       streakFreezes: streakFreezes ?? this.streakFreezes,
       cyberRoomProgress: cyberRoomProgress ?? this.cyberRoomProgress,
       badges: badges ?? this.badges,
+      achievementIds: achievementIds ?? this.achievementIds,
+      referralCode: referralCode ?? this.referralCode,
+      referredBy: referredBy ?? this.referredBy,
+      referralRewardClaimed:
+          referralRewardClaimed ?? this.referralRewardClaimed,
+      friendIds: friendIds ?? this.friendIds,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }

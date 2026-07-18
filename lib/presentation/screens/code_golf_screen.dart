@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/curriculum/language_track.dart';
 import '../../core/session/user_session.dart';
 import '../../core/social/code_golf.dart';
+import '../../data/repositories/user_repository.dart';
 import '../theme/landing_tokens.dart';
 import '../theme/noir_skin.dart';
 import '../widgets/landing/landing_surface.dart';
@@ -13,21 +14,36 @@ import '../widgets/landing/landing_surface.dart';
 /// themselves cleared that level, otherwise the solution stays locked.
 class CodeGolfScreen extends StatefulWidget {
   final UserSession user;
+  final String? uid;
+  final UserRepository repository;
   final VoidCallback onBack;
 
-  const CodeGolfScreen({super.key, required this.user, required this.onBack});
+  const CodeGolfScreen({
+    super.key,
+    required this.user,
+    required this.uid,
+    required this.repository,
+    required this.onBack,
+  });
 
   @override
   State<CodeGolfScreen> createState() => _CodeGolfScreenState();
 }
 
 class _CodeGolfScreenState extends State<CodeGolfScreen> {
+  static const _golfTracks = <LanguageTrack>[
+    LanguageTrack.python,
+    LanguageTrack.sql,
+    LanguageTrack.java,
+  ];
   bool _friendsOnly = false;
+  int _boardMode = 0; // 0: Bytes (golf), 1: Speed (time), 2: Accuracy
   LanguageTrack _track = LanguageTrack.python;
   String? _expandedKey;
+  DateTime? _lastSnapshotAt;
 
   Widget _rowFor(CodeGolfEntry e, int i, NoirSkin skin) {
-    final key = '${e.player}-${e.moduleId}';
+    final key = '${e.uid}-${e.moduleId}';
     return _GolfRow(
       rank: i + 1,
       entry: e,
@@ -39,16 +55,55 @@ class _CodeGolfScreenState extends State<CodeGolfScreen> {
     );
   }
 
+  List<CodeGolfEntry> _sortEntries(List<CodeGolfEntry> entries) {
+    switch (_boardMode) {
+      case 0: // Bytes (golf)
+        return entries..sort((a, b) {
+          if (a.bytes != b.bytes) return a.bytes.compareTo(b.bytes);
+          if (a.executionMs != b.executionMs) return a.executionMs.compareTo(b.executionMs);
+          return b.accuracy.compareTo(a.accuracy);
+        });
+      case 1: // Speedrun (who completed first, then fastest)
+        return entries..sort((a, b) {
+          final aTime = a.completedAt ?? DateTime(2099);
+          final bTime = b.completedAt ?? DateTime(2099);
+          if (aTime != bTime) return aTime.compareTo(bTime);
+          if (a.executionMs != b.executionMs) return a.executionMs.compareTo(b.executionMs);
+          return b.accuracy.compareTo(a.accuracy);
+        });
+      case 2: // Accuracy
+        return entries..sort((a, b) {
+          if (a.accuracy != b.accuracy) return b.accuracy.compareTo(a.accuracy);
+          if (a.bytes != b.bytes) return a.bytes.compareTo(b.bytes);
+          return a.executionMs.compareTo(b.executionMs);
+        });
+      default:
+        return entries;
+    }
+  }
+
+  /// The board is public: every player who opens Ngoding Lok sees the live
+  /// global standings, signed in or not. Firestore rules allow the read; only
+  /// the winning source stays locked per-module. The try/catch keeps the
+  /// screen alive when Firebase is unavailable (tests, offline demo).
+  Stream<List<CodeGolfEntry>> _entriesStream() {
+    try {
+      return widget.repository.streamCodeGolfEntries(
+        track: _track,
+        friendIds: [
+          ...widget.user.friendIds,
+          if (widget.uid != null) widget.uid!,
+        ],
+      );
+    } catch (_) {
+      return Stream.value(const <CodeGolfEntry>[]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final skin = NoirSkin.of(context);
-
-    final entries = CodeGolf.forTrack(
-      _track,
-    ).where((e) => !_friendsOnly || e.isFriend).toList();
-    final emptyMessage = _friendsOnly
-        ? 'No friends have posted a score for this track yet.'
-        : 'No Code Golf entries for this track yet.';
+    final entriesStream = _entriesStream();
 
     return Scaffold(
       backgroundColor: skin.bg,
@@ -86,65 +141,160 @@ class _CodeGolfScreenState extends State<CodeGolfScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _SegTabs(
-                        options: [
-                          for (final t in LanguageTrack.values) t.shortLabel,
-                        ],
-                        selected: _track.index,
+                        options: const ['Bytes', 'Speedrun', 'Accuracy'],
+                        selected: _boardMode,
                         skin: skin,
                         onSelected: (i) => setState(() {
-                          _track = LanguageTrack.values[i];
+                          _boardMode = i;
+                          _expandedKey = null;
+                        }),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _SegTabs(
+                        options: [for (final t in _golfTracks) t.shortLabel],
+                        selected: _golfTracks.indexOf(_track),
+                        skin: skin,
+                        onSelected: (i) => setState(() {
+                          _track = _golfTracks[i];
                           _expandedKey = null;
                         }),
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
-                      child: Text(
-                        '// RANKED BY FEWEST BYTES',
-                        style: LandingTokens.label(
-                          fontSize: 9.5,
-                          color: skin.faint,
-                        ),
-                      ),
-                    ),
                     Expanded(
-                      child: entries.isEmpty
-                          ? Center(
-                              child: Text(
-                                emptyMessage,
-                                style: LandingTokens.body(
-                                  fontSize: 14,
-                                  color: skin.sub,
+                      child: StreamBuilder<List<CodeGolfEntry>>(
+                        stream: entriesStream,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            _lastSnapshotAt = DateTime.now();
+                          }
+                          final allEntries =
+                              snapshot.data ?? const <CodeGolfEntry>[];
+                          final filtered = allEntries
+                              .where((e) => !_friendsOnly || e.isFriend)
+                              .toList();
+
+                          final entries = _sortEntries(filtered);
+
+                          final emptyMessage = _friendsOnly
+                              ? 'No friends have posted a score for this track yet.'
+                              : 'No Code Golf entries for this track yet.';
+
+                          if (snapshot.hasError) {
+                            return _CodeGolfErrorPanel(
+                              message:
+                                  'Live standings are unavailable right now.',
+                            );
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  6,
+                                  20,
+                                  8,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _boardMode == 0 ? '// RANKED BY FEWEST BYTES'
+                                          : _boardMode == 1 ? '// RANKED BY COMPLETION TIME'
+                                          : '// RANKED BY HIGHEST ACCURACY',
+                                        style: LandingTokens.label(
+                                          fontSize: 9.5,
+                                          color: skin.faint,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      '${entries.length} ACTIVE',
+                                      style: LandingTokens.label(
+                                        fontSize: 9,
+                                        color: LandingTokens.circuit,
+                                      ),
+                                    ),
+                                    if (_lastSnapshotAt != null) ...[
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'LIVE',
+                                        style: LandingTokens.label(
+                                          fontSize: 9,
+                                          color: LandingTokens.signal,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ),
-                            )
-                          : SingleChildScrollView(
-                              padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final rows = [
-                                    for (var i = 0; i < entries.length; i++)
-                                      _rowFor(entries[i], i, skin),
-                                  ];
-                                  // Wide: two columns of ranked cards fill the
-                                  // width; reading order keeps the ranking.
-                                  if (constraints.maxWidth <= 900) {
-                                    return Column(children: rows);
-                                  }
-                                  const gap = 16.0;
-                                  final tileW =
-                                      (constraints.maxWidth - gap) / 2;
-                                  return Wrap(
-                                    spacing: gap,
-                                    children: [
-                                      for (final r in rows)
-                                        SizedBox(width: tileW, child: r),
-                                    ],
-                                  );
-                                },
+                              Expanded(
+                                child:
+                                    snapshot.connectionState ==
+                                            ConnectionState.waiting &&
+                                        !snapshot.hasData
+                                    ? const Center(
+                                        child: CircularProgressIndicator(),
+                                      )
+                                    : entries.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                          emptyMessage,
+                                          style: LandingTokens.body(
+                                            fontSize: 14,
+                                            color: skin.sub,
+                                          ),
+                                        ),
+                                      )
+                                    : SingleChildScrollView(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          16,
+                                          4,
+                                          16,
+                                          24,
+                                        ),
+                                        child: LayoutBuilder(
+                                          builder: (context, constraints) {
+                                            final rows = [
+                                              for (
+                                                var i = 0;
+                                                i < entries.length;
+                                                i++
+                                              )
+                                                _rowFor(entries[i], i, skin),
+                                            ];
+                                            // Wide: two columns of ranked cards fill the
+                                            // width; reading order keeps the ranking.
+                                            if (constraints.maxWidth <= 900) {
+                                              return Column(children: rows);
+                                            }
+                                            const gap = 16.0;
+                                            final tileW =
+                                                (constraints.maxWidth - gap) /
+                                                2;
+                                            return Wrap(
+                                              spacing: gap,
+                                              children: [
+                                                for (final r in rows)
+                                                  SizedBox(
+                                                    width: tileW,
+                                                    child: r,
+                                                  ),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      ),
                               ),
-                            ),
+                            ],
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -336,6 +486,27 @@ class _GolfRow extends StatelessWidget {
             ),
             if (expanded) ...[
               const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  _MetricChip(
+                    label:
+                        '${entry.executionMs > 0 ? entry.executionMs : '—'} ms',
+                    icon: Icons.timer_outlined,
+                  ),
+                  _MetricChip(
+                    label: '${(entry.accuracy * 100).round()}% accuracy',
+                    icon: Icons.track_changes,
+                  ),
+                  if (entry.completedAt != null)
+                    _MetricChip(
+                      label: _shortDate(entry.completedAt!),
+                      icon: Icons.flag_outlined,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
               if (unlocked)
                 _CodeBlock(source: entry.source)
               else
@@ -370,6 +541,64 @@ class _GolfRow extends StatelessWidget {
     );
   }
 }
+
+class _CodeGolfErrorPanel extends StatelessWidget {
+  final String message;
+
+  const _CodeGolfErrorPanel({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = NoirSkin.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: NoirPanel(
+          skin: skin,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.cloud_off, color: LandingTokens.ember),
+              const SizedBox(width: 12),
+              Text(message, style: LandingTokens.body(color: skin.sub)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+
+  const _MetricChip({required this.label, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final skin = NoirSkin.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: skin.panelRaised,
+        borderRadius: LandingTokens.smallRadius,
+        border: Border.all(color: skin.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: LandingTokens.circuit),
+          const SizedBox(width: 5),
+          Text(label, style: LandingTokens.label(fontSize: 9, color: skin.sub)),
+        ],
+      ),
+    );
+  }
+}
+
+String _shortDate(DateTime date) =>
+    '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
 class _CodeBlock extends StatelessWidget {
   final String source;

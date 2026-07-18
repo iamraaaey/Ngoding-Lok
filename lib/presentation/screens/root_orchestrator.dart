@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/curriculum/curriculum.dart';
@@ -10,16 +12,20 @@ import '../../core/session/api_service.dart';
 import '../../core/session/app_route.dart';
 import '../../core/session/email_auth_service.dart';
 import '../../core/session/google_auth_service.dart';
-import '../../core/session/leaderboard.dart';
 import '../../core/session/user_session.dart';
+import '../../core/session/module_performance.dart';
 import '../../core/session/session_persistence.dart';
+import '../../core/social/certificate_link.dart';
+import '../../core/social/referral_link.dart';
 import '../../data/repositories/user_repository.dart';
 import 'arduino_simulator_screen.dart';
 import 'auth_screen.dart';
 import 'code_golf_screen.dart';
+import 'certificates_screen.dart';
 import 'cybersecurity_room_screen.dart';
 import 'dashboard_screen.dart';
 import 'forgot_password_screen.dart';
+import 'friends_screen.dart';
 import 'grid_game_screen.dart';
 import 'home_dashboard_screen.dart';
 import 'landing_screen.dart';
@@ -61,21 +67,20 @@ class RootOrchestrator extends StatefulWidget {
 class _RootOrchestratorState extends State<RootOrchestrator> {
   bool _splashDone = false;
   AppRoute _route = AppRoute.landing;
+  String? _publicCertificateId;
   UserSession? _user;
   CurriculumModule? _activeModule;
   LanguageTrack _leagueMapTrack = LanguageTrack.python;
 
   late final RewardedAdService _rewardedAdService;
   late final UserRepository _userRepository;
-
-  /// Streak the player starts a fresh session with. There's no day-tracking
-  /// backend in this prototype, so this stands in for a returning player's
-  /// run rather than being computed from real login dates.
-  static const int _seededStreak = 3;
+  StreamSubscription<UserSession?>? _userSyncSubscription;
 
   @override
   void initState() {
     super.initState();
+    _publicCertificateId = CertificateLink.certificateIdFromLaunchUrl();
+    if (_publicCertificateId != null) _route = AppRoute.publicCertificate;
     _userRepository = UserRepository();
     _rewardedAdService = RewardedAdService()..initialize();
     _loadPersistedSession();
@@ -83,33 +88,114 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
 
   @override
   void dispose() {
+    _userSyncSubscription?.cancel();
     _rewardedAdService.dispose();
     super.dispose();
   }
 
   Future<void> _loadPersistedSession() async {
+    if (_publicCertificateId != null) return;
     final session = await SessionPersistence.loadSession();
     if (session != null && mounted) {
+      UserSession restored = session;
+      final currentUser = _firebaseUser;
+      if (currentUser != null) {
+        restored = await _userRepository.syncUserSession(
+          currentUser.uid,
+          session,
+        );
+        try {
+          restored = await _userRepository.recordActivity(currentUser.uid);
+        } catch (error) {
+          debugPrint('Activity sync failed during restore: $error');
+        }
+        _startUserSync(currentUser.uid);
+      } else {
+        restored = restored.withActivity();
+      }
       setState(() {
-        _user = session;
+        _user = restored;
         _route = AppRoute.home;
         _splashDone = true;
       });
+      await SessionPersistence.saveSession(restored);
+      if (currentUser != null) {
+        unawaited(_maybeRedeemPendingReferral(currentUser.uid, restored));
+      }
     }
   }
 
-  void _updateUser(UserSession? user) {
+  /// Completes an invite-link referral (`?ref=CODE` on the hosted web app)
+  /// once the invitee is signed in and their Firestore profile exists.
+  /// Best-effort: failures surface as a snack and never block navigation.
+  Future<void> _maybeRedeemPendingReferral(
+    String uid,
+    UserSession session,
+  ) async {
+    if (session.referralRewardClaimed) {
+      ReferralLink.consumePendingCode();
+      return;
+    }
+    final code = ReferralLink.consumePendingCode();
+    if (code == null || code == _userRepository.referralCodeForUid(uid)) {
+      return;
+    }
+    try {
+      final updated = await _userRepository.redeemReferralCode(uid, code);
+      _updateUser(updated);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Referral applied — you and your friend each earned +50 XP.',
+          ),
+        ),
+      );
+    } on ReferralException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error) {
+      debugPrint('Referral auto-redeem failed: $error');
+    }
+  }
+
+  User? get _firebaseUser {
+    try {
+      return FirebaseAuth.instance.currentUser;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _startUserSync(String uid) {
+    _userSyncSubscription?.cancel();
+    _userSyncSubscription = _userRepository.streamUserFromFirestore(uid).listen(
+      (remoteUser) {
+        if (!mounted || remoteUser == null) return;
+        setState(() => _user = remoteUser);
+        SessionPersistence.saveSession(remoteUser);
+      },
+      onError: (Object error) =>
+          debugPrint('Firestore user stream failed: $error'),
+    );
+  }
+
+  void _updateUser(UserSession? user, {bool syncRemote = true}) {
     setState(() {
       _user = user;
     });
     if (user != null) {
       SessionPersistence.saveSession(user);
       // Sync to Firestore if user is authenticated
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        _userRepository.saveUserToFirestore(user, currentUser.uid).catchError(
-          (e) => print('Failed to sync user to Firestore: $e'),
-        );
+      final currentUser = _firebaseUser;
+      if (currentUser != null && syncRemote) {
+        _userRepository
+            .saveUserToFirestore(user, currentUser.uid)
+            .catchError(
+              (e) => debugPrint('Failed to sync user to Firestore: $e'),
+            );
       }
     } else {
       SessionPersistence.clearSession();
@@ -117,24 +203,32 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   }
 
   void _login(String email, {String? name, String? photoUrl}) async {
-    final session = UserSession(
+    var session = UserSession(
       email: email,
       name: name,
       photoUrl: photoUrl,
-      streak: _seededStreak,
-    );
+    ).withActivity();
 
     // Sync with Firestore if user is authenticated
-    final currentUser = FirebaseAuth.instance.currentUser;
+    final currentUser = _firebaseUser;
     if (currentUser != null) {
       try {
         final mergedSession = await _userRepository.syncUserSession(
           currentUser.uid,
           session,
         );
-        _updateUser(mergedSession);
+        UserSession activeSession;
+        try {
+          activeSession = await _userRepository.recordActivity(currentUser.uid);
+        } catch (error) {
+          debugPrint('Activity sync failed during sign-in: $error');
+          activeSession = mergedSession;
+        }
+        _updateUser(activeSession, syncRemote: false);
+        _startUserSync(currentUser.uid);
+        unawaited(_maybeRedeemPendingReferral(currentUser.uid, activeSession));
       } catch (e) {
-        print('Firestore sync failed, using local session: $e');
+        debugPrint('Firestore sync failed, using local session: $e');
         _updateUser(session);
       }
     } else {
@@ -158,6 +252,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   }
 
   void _logout() {
+    _userSyncSubscription?.cancel();
+    _userSyncSubscription = null;
     GoogleAuthService.signOut(); // fire-and-forget; no-op for email sessions
     _updateUser(null);
     setState(() {
@@ -232,7 +328,10 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     VoidCallback? onCancelled,
   ) async {
     // Debug mode: skip ads and go straight to hint when in development.
-    const bool kDebugHintFlow = bool.fromEnvironment('DEBUG_HINT_FLOW', defaultValue: false);
+    const bool kDebugHintFlow = bool.fromEnvironment(
+      'DEBUG_HINT_FLOW',
+      defaultValue: false,
+    );
     if (kDebugHintFlow) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -280,6 +379,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   Future<void> _handleModuleWin({
     required int linesUsed,
     required int executionMs,
+    String? sourceCode,
   }) async {
     final module = _activeModule!;
     final result = await ApiService.syncLevelComplete(
@@ -289,8 +389,41 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       moduleId: module.id,
     );
 
-    final updated = _user!.withModuleCompleted(module.id, result.finalScore);
-    _updateUser(updated);
+    final currentUser = _firebaseUser;
+    UserSession updated;
+    if (currentUser != null) {
+      try {
+        updated = await _userRepository.recordModuleCompletion(
+          uid: currentUser.uid,
+          user: _user!,
+          module: module,
+          score: result.finalScore,
+          linesUsed: linesUsed,
+          executionMs: executionMs,
+          source: sourceCode ?? '',
+        );
+        _updateUser(updated, syncRemote: false);
+      } catch (error) {
+        debugPrint('Module completion sync failed: $error');
+        updated = _recordLocalCompletion(
+          _user!,
+          module,
+          result.finalScore,
+          linesUsed,
+          executionMs,
+        );
+        _updateUser(updated);
+      }
+    } else {
+      updated = _recordLocalCompletion(
+        _user!,
+        module,
+        result.finalScore,
+        linesUsed,
+        executionMs,
+      );
+      _updateUser(updated);
+    }
 
     setState(() {
       if (module.track == LanguageTrack.cybersecurity) {
@@ -312,6 +445,57 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
         }
       }
     });
+  }
+
+  UserSession _recordLocalCompletion(
+    UserSession user,
+    CurriculumModule module,
+    int score,
+    int linesUsed,
+    int executionMs,
+  ) {
+    final currentScore = user.moduleScores[module.id];
+    final bestScore = currentScore == null || score > currentScore
+        ? score
+        : currentScore;
+    final performance = user.modulePerformance[module.id];
+    final better =
+        performance == null ||
+        score > performance.score ||
+        (score == performance.score && executionMs < performance.executionMs);
+    final now = DateTime.now();
+    final nextPerformance = better
+        ? ModulePerformance(
+            score: bestScore,
+            linesUsed: linesUsed,
+            executionMs: executionMs,
+            accuracy: (score / module.xpReward).clamp(0.0, 1.0),
+            attempts: (performance?.attempts ?? 0) + 1,
+            firstCompletedAt: performance?.firstCompletedAt ?? now,
+            lastCompletedAt: now,
+          )
+        : performance.copyWith(
+            score: bestScore,
+            attempts: performance.attempts + 1,
+            lastCompletedAt: now,
+          );
+    final next = user.withActivity();
+    return next.copyWith(
+      xp:
+          user.xp +
+          (currentScore == null
+              ? score
+              : (score - currentScore).clamp(0, score).toInt()),
+      completedModuleIds: [
+        ...user.completedModuleIds,
+        if (!user.completedModuleIds.contains(module.id)) module.id,
+      ],
+      moduleScores: {...user.moduleScores, module.id: bestScore},
+      modulePerformance: {
+        ...user.modulePerformance,
+        module.id: nextPerformance,
+      },
+    );
   }
 
   Widget _buildGameScreen(CurriculumModule module) {
@@ -413,9 +597,15 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           user: _user!,
           nextModule: _nextModule,
           onResume: _launchModule,
-          onOpenMap: () => setState(() { _leagueMapTrack = LanguageTrack.python; _route = AppRoute.leagueMap; }),
+          onOpenMap: () => setState(() {
+            _leagueMapTrack = LanguageTrack.python;
+            _route = AppRoute.leagueMap;
+          }),
           onOpenCodeGolf: () => setState(() => _route = AppRoute.codeGolf),
           onOpenProfile: () => setState(() => _route = AppRoute.profile),
+          onOpenFriends: () => setState(() => _route = AppRoute.friends),
+          onOpenCertificates: () =>
+              setState(() => _route = AppRoute.certificates),
           onOpenSettings: () => setState(() => _route = AppRoute.settings),
           onLogout: _logout,
         );
@@ -423,14 +613,45 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       case AppRoute.codeGolf:
         return CodeGolfScreen(
           user: _user!,
+          uid: _firebaseUser?.uid,
+          repository: _userRepository,
           onBack: () => setState(() => _route = AppRoute.home),
         );
 
       case AppRoute.profile:
         return ProfileScreen(
           user: _user!,
+          uid: _firebaseUser?.uid,
+          repository: _userRepository,
           onPurchaseStreakFreeze: _purchaseStreakFreeze,
+          onOpenFriends: () => setState(() => _route = AppRoute.friends),
+          onOpenCertificates: () =>
+              setState(() => _route = AppRoute.certificates),
           onBack: () => setState(() => _route = AppRoute.home),
+        );
+
+      case AppRoute.friends:
+        return FriendsScreen(
+          user: _user!,
+          uid: _firebaseUser?.uid,
+          repository: _userRepository,
+          onUserUpdated: _updateUser,
+          onBack: () => setState(() => _route = AppRoute.home),
+        );
+
+      case AppRoute.certificates:
+        return CertificatesScreen(
+          user: _user!,
+          uid: _firebaseUser?.uid,
+          repository: _userRepository,
+          onBack: () => setState(() => _route = AppRoute.home),
+        );
+
+      case AppRoute.publicCertificate:
+        return PublicCertificateScreen(
+          certificateId: _publicCertificateId!,
+          repository: _userRepository,
+          onBack: () => setState(() => _route = AppRoute.landing),
         );
 
       case AppRoute.settings:
@@ -455,7 +676,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       case AppRoute.dashboard:
         return DashboardScreen(
           user: _user!,
-          leaderboard: Leaderboard.withUser(_user!),
+          uid: _firebaseUser?.uid,
+          repository: _userRepository,
           onLogout: _logout,
           onLaunchModule: _launchModule,
           onBack: () => setState(() => _route = AppRoute.home),

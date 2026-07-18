@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/session/progression.dart';
 import '../../core/session/user_session.dart';
 import '../../core/social/achievement.dart';
+import '../../data/repositories/user_repository.dart';
 import '../theme/landing_tokens.dart';
 import '../theme/league_style.dart';
 import '../theme/noir_skin.dart';
@@ -9,16 +10,22 @@ import '../widgets/landing/landing_button.dart';
 import '../widgets/landing/landing_surface.dart';
 
 /// Screen 10 — User Profile & Achievements, in the terminal noir style. A
-/// profile card (name, linked GitHub, current league), streak management with
-/// a calendar of recent activity and an XP-priced "Streak Freeze" purchase,
-/// and a grid of unlocked and locked achievement badges.
-class ProfileScreen extends StatelessWidget {
+/// player card (identity, live XP/league stats, linked GitHub), streak
+/// management with a calendar of recent activity and an XP-priced "Streak
+/// Freeze" purchase, and a grid of unlocked and locked achievement badges.
+/// When a signed-in [uid] and [repository] are provided, the card renders
+/// straight from the live Firestore profile document.
+class ProfileScreen extends StatefulWidget {
   final UserSession user;
+  final String? uid;
+  final UserRepository? repository;
 
   /// Attempts to buy a Streak Freeze with XP; returns whether it succeeded
   /// (false when the player can't afford it). Implemented by the orchestrator
   /// so it can mutate the shared session.
   final bool Function() onPurchaseStreakFreeze;
+  final VoidCallback? onOpenFriends;
+  final VoidCallback? onOpenCertificates;
   final VoidCallback onBack;
 
   static const int streakFreezeCost = 200;
@@ -26,15 +33,80 @@ class ProfileScreen extends StatelessWidget {
   const ProfileScreen({
     super.key,
     required this.user,
+    this.uid,
+    this.repository,
     required this.onPurchaseStreakFreeze,
+    this.onOpenFriends,
+    this.onOpenCertificates,
     required this.onBack,
   });
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  Stream<UserSession?>? _liveUser;
+
+  @override
+  void initState() {
+    super.initState();
+    final uid = widget.uid;
+    final repository = widget.repository;
+    if (uid != null && repository != null) {
+      // The real Firestore profile document, streamed live. The try/catch
+      // keeps the screen alive when Firebase is unavailable (tests, offline).
+      try {
+        _liveUser = repository.streamUserFromFirestore(uid);
+      } catch (_) {
+        _liveUser = null;
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<UserSession?>(
+      stream: _liveUser,
+      builder: (context, snapshot) {
+        final user = snapshot.data ?? widget.user;
+        return _ProfileBody(
+          user: user,
+          live: snapshot.hasData,
+          onPurchaseStreakFreeze: widget.onPurchaseStreakFreeze,
+          onOpenFriends: widget.onOpenFriends,
+          onOpenCertificates: widget.onOpenCertificates,
+          onBack: widget.onBack,
+        );
+      },
+    );
+  }
+}
+
+class _ProfileBody extends StatelessWidget {
+  final UserSession user;
+  final bool live;
+  final bool Function() onPurchaseStreakFreeze;
+  final VoidCallback? onOpenFriends;
+  final VoidCallback? onOpenCertificates;
+  final VoidCallback onBack;
+
+  const _ProfileBody({
+    required this.user,
+    required this.live,
+    required this.onPurchaseStreakFreeze,
+    this.onOpenFriends,
+    this.onOpenCertificates,
+    required this.onBack,
+  });
+
+  static const int streakFreezeCost = ProfileScreen.streakFreezeCost;
 
   @override
   Widget build(BuildContext context) {
     final skin = NoirSkin.of(context);
 
-    final profileCard = _ProfileCard(user: user, skin: skin);
+    final profileCard = _ProfileCard(user: user, skin: skin, live: live);
     final streakCard = _StreakCard(
       user: user,
       cost: streakFreezeCost,
@@ -91,6 +163,22 @@ class ProfileScreen extends StatelessWidget {
                                         CrossAxisAlignment.stretch,
                                     children: [
                                       profileCard,
+                                      if (onOpenFriends != null) ...[
+                                        const SizedBox(height: 20),
+                                        _FriendsShortcut(
+                                          user: user,
+                                          skin: skin,
+                                          onOpen: onOpenFriends!,
+                                        ),
+                                      ],
+                                      if (onOpenCertificates != null) ...[
+                                        const SizedBox(height: 20),
+                                        _CertificateShortcut(
+                                          user: user,
+                                          skin: skin,
+                                          onOpen: onOpenCertificates!,
+                                        ),
+                                      ],
                                       const SizedBox(height: 20),
                                       streakCard,
                                     ],
@@ -105,6 +193,22 @@ class ProfileScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               profileCard,
+                              if (onOpenFriends != null) ...[
+                                const SizedBox(height: 16),
+                                _FriendsShortcut(
+                                  user: user,
+                                  skin: skin,
+                                  onOpen: onOpenFriends!,
+                                ),
+                              ],
+                              if (onOpenCertificates != null) ...[
+                                const SizedBox(height: 16),
+                                _CertificateShortcut(
+                                  user: user,
+                                  skin: skin,
+                                  onOpen: onOpenCertificates!,
+                                ),
+                              ],
                               const SizedBox(height: 16),
                               streakCard,
                               const SizedBox(height: 16),
@@ -129,17 +233,27 @@ class _ProfileCard extends StatelessWidget {
   final UserSession user;
   final NoirSkin skin;
 
-  const _ProfileCard({required this.user, required this.skin});
+  /// True when the card is rendering the live Firestore profile document.
+  final bool live;
+
+  const _ProfileCard({
+    required this.user,
+    required this.skin,
+    required this.live,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final tier = Progression(user.xp).tier;
+    final progression = Progression(user.xp);
+    final tier = progression.tier;
+    final nextTier = progression.nextTier;
     return NoirPanel(
       skin: skin,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _avatar(),
               const SizedBox(width: 14),
@@ -167,10 +281,70 @@ class _ProfileCard extends StatelessWidget {
                         color: skin.faint,
                       ),
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      live ? '● LIVE PROFILE' : '● LOCAL SESSION',
+                      style: LandingTokens.label(
+                        fontSize: 8.5,
+                        color: live ? LandingTokens.signal : skin.faint,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 16),
+          // Live stats straight from the profile document. The grid collapses
+          // from four tiles to two columns on narrow phones so nothing clips.
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cols = constraints.maxWidth > 520
+                  ? 4
+                  : constraints.maxWidth > 260
+                  ? 2
+                  : 1;
+              const gap = 10.0;
+              final tileW =
+                  (constraints.maxWidth - gap * (cols - 1)) / cols;
+              final tiles = [
+                _StatTile(
+                  icon: Icons.bolt,
+                  color: LandingTokens.ember,
+                  value: '${user.xp}',
+                  label: 'TOTAL XP',
+                  skin: skin,
+                ),
+                _StatTile(
+                  icon: Icons.military_tech,
+                  color: LandingTokens.circuit,
+                  value: 'LV ${progression.level}',
+                  label: 'LEVEL',
+                  skin: skin,
+                ),
+                _StatTile(
+                  icon: Icons.task_alt,
+                  color: LandingTokens.signal,
+                  value: '${user.completedModuleIds.length}',
+                  label: 'MODULES',
+                  skin: skin,
+                ),
+                _StatTile(
+                  icon: Icons.group,
+                  color: const Color(0xFF9E9CFF),
+                  value: '${user.friendIds.length}',
+                  label: 'FRIENDS',
+                  skin: skin,
+                ),
+              ];
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  for (final t in tiles) SizedBox(width: tileW, child: t),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
           _InfoRow(
@@ -190,6 +364,23 @@ class _ProfileCard extends StatelessWidget {
                 style: LandingTokens.label(fontSize: 9, color: tier.color),
               ),
             ),
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: progression.tierProgress,
+              minHeight: 5,
+              backgroundColor: skin.panelRaised,
+              valueColor: AlwaysStoppedAnimation<Color>(tier.color),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            nextTier == null
+                ? 'MAX LEAGUE REACHED'
+                : '${progression.xpToNextTier} XP TO ${nextTier.label.toUpperCase()}',
+            style: LandingTokens.label(fontSize: 8.5, color: skin.faint),
           ),
           const SizedBox(height: 12),
           _InfoRow(
@@ -231,6 +422,176 @@ class _ProfileCard extends StatelessWidget {
   }
 }
 
+/// One compact metric on the player card. The value scales down with a
+/// [FittedBox] instead of clipping when a tile gets narrow.
+class _StatTile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String value;
+  final String label;
+  final NoirSkin skin;
+
+  const _StatTile({
+    required this.icon,
+    required this.color,
+    required this.value,
+    required this.label,
+    required this.skin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      decoration: BoxDecoration(
+        color: skin.panelRaised,
+        borderRadius: LandingTokens.smallRadius,
+        border: Border.all(color: skin.border),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: LandingTokens.mono(
+                      fontSize: 15,
+                      color: skin.text,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: LandingTokens.label(fontSize: 8, color: skin.faint),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FriendsShortcut extends StatelessWidget {
+  final UserSession user;
+  final NoirSkin skin;
+  final VoidCallback onOpen;
+
+  const _FriendsShortcut({
+    required this.user,
+    required this.skin,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NoirPanel(
+      skin: skin,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          const Icon(Icons.group, color: LandingTokens.circuit, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Friends & referrals',
+                  style: TextStyle(
+                    color: skin.text,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${user.friendIds.length} connected · Invite a coder for +50 XP each',
+                  style: LandingTokens.label(fontSize: 9, color: skin.faint),
+                ),
+              ],
+            ),
+          ),
+          CinematicOutlineButton(
+            label: 'Open',
+            icon: Icons.arrow_forward,
+            compact: true,
+            onPressed: onOpen,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CertificateShortcut extends StatelessWidget {
+  final UserSession user;
+  final NoirSkin skin;
+  final VoidCallback onOpen;
+
+  const _CertificateShortcut({
+    required this.user,
+    required this.skin,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final count = user.completedModuleIds.length;
+    return NoirPanel(
+      skin: skin,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.workspace_premium,
+            color: LandingTokens.signal,
+            size: 22,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Module certificates',
+                  style: TextStyle(
+                    color: skin.text,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '$count completed · Issue verified credentials',
+                  style: LandingTokens.label(fontSize: 9, color: skin.faint),
+                ),
+              ],
+            ),
+          ),
+          CinematicOutlineButton(
+            label: 'Open',
+            icon: Icons.arrow_forward,
+            compact: true,
+            onPressed: onOpen,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -248,22 +609,49 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: iconColor),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: skin.sub,
-              fontWeight: FontWeight.w800,
-              fontSize: 13,
-            ),
-          ),
-        ),
-        valueWidget,
-      ],
+    final labelText = Text(
+      label,
+      style: TextStyle(
+        color: skin.sub,
+        fontWeight: FontWeight.w800,
+        fontSize: 13,
+      ),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Narrow phones: the value drops under the label instead of fighting
+        // it for the same row.
+        if (constraints.maxWidth < 300) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, size: 18, color: iconColor),
+                  const SizedBox(width: 10),
+                  Expanded(child: labelText),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 28),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: valueWidget,
+                ),
+              ),
+            ],
+          );
+        }
+        return Row(
+          children: [
+            Icon(icon, size: 18, color: iconColor),
+            const SizedBox(width: 10),
+            Expanded(child: labelText),
+            valueWidget,
+          ],
+        );
+      },
     );
   }
 }
@@ -488,25 +876,51 @@ class _BadgesCard extends StatelessWidget {
 
   IconData _iconFor(String id) => switch (id) {
     'first_steps' => Icons.flag,
+    'sequential_steps' => Icons.alt_route,
     'grid_master' => Icons.grid_view,
     'sql_sleuth' => Icons.storage,
     'rocket_scientist' => Icons.rocket_launch,
+    'cyber_defender' => Icons.shield,
+    'java_starter' => Icons.coffee,
+    'module_runner' => Icons.route,
+    'halfway_there' => Icons.flag_circle,
+    'curriculum_complete' => Icons.school,
+    'graduation_flight' => Icons.flight_takeoff,
     'persistence' => Icons.local_fire_department,
+    'week_warrior' => Icons.calendar_month,
+    'streak_legend' => Icons.whatshot,
     'polyglot' => Icons.translate,
     'high_roller' => Icons.savings,
     'efficiency_expert' => Icons.bolt,
+    'speedrunner' => Icons.speed,
+    'code_golfer' => Icons.code,
+    'golf_enthusiast' => Icons.golf_course,
+    'golf_master' => Icons.sports_golf,
     _ => Icons.emoji_events,
   };
 
   Color _colorFor(String id) => switch (id) {
     'first_steps' => LandingTokens.signal,
+    'sequential_steps' => LandingTokens.circuit,
     'grid_master' => LandingTokens.circuit,
     'sql_sleuth' => const Color(0xFF9E9CFF),
     'rocket_scientist' => LandingTokens.ember,
+    'cyber_defender' => LandingTokens.signal,
+    'java_starter' => const Color(0xFFFFB300),
+    'module_runner' => LandingTokens.circuit,
+    'halfway_there' => const Color(0xFF9E9CFF),
+    'curriculum_complete' => LandingTokens.signal,
+    'graduation_flight' => LandingTokens.ember,
     'persistence' => LandingTokens.ember,
+    'week_warrior' => LandingTokens.ember,
+    'streak_legend' => const Color(0xFFFFB300),
     'polyglot' => const Color(0xFFFFB300),
     'high_roller' => LandingTokens.signal,
     'efficiency_expert' => const Color(0xFFFFB300),
+    'speedrunner' => LandingTokens.circuit,
+    'code_golfer' => LandingTokens.signal,
+    'golf_enthusiast' => const Color(0xFF00D98E),
+    'golf_master' => const Color(0xFFFFD700),
     _ => LandingTokens.circuit,
   };
 
@@ -570,6 +984,8 @@ class _BadgesCard extends StatelessWidget {
                         title: b.title,
                         description: b.description,
                         unlocked: b.unlocked,
+                        progress: b.progress,
+                        target: b.target,
                         skin: skin,
                       ),
                     ),
@@ -589,6 +1005,8 @@ class _BadgeTile extends StatelessWidget {
   final String title;
   final String description;
   final bool unlocked;
+  final int progress;
+  final int target;
   final NoirSkin skin;
 
   const _BadgeTile({
@@ -597,6 +1015,8 @@ class _BadgeTile extends StatelessWidget {
     required this.title,
     required this.description,
     required this.unlocked,
+    required this.progress,
+    required this.target,
     required this.skin,
   });
 
@@ -674,6 +1094,13 @@ class _BadgeTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: LandingTokens.body(fontSize: 10, color: skin.faint),
             ),
+            if (!unlocked && target > 1) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${progress.clamp(0, target)} / $target',
+                style: LandingTokens.mono(fontSize: 9, color: skin.faint),
+              ),
+            ],
           ],
         ),
       ),

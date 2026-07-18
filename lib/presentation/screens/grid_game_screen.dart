@@ -30,6 +30,7 @@ class GridGameScreen extends StatefulWidget {
   final Future<void> Function({
     required int linesUsed,
     required int executionMs,
+    String? sourceCode,
   })
   onWin;
   final VoidCallback onBack;
@@ -173,6 +174,7 @@ class _GridGameScreenState extends State<GridGameScreen> {
       await widget.onWin(
         linesUsed: validLines,
         executionMs: _timerController.elapsedSeconds.value * 1000,
+        sourceCode: _codeController.text,
       );
     }
   }

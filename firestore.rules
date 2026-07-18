@@ -1,0 +1,102 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function referralRedemptionFor(inviteeUid) {
+      return getAfter(
+        /databases/$(database)/documents/referralRedemptions/$(inviteeUid)
+      ).data;
+    }
+
+    match /users/{userId} {
+      // The app already stores the complete UserSession in this document and
+      // reads friend profiles from it, so authenticated players can read the
+      // public-facing profile fields used by the social hub.
+      allow read: if signedIn();
+
+      allow create: if signedIn() && request.auth.uid == userId;
+
+      // Existing progress writes remain available to the account owner. The
+      // second branch permits the atomic referral transaction to update the
+      // inviter's XP and friend list from the invitee's account.
+      allow update: if signedIn() && (
+        request.auth.uid == userId ||
+        (
+          referralRedemptionFor(request.auth.uid).inviteeUid == request.auth.uid &&
+          referralRedemptionFor(request.auth.uid).referrerUid == userId &&
+          referralRedemptionFor(request.auth.uid).rewardXp == 50 &&
+          request.resource.data.xp == resource.data.xp + 50 &&
+          request.resource.data.friendIds.hasAny([request.auth.uid])
+        )
+      );
+    }
+
+    match /referralCodes/{code} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() &&
+          request.resource.data.ownerUid == request.auth.uid &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid))
+              .data.referralCode == code;
+    }
+
+    match /referralRedemptions/{inviteeUid} {
+      allow read: if signedIn() && request.auth.uid == inviteeUid;
+      allow create: if signedIn() &&
+          request.auth.uid == inviteeUid &&
+          request.resource.data.inviteeUid == request.auth.uid &&
+          request.resource.data.rewardXp == 50 &&
+          request.resource.data.referrerUid != request.auth.uid &&
+          get(
+            /databases/$(database)/documents/referralCodes/$(request.resource.data.code)
+          ).data.ownerUid == request.resource.data.referrerUid;
+    }
+
+    match /codeGolfEntries/{entryId} {
+      // The Code Golf leaderboard is public by design: every visitor to the
+      // Ngoding Lok app can watch the live standings, the same way the
+      // certificate pages are public. Writes still require the authenticated
+      // owner to have genuinely completed the module.
+      allow read: if true;
+      allow create: if signedIn() &&
+          request.resource.data.uid == request.auth.uid &&
+          ['python', 'sql', 'java', 'cybersecurity', 'arduino']
+              .hasAny([request.resource.data.track]) &&
+          request.resource.data.bytes is int &&
+          request.resource.data.executionMs is int &&
+          request.resource.data.accuracy is number &&
+          getAfter(
+            /databases/$(database)/documents/users/$(request.auth.uid)
+          ).data.completedModuleIds.hasAny([request.resource.data.moduleId]);
+      allow update: if signedIn() &&
+          resource.data.uid == request.auth.uid &&
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.moduleId == resource.data.moduleId &&
+          request.resource.data.track == resource.data.track &&
+          request.resource.data.bytes is int &&
+          request.resource.data.bytes <= resource.data.bytes &&
+          request.resource.data.executionMs is int &&
+          request.resource.data.accuracy is number;
+    }
+
+    // Certificate records are public by design: this is what lets a hiring
+    // manager or LinkedIn visitor verify a shared certificate without an app
+    // account. Creation still requires the authenticated owner to have the
+    // module in their completedModuleIds list.
+    match /certificates/{certificateId} {
+      allow read: if true;
+      allow create: if signedIn() &&
+          request.resource.data.uid == request.auth.uid &&
+          get(
+            /databases/$(database)/documents/users/$(request.auth.uid)
+          ).data.completedModuleIds.hasAny([request.resource.data.moduleId]);
+      allow update: if signedIn() &&
+          resource.data.uid == request.auth.uid &&
+          request.resource.data.uid == resource.data.uid &&
+          request.resource.data.moduleId == resource.data.moduleId;
+    }
+  }
+}

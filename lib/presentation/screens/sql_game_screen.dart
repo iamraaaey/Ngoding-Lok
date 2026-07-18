@@ -30,6 +30,7 @@ class SqlGameScreen extends StatefulWidget {
   final Future<void> Function({
     required int linesUsed,
     required int executionMs,
+    String? sourceCode,
   })
   onWin;
   final VoidCallback onBack;
@@ -191,6 +192,7 @@ class _SqlGameScreenState extends State<SqlGameScreen> {
             .where((l) => l.trim().isNotEmpty)
             .length,
         executionMs: _timerController.elapsedSeconds.value * 1000,
+        sourceCode: _codeController.text,
       );
     } else {
       _log('Error: ${result.detail}');
@@ -316,6 +318,7 @@ class _SqlGameScreenState extends State<SqlGameScreen> {
           .where((l) => l.trim().isNotEmpty)
           .length,
       executionMs: _timerController.elapsedSeconds.value * 1000,
+      sourceCode: _codeController.text,
     );
   }
 

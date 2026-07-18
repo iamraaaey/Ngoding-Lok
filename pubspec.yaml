@@ -46,8 +46,11 @@ dependencies:
   shared_preferences: ^2.2.0
   firebase_core: ^4.12.1
   firebase_auth: ^6.5.6
-  cloud_firestore: ^5.0.0
+  # Keep the Firestore plugin on the Firebase Core 4.x-compatible line.
+  cloud_firestore: ^6.7.1
   google_mobile_ads: ^9.0.0
+  # Opens the real LinkedIn share-offsite flow on web and native platforms.
+  url_launcher: ^6.3.2
 
   # Typed browser DOM APIs for the web-only Wokwi iframe.
   web: ^1.1.1

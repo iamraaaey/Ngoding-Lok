@@ -38,9 +38,9 @@ void main() {
         orderedEquals([
           'cyber-warmup',
           'cyber-default-credentials',
-          'cyber-pick-right-exploit',
-          'cyber-soc-defense',
-          'cyber-red-blue-capstone',
+          'cyber-spot-the-phish',
+          'cyber-save-your-laptop',
+          'cyber-free-wifi-trap',
         ]),
       );
 
@@ -87,14 +87,14 @@ void main() {
   });
 
   group('Code Golf track data', () {
-    test('references existing modules in the matching track', () {
+    test('track keys map both ways for Firestore payloads', () {
       for (final track in LanguageTrack.values) {
-        for (final entry in CodeGolf.forTrack(track)) {
-          expect(Curriculum.byId(entry.moduleId).track, track);
-        }
+        final key = codeGolfTrackKey(track);
+        expect(codeGolfTrackFromKey(key), track);
       }
 
-      expect(CodeGolf.forTrack(LanguageTrack.cybersecurity), isEmpty);
+      // Unknown values default safely to python.
+      expect(codeGolfTrackFromKey('unknown'), LanguageTrack.python);
     });
   });
 }

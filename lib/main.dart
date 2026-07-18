@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'app_theme.dart';
+import 'core/session/app_preferences.dart';
 import 'firebase_options.dart';
 import 'presentation/screens/root_orchestrator.dart';
 
@@ -57,10 +58,35 @@ class NgeCodeJuhApp extends StatefulWidget {
 }
 
 class _NgeCodeJuhAppState extends State<NgeCodeJuhApp> {
-  // App-wide preferences, flipped from the Settings screen. Session-only (no
-  // persistence), matching the rest of this prototype's in-memory state.
+  // App-wide preferences, flipped from Settings and persisted locally.
   bool _darkMode = true;
   bool _soundEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final darkMode = await AppPreferences.loadDarkMode();
+    final soundEnabled = await AppPreferences.loadSoundEnabled();
+    if (!mounted) return;
+    setState(() {
+      _darkMode = darkMode ?? _darkMode;
+      _soundEnabled = soundEnabled ?? _soundEnabled;
+    });
+  }
+
+  void _setDarkMode(bool value) {
+    setState(() => _darkMode = value);
+    unawaited(AppPreferences.saveDarkMode(value));
+  }
+
+  void _setSoundEnabled(bool value) {
+    setState(() => _soundEnabled = value);
+    unawaited(AppPreferences.saveSoundEnabled(value));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,8 +100,8 @@ class _NgeCodeJuhAppState extends State<NgeCodeJuhApp> {
       home: RootOrchestrator(
         darkMode: _darkMode,
         soundEnabled: _soundEnabled,
-        onSetDarkMode: (v) => setState(() => _darkMode = v),
-        onSetSound: (v) => setState(() => _soundEnabled = v),
+        onSetDarkMode: _setDarkMode,
+        onSetSound: _setSoundEnabled,
       ),
     );
   }

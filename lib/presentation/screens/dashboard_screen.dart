@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/curriculum/curriculum.dart';
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/language_track.dart';
-import '../../core/session/leaderboard_entry.dart';
 import '../../core/session/user_session.dart';
+import '../../data/repositories/user_repository.dart';
 import '../theme/landing_tokens.dart';
 import '../theme/noir_skin.dart';
 import '../widgets/landing/landing_surface.dart';
@@ -16,7 +16,8 @@ import '../widgets/sql_case_files.dart';
 /// sidebar, every learning track's modules in a staggered-entrance grid.
 class DashboardScreen extends StatefulWidget {
   final UserSession user;
-  final List<LeaderboardEntry> leaderboard;
+  final String? uid;
+  final UserRepository repository;
   final VoidCallback onLogout;
   final void Function(CurriculumModule module) onLaunchModule;
 
@@ -26,7 +27,8 @@ class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
     super.key,
     required this.user,
-    required this.leaderboard,
+    required this.uid,
+    required this.repository,
     required this.onLogout,
     required this.onLaunchModule,
     this.onBack,
@@ -102,7 +104,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 ),
                                 const SizedBox(height: 16),
                                 LeaderboardPanel(
-                                  entries: widget.leaderboard,
+                                  entriesStream: widget.uid == null
+                                      ? null
+                                      : widget.repository.streamGlobalLeaderboard(
+                                          currentUid: widget.uid!,
+                                          currentUser: widget.user,
+                                        ),
                                   currentUserName: widget.user.displayName,
                                 ),
                               ],

@@ -11,7 +11,7 @@ void main() {
     home: SqlGameScreen(
       module: Curriculum.byId('m2'),
       onRequestHintAd: ({required onGranted, onCancelled}) {},
-      onWin: ({required linesUsed, required executionMs}) async {},
+      onWin: ({required linesUsed, required executionMs, sourceCode}) async {},
       onBack: () {},
     ),
   );

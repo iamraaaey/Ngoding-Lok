@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ngecode_juh/core/curriculum/curriculum.dart';
-import 'package:ngecode_juh/core/session/leaderboard.dart';
 import 'package:ngecode_juh/core/session/user_session.dart';
+import 'package:ngecode_juh/data/repositories/user_repository.dart';
 import 'package:ngecode_juh/presentation/screens/arduino_simulator_screen.dart';
 import 'package:ngecode_juh/presentation/screens/auth_screen.dart';
 import 'package:ngecode_juh/presentation/screens/code_golf_screen.dart';
@@ -73,14 +73,20 @@ void main() {
     ),
     'dashboard': () => DashboardScreen(
       user: _user,
-      leaderboard: Leaderboard.withUser(_user),
+      uid: null,
+      repository: UserRepository(),
       onLogout: () {},
       onLaunchModule: (_) {},
       onBack: () {},
     ),
     'league map': () =>
         LeagueMapScreen(user: _user, onLaunch: (_) {}, onBack: () {}),
-    'code golf': () => CodeGolfScreen(user: _user, onBack: () {}),
+    'code golf': () => CodeGolfScreen(
+      user: _user,
+      uid: null,
+      repository: UserRepository(),
+      onBack: () {},
+    ),
     'profile': () => ProfileScreen(
       user: _user,
       onPurchaseStreakFreeze: () => false,
@@ -99,7 +105,7 @@ void main() {
       GridGameScreen(
         module: Curriculum.byId('m1'),
         onRequestHintAd: ({required onGranted, onCancelled}) {},
-        onWin: ({required linesUsed, required executionMs}) async {},
+        onWin: ({required linesUsed, required executionMs, sourceCode}) async {},
         onBack: () {},
       ),
     ),
@@ -107,7 +113,7 @@ void main() {
       SqlGameScreen(
         module: Curriculum.byId('m2'),
         onRequestHintAd: ({required onGranted, onCancelled}) {},
-        onWin: ({required linesUsed, required executionMs}) async {},
+        onWin: ({required linesUsed, required executionMs, sourceCode}) async {},
         onBack: () {},
       ),
     ),
@@ -115,7 +121,7 @@ void main() {
       RocketGameScreen(
         module: Curriculum.byId('m3'),
         onRequestHintAd: ({required onGranted, onCancelled}) {},
-        onWin: ({required linesUsed, required executionMs}) async {},
+        onWin: ({required linesUsed, required executionMs, sourceCode}) async {},
         onBack: () {},
       ),
     ),
@@ -125,7 +131,7 @@ void main() {
     ),
     'cybersecurity room': () => CybersecurityRoomScreen(
       module: Curriculum.byId('cyber-warmup'),
-      onWin: ({required linesUsed, required executionMs}) async {},
+      onWin: ({required linesUsed, required executionMs, sourceCode}) async {},
       onBack: () {},
       onProgressChanged: (_) {},
       onBadgeAwarded: (_) {},

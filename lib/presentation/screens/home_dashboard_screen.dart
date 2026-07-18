@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/curriculum/curriculum_module.dart';
+import '../../core/session/email_auth_service.dart';
 import '../../core/session/progression.dart';
 import '../../core/session/user_session.dart';
 import '../theme/landing_tokens.dart';
 import '../theme/league_style.dart';
 import '../widgets/landing/landing_button.dart';
 import '../widgets/landing/landing_surface.dart';
+import '../widgets/email_verification_banner.dart';
 
 /// Screen 4 — the Home Dashboard ("The Hub") in the terminal noir style.
 /// Surfaces the player's identity and momentum at a glance (avatar,
@@ -23,6 +25,8 @@ class HomeDashboardScreen extends StatefulWidget {
   final VoidCallback onOpenMap;
   final VoidCallback onOpenCodeGolf;
   final VoidCallback onOpenProfile;
+  final VoidCallback? onOpenFriends;
+  final VoidCallback? onOpenCertificates;
   final VoidCallback onOpenSettings;
   final VoidCallback onLogout;
 
@@ -34,6 +38,8 @@ class HomeDashboardScreen extends StatefulWidget {
     required this.onOpenMap,
     required this.onOpenCodeGolf,
     required this.onOpenProfile,
+    this.onOpenFriends,
+    this.onOpenCertificates,
     required this.onOpenSettings,
     required this.onLogout,
   });
@@ -129,6 +135,20 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
         onLogout: widget.onLogout,
       ),
     );
+    // Only nag about verification when a real Firebase account is signed in;
+    // simulated/offline sessions have no email to verify.
+    final firebaseEmail = EmailAuthService.currentEmail;
+    final verifyBanner =
+        (firebaseEmail != null && !EmailAuthService.emailVerified)
+        ? _FadeSlide(
+            animation: _interval(0.06, 0.56),
+            yOffset: -12,
+            child: EmailVerificationBanner(
+              userEmail: firebaseEmail,
+              onVerified: () => setState(() {}),
+            ),
+          )
+        : null;
     final hero = _FadeSlide(
       animation: _interval(0.12, 0.62),
       yOffset: 24,
@@ -152,6 +172,8 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
         onOpenMap: widget.onOpenMap,
         onOpenCodeGolf: widget.onOpenCodeGolf,
         onOpenProfile: widget.onOpenProfile,
+        onOpenFriends: widget.onOpenFriends,
+        onOpenCertificates: widget.onOpenCertificates,
         onOpenSettings: widget.onOpenSettings,
       ),
     );
@@ -174,6 +196,10 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
                     children: [
                       appBar,
                       const SizedBox(height: 8),
+                      if (verifyBanner != null) ...[
+                        verifyBanner,
+                        const SizedBox(height: 8),
+                      ],
                       LayoutBuilder(
                         builder: (context, constraints) {
                           // Wide screens: hero + league share the top row, nav
@@ -622,6 +648,8 @@ class _HubNav extends StatelessWidget {
   final VoidCallback onOpenMap;
   final VoidCallback onOpenCodeGolf;
   final VoidCallback onOpenProfile;
+  final VoidCallback? onOpenFriends;
+  final VoidCallback? onOpenCertificates;
   final VoidCallback onOpenSettings;
 
   const _HubNav({
@@ -629,6 +657,8 @@ class _HubNav extends StatelessWidget {
     required this.onOpenMap,
     required this.onOpenCodeGolf,
     required this.onOpenProfile,
+    this.onOpenFriends,
+    this.onOpenCertificates,
     required this.onOpenSettings,
   });
 
@@ -659,6 +689,24 @@ class _HubNav extends StatelessWidget {
         skin: skin,
         onTap: onOpenProfile,
       ),
+      if (onOpenFriends != null)
+        _NavTile(
+          icon: Icons.group,
+          accent: LandingTokens.circuit,
+          title: 'Friends',
+          subtitle: 'Invite +50 XP each',
+          skin: skin,
+          onTap: onOpenFriends!,
+        ),
+      if (onOpenCertificates != null)
+        _NavTile(
+          icon: Icons.workspace_premium,
+          accent: LandingTokens.signal,
+          title: 'Certificates',
+          subtitle: 'Verified module credentials',
+          skin: skin,
+          onTap: onOpenCertificates!,
+        ),
       _NavTile(
         icon: Icons.settings,
         accent: Color(0xFF9E9CFF),
