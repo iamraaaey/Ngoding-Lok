@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -84,9 +85,45 @@ class UserRepository {
           ? user.copyWith(referralCode: referralCodeForUid(uid))
           : user;
       final firestoreUser = FirestoreUser.fromUserSession(session, uid);
-      await _usersCollection
-          .doc(uid)
-          .set(firestoreUser.toFirestore(), SetOptions(merge: true));
+      final userRef = _usersCollection.doc(uid);
+
+      // Session saves can race a referral transaction (for example while a
+      // second tab is restoring its cached session). Preserve server-owned
+      // relationship state instead of allowing an older snapshot to erase a
+      // newly-created friend link or referral reward.
+      await _database.runTransaction((transaction) async {
+        final existing = await transaction.get(userRef);
+        final existingData = existing.data() ?? const <String, dynamic>{};
+        final data = firestoreUser.toFirestore();
+        data['friendIds'] = {
+          ..._stringList(existingData['friendIds']),
+          ...session.friendIds,
+        }.toList();
+        data['achievementIds'] = {
+          ..._stringList(existingData['achievementIds']),
+          ...session.achievementIds,
+        }.toList();
+        data['badges'] = {
+          ..._stringList(existingData['badges']),
+          ...session.badges,
+        }.toList();
+        data['completedModuleIds'] = {
+          ..._stringList(existingData['completedModuleIds']),
+          ...session.completedModuleIds,
+        }.toList();
+        data['referralRewardClaimed'] =
+            existingData['referralRewardClaimed'] == true ||
+            session.referralRewardClaimed;
+        data['referredBy'] = existingData['referredBy'] ?? session.referredBy;
+        if (existing.exists) {
+          // XP is awarded monotonically by the server transactions. A stale
+          // local save must never roll it back.
+          data['xp'] = math.max(_intValue(existingData['xp']), session.xp);
+          transaction.set(userRef, data, SetOptions(merge: true));
+        } else {
+          transaction.set(userRef, data);
+        }
+      });
 
       // This small public index lets a new user redeem a code without
       // exposing the referrer's private progress fields.
@@ -180,6 +217,16 @@ class UserRepository {
     };
 
     return controller.stream;
+  }
+
+  /// Live friend list driven by the signed-in user's Firestore document.
+  /// This is intentionally based on the remote relationship list rather than
+  /// a widget's cached session so both sides of a referral update immediately.
+  Stream<List<FriendSummary>> streamFriendsForUser(String uid) {
+    return _usersCollection.doc(uid).snapshots().asyncExpand((doc) {
+      final ids = _stringList(doc.data()?['friendIds']);
+      return streamFriends(ids);
+    });
   }
 
   /// Global XP leaderboard from real Firestore user profiles.
@@ -704,6 +751,52 @@ class UserRepository {
       );
     }
     return updated;
+  }
+
+  /// Repairs a relationship created before a stale session save could erase
+  /// the invitee's friend ID. The redemption record and the invitee UID are
+  /// both checked by Firestore rules, so this cannot link arbitrary accounts.
+  Future<void> reconcileReferralFriendLink(String uid) async {
+    final inviteeRef = _usersCollection.doc(uid);
+    final redemptionRef = _redemptionsCollection.doc(uid);
+
+    await _database.runTransaction((transaction) async {
+      final inviteeDoc = await transaction.get(inviteeRef);
+      final redemptionDoc = await transaction.get(redemptionRef);
+      if (!inviteeDoc.exists || !redemptionDoc.exists) return;
+
+      final inviteeData = inviteeDoc.data() ?? const <String, dynamic>{};
+      final redemption = redemptionDoc.data() ?? const <String, dynamic>{};
+      final referrerUid = redemption['referrerUid'] as String?;
+      if (referrerUid == null ||
+          referrerUid.isEmpty ||
+          referrerUid == uid ||
+          inviteeData['referredBy'] != referrerUid) {
+        return;
+      }
+
+      final referrerRef = _usersCollection.doc(referrerUid);
+      final referrerDoc = await transaction.get(referrerRef);
+      if (!referrerDoc.exists) return;
+
+      final inviteeFriends = _stringList(inviteeData['friendIds']);
+      final referrerFriends = _stringList(referrerDoc.data()?['friendIds']);
+      if (!inviteeFriends.contains(referrerUid)) {
+        inviteeFriends.add(referrerUid);
+      }
+      if (!referrerFriends.contains(uid)) {
+        referrerFriends.add(uid);
+      }
+
+      transaction.update(inviteeRef, {
+        'friendIds': inviteeFriends,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      transaction.update(referrerRef, {
+        'friendIds': referrerFriends,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
   }
 
   /// Update specific user fields (optimized for incremental updates)

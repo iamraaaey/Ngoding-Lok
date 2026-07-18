@@ -6,9 +6,11 @@ import 'package:ngecode_juh/data/repositories/user_repository.dart';
 import 'package:ngecode_juh/presentation/screens/arduino_simulator_screen.dart';
 import 'package:ngecode_juh/presentation/screens/auth_screen.dart';
 import 'package:ngecode_juh/presentation/screens/code_golf_screen.dart';
+import 'package:ngecode_juh/presentation/screens/certificates_screen.dart';
 import 'package:ngecode_juh/presentation/screens/cybersecurity_room_screen.dart';
 import 'package:ngecode_juh/presentation/screens/dashboard_screen.dart';
 import 'package:ngecode_juh/presentation/screens/forgot_password_screen.dart';
+import 'package:ngecode_juh/presentation/screens/friends_screen.dart';
 import 'package:ngecode_juh/presentation/screens/grid_game_screen.dart';
 import 'package:ngecode_juh/presentation/screens/home_dashboard_screen.dart';
 import 'package:ngecode_juh/presentation/screens/league_map_screen.dart';
@@ -92,6 +94,19 @@ void main() {
       onPurchaseStreakFreeze: () => false,
       onBack: () {},
     ),
+    'friends': () => FriendsScreen(
+      user: _user,
+      uid: null,
+      repository: UserRepository(),
+      onUserUpdated: (_) {},
+      onBack: () {},
+    ),
+    'certificates': () => CertificatesScreen(
+      user: _user,
+      uid: null,
+      repository: UserRepository(),
+      onBack: () {},
+    ),
     'settings': () => SettingsScreen(
       user: _user,
       darkMode: true,
@@ -105,7 +120,8 @@ void main() {
       GridGameScreen(
         module: Curriculum.byId('m1'),
         onRequestHintAd: ({required onGranted, onCancelled}) {},
-        onWin: ({required linesUsed, required executionMs, sourceCode}) async {},
+        onWin:
+            ({required linesUsed, required executionMs, sourceCode}) async {},
         onBack: () {},
       ),
     ),
@@ -113,7 +129,8 @@ void main() {
       SqlGameScreen(
         module: Curriculum.byId('m2'),
         onRequestHintAd: ({required onGranted, onCancelled}) {},
-        onWin: ({required linesUsed, required executionMs, sourceCode}) async {},
+        onWin:
+            ({required linesUsed, required executionMs, sourceCode}) async {},
         onBack: () {},
       ),
     ),
@@ -121,7 +138,8 @@ void main() {
       RocketGameScreen(
         module: Curriculum.byId('m3'),
         onRequestHintAd: ({required onGranted, onCancelled}) {},
-        onWin: ({required linesUsed, required executionMs, sourceCode}) async {},
+        onWin:
+            ({required linesUsed, required executionMs, sourceCode}) async {},
         onBack: () {},
       ),
     ),
