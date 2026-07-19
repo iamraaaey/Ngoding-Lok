@@ -2,10 +2,10 @@ import 'dart:typed_data';
 
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 
 import '../../data/models/module_certificate.dart';
 import 'certificate_link.dart';
+import 'pdf_downloader.dart';
 
 /// Builds the portable version of a verified Ngoding Lok credential.
 ///
@@ -157,7 +157,7 @@ class CertificatePdf {
   /// the platform's save/share destination for the generated PDF.
   static Future<bool> download(ModuleCertificate certificate) async {
     final bytes = await build(certificate);
-    return Printing.sharePdf(bytes: bytes, filename: filenameFor(certificate));
+    return downloadPdfBytes(bytes: bytes, filename: filenameFor(certificate));
   }
 
   static pw.Widget _brandRail(ModuleCertificate certificate) {

@@ -2,12 +2,12 @@ import 'dart:typed_data';
 
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 
 import '../curriculum/curriculum.dart';
 import '../curriculum/curriculum_module.dart';
 import '../session/module_performance.dart';
 import '../session/user_session.dart';
+import 'pdf_downloader.dart';
 
 /// Creates a portable snapshot of the learner's current performance report.
 ///
@@ -160,7 +160,7 @@ class PerformanceReportPdf {
 
   static Future<bool> download(UserSession user) async {
     final bytes = await build(user);
-    return Printing.sharePdf(bytes: bytes, filename: filenameFor(user));
+    return downloadPdfBytes(bytes: bytes, filename: filenameFor(user));
   }
 
   static pw.Widget _header(UserSession user) => pw.Container(
