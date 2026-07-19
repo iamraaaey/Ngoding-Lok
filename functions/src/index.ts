@@ -2,17 +2,10 @@ import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
-import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { z } from "zod/v4";
+import { GoogleGenAI, Type, Schema } from "@google/genai";
 
-const anthropicApiKey = defineSecret("ANTHROPIC_API_KEY");
+const geminiApiKey = defineSecret("GEMINI_API_KEY");
 initializeApp();
-
-const HintResponseSchema = z.object({
-  hintTitle: z.string(),
-  hintMessage: z.string(),
-});
 
 const MODULE_DSL_NOTES: Record<string, string> = {
   logic_grid:
@@ -50,8 +43,17 @@ interface HintRequestBody {
   currentCode?: string;
 }
 
+const responseSchema: Schema = {
+  type: Type.OBJECT,
+  properties: {
+    hintTitle: { type: Type.STRING },
+    hintMessage: { type: Type.STRING },
+  },
+  required: ["hintTitle", "hintMessage"],
+};
+
 export const generateSocraticHint = onRequest(
-  { secrets: [anthropicApiKey], cors: true, region: "us-central1" },
+  { secrets: [geminiApiKey], cors: true, region: "us-central1" },
   async (req, res) => {
     if (req.method !== "POST") {
       res.status(405).json({ error: "Method not allowed" });
@@ -92,34 +94,31 @@ export const generateSocraticHint = onRequest(
     }
 
     try {
-      const client = new Anthropic({ apiKey: anthropicApiKey.value() });
+      const ai = new GoogleGenAI({ apiKey: geminiApiKey.value() });
 
       const dslNotes =
         MODULE_DSL_NOTES[moduleType] ?? "No additional syntax notes.";
 
-      const response = await client.messages.parse({
-        model: "claude-haiku-4-5",
-        max_tokens: 512,
-        system: SYSTEM_PROMPT,
-        messages: [
-          {
-            role: "user",
-            content:
-              `Level objective: ${levelObjective}\n\n` +
-              `Language notes: ${dslNotes}\n\n` +
-              `Student's current code:\n${currentCode || "(empty)"}`,
-          },
-        ],
-        output_config: {
-          format: zodOutputFormat(HintResponseSchema),
-        },
+      const prompt = `Level objective: ${levelObjective}\n\nLanguage notes: ${dslNotes}\n\nStudent's current code:\n${currentCode || "(empty)"}`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          responseMimeType: "application/json",
+          responseSchema: responseSchema,
+          temperature: 0.7,
+        }
       });
 
-      const parsed = response.parsed_output;
-      if (!parsed) {
+      const responseText = response.text;
+      if (!responseText) {
         res.status(502).json({ error: "Model did not return a valid hint" });
         return;
       }
+
+      const parsed = JSON.parse(responseText);
 
       res.status(200).json(parsed);
     } catch (err) {
