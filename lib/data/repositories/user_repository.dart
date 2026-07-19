@@ -7,11 +7,13 @@ import 'package:flutter/foundation.dart';
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/language_track.dart';
 import '../../core/curriculum/module_type.dart';
+import '../../core/streaming/switch_latest.dart';
 import '../../core/session/leaderboard_entry.dart';
 import '../../core/session/module_performance.dart';
 import '../../core/social/code_golf.dart';
 import '../../core/social/achievement.dart';
 import '../../core/social/friend.dart';
+import '../../core/social/referral_reconciliation.dart';
 import '../../core/session/user_session.dart';
 import '../models/module_certificate.dart';
 import '../models/firestore_user.dart';
@@ -223,10 +225,12 @@ class UserRepository {
   /// This is intentionally based on the remote relationship list rather than
   /// a widget's cached session so both sides of a referral update immediately.
   Stream<List<FriendSummary>> streamFriendsForUser(String uid) {
-    return _usersCollection.doc(uid).snapshots().asyncExpand((doc) {
-      final ids = _stringList(doc.data()?['friendIds']);
-      return streamFriends(ids);
-    });
+    return switchLatest(
+      _usersCollection
+          .doc(uid)
+          .snapshots()
+          .map((doc) => streamFriends(_stringList(doc.data()?['friendIds']))),
+    );
   }
 
   /// Global XP leaderboard from real Firestore user profiles.
@@ -754,8 +758,9 @@ class UserRepository {
   }
 
   /// Repairs a relationship created before a stale session save could erase
-  /// the invitee's friend ID. The redemption record and the invitee UID are
-  /// both checked by Firestore rules, so this cannot link arbitrary accounts.
+  /// referral fields from the invitee. The validated redemption record is the
+  /// authority, so the repair is safe to repeat and never links arbitrary
+  /// accounts.
   Future<void> reconcileReferralFriendLink(String uid) async {
     final inviteeRef = _usersCollection.doc(uid);
     final redemptionRef = _redemptionsCollection.doc(uid);
@@ -768,34 +773,38 @@ class UserRepository {
       final inviteeData = inviteeDoc.data() ?? const <String, dynamic>{};
       final redemption = redemptionDoc.data() ?? const <String, dynamic>{};
       final referrerUid = redemption['referrerUid'] as String?;
-      if (referrerUid == null ||
-          referrerUid.isEmpty ||
-          referrerUid == uid ||
-          inviteeData['referredBy'] != referrerUid) {
-        return;
-      }
+      if (referrerUid == null || referrerUid.isEmpty) return;
 
       final referrerRef = _usersCollection.doc(referrerUid);
       final referrerDoc = await transaction.get(referrerRef);
       if (!referrerDoc.exists) return;
 
-      final inviteeFriends = _stringList(inviteeData['friendIds']);
-      final referrerFriends = _stringList(referrerDoc.data()?['friendIds']);
-      if (!inviteeFriends.contains(referrerUid)) {
-        inviteeFriends.add(referrerUid);
-      }
-      if (!referrerFriends.contains(uid)) {
-        referrerFriends.add(uid);
-      }
+      final plan = ReferralReconciliationPlan.fromDocuments(
+        inviteeUid: uid,
+        redemption: redemption,
+        invitee: inviteeData,
+        referrer: referrerDoc.data() ?? const <String, dynamic>{},
+      );
+      if (plan == null) return;
 
-      transaction.update(inviteeRef, {
-        'friendIds': inviteeFriends,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-      transaction.update(referrerRef, {
-        'friendIds': referrerFriends,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+      if (plan.needsInviteeUpdate(inviteeData)) {
+        final inviteeUpdate = <String, dynamic>{
+          'friendIds': plan.inviteeFriendIds,
+          'referredBy': plan.referrerUid,
+          'referralRewardClaimed': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        };
+        if (plan.awardsInvitee) {
+          inviteeUpdate['xp'] = plan.repairedInviteeXp;
+        }
+        transaction.update(inviteeRef, inviteeUpdate);
+      }
+      if (plan.needsReferrerUpdate) {
+        transaction.update(referrerRef, {
+          'friendIds': plan.referrerFriendIds,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
     });
   }
 

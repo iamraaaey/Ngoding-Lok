@@ -63,5 +63,34 @@ void main() {
       final cleared = await SessionPersistence.loadSession();
       expect(cleared, isNull);
     });
+
+    test('keeps cached sessions isolated by authenticated account', () async {
+      const first = UserSession(email: 'first@example.com', xp: 50);
+      const second = UserSession(email: 'second@example.com', xp: 100);
+
+      await SessionPersistence.saveSession(first, accountId: 'first-account');
+      await SessionPersistence.saveSession(second, accountId: 'second-account');
+
+      final restoredFirst = await SessionPersistence.loadSession(
+        accountId: 'first-account',
+      );
+      final restoredSecond = await SessionPersistence.loadSession(
+        accountId: 'second-account',
+      );
+
+      expect(restoredFirst!.email, first.email);
+      expect(restoredSecond!.email, second.email);
+      await SessionPersistence.clearSession(accountId: 'first-account');
+      expect(
+        await SessionPersistence.loadSession(accountId: 'first-account'),
+        isNull,
+      );
+      expect(
+        (await SessionPersistence.loadSession(
+          accountId: 'second-account',
+        ))!.email,
+        second.email,
+      );
+    });
   });
 }

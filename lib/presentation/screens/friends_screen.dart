@@ -72,7 +72,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
         : widget.repository.streamFriendsForUser(uid);
 
     // Also repair links created before the stale-session overwrite fix. This
-    // is idempotent and is protected by the redemption document in rules.
+    // is idempotent and is protected by the validated redemption document.
     if (uid != null) {
       unawaited(
         widget.repository.reconcileReferralFriendLink(uid).catchError((error) {
@@ -80,6 +80,11 @@ class _FriendsScreenState extends State<FriendsScreen> {
         }),
       );
     }
+  }
+
+  void _refreshFriends() {
+    _bindFirebaseFriends();
+    setState(() {});
   }
 
   @override
@@ -95,11 +100,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
   Future<void> _redeemCode() async {
     final uid = widget.uid;
     if (uid == null) {
-      showNoirSnack(
-        context,
-        'Sign in to add friends.',
-        success: false,
-      );
+      showNoirSnack(context, 'Sign in to add friends.', success: false);
       return;
     }
     if (_codeController.text.trim().isEmpty) {
@@ -269,7 +270,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                           label: 'Refresh',
                           icon: Icons.refresh,
                           compact: true,
-                          onPressed: () => setState(() {}),
+                          onPressed: _refreshFriends,
                         ),
                       ),
                       const SizedBox(height: 16),

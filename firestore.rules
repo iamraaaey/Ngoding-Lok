@@ -12,6 +12,22 @@ service cloud.firestore {
       ).data;
     }
 
+    function isSafeReferralLinkUpdate(userId) {
+      return referralRedemptionFor(request.auth.uid).inviteeUid == request.auth.uid &&
+          referralRedemptionFor(request.auth.uid).referrerUid == userId &&
+          referralRedemptionFor(request.auth.uid).rewardXp == 50 &&
+          request.resource.data
+              .diff(resource.data)
+              .affectedKeys()
+              .hasOnly(['xp', 'friendIds', 'updatedAt']) &&
+          request.resource.data.friendIds.hasAll(resource.data.friendIds) &&
+          request.resource.data.friendIds.hasAny([request.auth.uid]) &&
+          (
+            request.resource.data.xp == resource.data.xp + 50 ||
+            request.resource.data.xp == resource.data.xp
+          );
+    }
+
     match /users/{userId} {
       // The app already stores the complete UserSession in this document and
       // reads friend profiles from it, so authenticated players can read the
@@ -25,16 +41,7 @@ service cloud.firestore {
       // inviter's XP and friend list from the invitee's account.
       allow update: if signedIn() && (
         request.auth.uid == userId ||
-        (
-          referralRedemptionFor(request.auth.uid).inviteeUid == request.auth.uid &&
-          referralRedemptionFor(request.auth.uid).referrerUid == userId &&
-          referralRedemptionFor(request.auth.uid).rewardXp == 50 &&
-          (
-            request.resource.data.xp == resource.data.xp + 50 ||
-            request.resource.data.xp == resource.data.xp
-          ) &&
-          request.resource.data.friendIds.hasAny([request.auth.uid])
-        )
+        isSafeReferralLinkUpdate(userId)
       );
     }
 

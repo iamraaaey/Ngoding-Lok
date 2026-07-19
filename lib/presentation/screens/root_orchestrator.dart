@@ -76,6 +76,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   late final RewardedAdService _rewardedAdService;
   late final UserRepository _userRepository;
   StreamSubscription<UserSession?>? _userSyncSubscription;
+  String? _sessionAccountId;
+  bool _pendingReferralRedeeming = false;
 
   @override
   void initState() {
@@ -97,7 +99,6 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   Future<void> _loadPersistedSession() async {
     if (_publicCertificateId != null) return;
     final currentUser = _firebaseUser;
-    final cachedSession = await SessionPersistence.loadSession();
 
     // A local cache is not an account. Old demo sessions must never reopen the
     // learning hub without a live Firebase identity.
@@ -105,6 +106,11 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       await SessionPersistence.clearSession();
       return;
     }
+
+    _sessionAccountId = currentUser.uid;
+    final cachedSession = await SessionPersistence.loadSession(
+      accountId: currentUser.uid,
+    );
 
     var restored =
         cachedSession ??
@@ -127,12 +133,13 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     }
     if (!mounted) return;
     _startUserSync(currentUser.uid);
+    _repairReferralLink(currentUser.uid);
     setState(() {
       _user = restored;
       _route = AppRoute.home;
       _splashDone = true;
     });
-    await SessionPersistence.saveSession(restored);
+    await SessionPersistence.saveSession(restored, accountId: currentUser.uid);
     unawaited(_maybeRedeemPendingReferral(currentUser.uid, restored));
   }
 
@@ -143,16 +150,23 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
     String uid,
     UserSession session,
   ) async {
+    if (_pendingReferralRedeeming) return;
     if (session.referralRewardClaimed) {
       ReferralLink.consumePendingCode();
       return;
     }
-    final code = ReferralLink.consumePendingCode();
+    // Keep the launch code until a successful transaction. A temporary
+    // connection error should leave it available in the Friends screen for a
+    // safe retry instead of silently losing the referral.
+    final code = ReferralLink.pendingCode;
     if (code == null || code == _userRepository.referralCodeForUid(uid)) {
+      if (code != null) ReferralLink.consumePendingCode();
       return;
     }
+    _pendingReferralRedeeming = true;
     try {
       final updated = await _userRepository.redeemReferralCode(uid, code);
+      ReferralLink.consumePendingCode();
       _updateUser(updated);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -169,7 +183,17 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       ).showSnackBar(SnackBar(content: Text(error.message)));
     } catch (error) {
       debugPrint('Referral auto-redeem failed: $error');
+    } finally {
+      _pendingReferralRedeeming = false;
     }
+  }
+
+  void _repairReferralLink(String uid) {
+    unawaited(
+      _userRepository.reconcileReferralFriendLink(uid).catchError((error) {
+        debugPrint('Referral link reconciliation deferred: $error');
+      }),
+    );
   }
 
   User? get _firebaseUser {
@@ -186,7 +210,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       (remoteUser) {
         if (!mounted || remoteUser == null) return;
         setState(() => _user = remoteUser);
-        SessionPersistence.saveSession(remoteUser);
+        SessionPersistence.saveSession(remoteUser, accountId: uid);
       },
       onError: (Object error) =>
           debugPrint('Firestore user stream failed: $error'),
@@ -198,9 +222,13 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       _user = user;
     });
     if (user != null) {
-      SessionPersistence.saveSession(user);
       // Sync to Firestore if user is authenticated
       final currentUser = _firebaseUser;
+      final accountId = currentUser?.uid ?? _sessionAccountId;
+      if (accountId != null) {
+        _sessionAccountId = accountId;
+        SessionPersistence.saveSession(user, accountId: accountId);
+      }
       if (currentUser != null && syncRemote) {
         _userRepository
             .saveUserToFirestore(user, currentUser.uid)
@@ -209,7 +237,9 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
             );
       }
     } else {
-      SessionPersistence.clearSession();
+      final accountId = _sessionAccountId;
+      _sessionAccountId = null;
+      SessionPersistence.clearSession(accountId: accountId);
     }
   }
 
@@ -226,6 +256,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       }
       return;
     }
+
+    _sessionAccountId = currentUser.uid;
 
     var session = UserSession(
       email: email,
@@ -247,6 +279,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       }
       _updateUser(activeSession, syncRemote: false);
       _startUserSync(currentUser.uid);
+      _repairReferralLink(currentUser.uid);
       unawaited(_maybeRedeemPendingReferral(currentUser.uid, activeSession));
     } catch (error) {
       debugPrint('Firestore sync failed after authenticated sign-in: $error');
