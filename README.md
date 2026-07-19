@@ -18,6 +18,9 @@
   <a href="https://www.anthropic.com">
     <img src="https://img.shields.io/badge/Hints-Claude%20Haiku-D97757" alt="Claude Haiku hints">
   </a>
+  <a href="#build-week-codex-and-gpt-56-collaboration">
+    <img src="https://img.shields.io/badge/Built%20with-Codex%20%2B%20GPT--5.6-111827?logo=openai&amp;logoColor=white" alt="Built with Codex and GPT-5.6">
+  </a>
 </p>
 
 <p align="center">
@@ -31,10 +34,11 @@
 </p>
 
 <p align="center">
+  <a href="DOCUMENTATION.md">📚 Full Documentation</a> ·
+  <a href="SETUP_AND_DEPLOYMENT.md">🚀 Setup & Deploy</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#curriculum">Curriculum</a> ·
-  <a href="#socratic-hints">AI hints</a> ·
-  <a href="#current-prototype-boundaries">Prototype boundaries</a>
+  <a href="#build-week-codex-and-gpt-56-collaboration">Codex + GPT-5.6 use</a>
 </p>
 
 > **Naming note:** the user-facing application, the GitHub repository, and the Firebase project are branded **Ngoding Lok**. The Dart package and the Android application ID retain the original **NgeCode-Juh** / `com.ngecodejuh.ngecode_juh` identifiers.
@@ -56,6 +60,10 @@ Ngoding Lok is a Flutter Final Year Project that turns beginner-friendly coding 
 
 The app currently targets **web, Android, and Windows**. Its learning paths are grouped into Python, SQL, Java, and cybersecurity tracks on the League Map.
 
+## AI-assisted build highlight
+
+This submission explicitly used **Codex** and **GPT-5.6** as a build partner for product planning, code changes, debugging, responsive UI review, Firebase/social-flow fixes, and release checks. The detailed evidence trail, session IDs, and model-history note are collected in [Build Week: Codex and GPT-5.6 collaboration](#build-week-codex-and-gpt-56-collaboration).
+
 ## Current experience
 
 | Area | What is available now |
@@ -64,8 +72,9 @@ The app currently targets **web, Android, and Windows**. Its learning paths are 
 | **Expanded curriculum** | 21 launchable missions across Python, SQL, Java, and cybersecurity tracks. |
 | **Safe security practice** | Five self-contained labs with scripted terminal, browser, and decision environments—no system commands, sockets, or real targets are used. |
 | **Progression** | XP, best-score stars, daily streak display, leagues from Wood to Platinum, achievements, and Streak Freeze purchases. |
-| **Player spaces** | Home hub, League Map, Code Golf boards, profile/achievement view, settings, landing, sign-up, and password-recovery screens. |
+| **Player spaces** | Home hub, League Map, Code Golf boards, profile/achievement view, Friends and referral pages, certificates, settings, landing, sign-up, and password-recovery screens. |
 | **Identity and continuity** | Firebase Google and GitHub sign-in where configured; the local session persists XP, completion, scores, badges, and cybersecurity progress on the device. |
+| **Social and credentials** | Firestore-backed friend streams, reciprocal referral reconciliation, public certificate verification, and responsive PDF certificate downloads. |
 | **Responsive UI** | A terminal-noir design with dark/light modes, adaptive mobile-to-desktop layouts, motion, and hover treatments. |
 
 ## Curriculum
@@ -145,6 +154,7 @@ The project keeps domain logic separate from UI orchestration:
 | Local persistence | `shared_preferences` |
 | Hint service | Firebase Cloud Functions v2, TypeScript, Anthropic SDK, Zod |
 | Networking | `http` |
+| Credential export | `pdf`, `printing` |
 | Quality checks | `flutter_test`, `flutter_lints`, GitHub Actions |
 
 ## Project layout
@@ -177,6 +187,14 @@ NgeCode-Juh/
 ├── test/                               Unit and widget coverage
 └── pubspec.yaml                        Flutter dependencies and asset registration
 ```
+
+## Documentation Index
+
+- **[DOCUMENTATION.md](DOCUMENTATION.md)** — Complete feature, architecture, and system reference
+- **[SETUP_AND_DEPLOYMENT.md](SETUP_AND_DEPLOYMENT.md)** — Setup, deployment, Firebase, ads, and configuration
+- **[CONSOLIDATION_SUMMARY.md](CONSOLIDATION_SUMMARY.md)** — What was merged (reference only)
+
+---
 
 ## Quick start
 
@@ -211,6 +229,14 @@ flutter build web --release
 
 The CI workflow runs these same Flutter checks for pushes and pull requests, then uploads `build/web` as an artifact. It does **not** deploy web hosting or the Cloud Function.
 
+### Production web build
+
+```bash
+flutter build web --release --no-wasm-dry-run --no-pub
+```
+
+The released web client is hosted at [ngoding-lok.web.app](https://ngoding-lok.web.app). Firebase Hosting and Firestore rules are deployed separately from the Flutter build; see [`DEPLOY.md`](DEPLOY.md) for the deployment checklist.
+
 ## Rewarded ad setup
 
 Rewarded hints are configured for real ad providers only:
@@ -226,9 +252,53 @@ Rewarded hints are configured for real ad providers only:
 
 AdMob rewarded videos are native full-screen SDK overlays, while AdSense controls web playback. No fake `SPONSOR MESSAGE` or local-preview card is used.
 
-## Build Week disclosure
+## Build Week: Codex and GPT-5.6 collaboration
 
-This project was built iteratively with Codex. Codex was used to inspect the product reference, refine the SQL learning experience and responsive UI, integrate the real-only rewarded-ad flows, and run the analyzer, test suite, and release web build. Before submitting, copy the `/feedback` Session ID from the primary Codex build thread and document the exact GPT-5.6 contribution from that thread’s model history in your own words; the repository cannot verify a model name by itself.
+Ngoding Lok was built iteratively with **Codex** and **GPT-5.6** during the Build Week submission period. The AI collaboration was used as a hands-on engineering loop: inspect the current app, choose a scoped improvement, implement it in the Flutter/Firebase codebase, run targeted validation, then review the result against the live product and judging requirements.
+
+### What Codex and GPT-5.6 contributed
+
+- **Planning and product focus:** Codex helped inspect the existing app, README, documentation, UI references, and Build Week requirements, then shaped the work into judge-visible improvements rather than loose polish.
+- **Implementation:** GPT-5.6/Codex were used to modify the Flutter and Firebase code paths for Friends/referrals, Certificates, profile achievements, responsive screens, and public credential export.
+- **Debugging:** The AI-assisted workflow diagnosed the one-sided referral issue and guided a Firestore transaction/reconciliation fix that links both accounts consistently while preserving existing friend IDs.
+- **UX refinement:** Codex reviewed the terminal-noir interface across desktop and mobile widths, improving scanability and layout behavior for social and credential flows.
+- **Validation:** The collaboration included Flutter analysis, targeted tests, release web-build checks, and final README/submission evidence review.
+
+### Required evidence for the submission
+
+The primary Codex build thread must be cited in Devpost’s `/feedback` field. Add the real value below before submitting; do not leave a placeholder:
+
+```text
+Primary /feedback Session ID: 019f7881-913b-7b91-9e51-266f05217d73
+
+Supporting Build Week Session IDs:
+- 019f7861-b7f0-7d81-93bc-e4f731b26b38
+- 019f781c-91b0-7e51-9dfa-2f32d39bd0ba
+- 019f7593-8912-7c13-b29a-16db92b48544
+- 019f6981-51f4-7e20-8c7a-e92eb24167f0
+- 019f742f-aeb9-73e3-a62f-19a43831feb4
+```
+
+The Devpost submission should also include the exact GPT-5.6 model-history evidence from that thread and describe which decisions or changes it supported. This README documents the contribution areas; the session ID and model-history details are the source-of-truth evidence.
+
+## Build Week judge access
+
+### Public project links
+
+- Live demo: [https://ngoding-lok.web.app](https://ngoding-lok.web.app)
+- Canonical repository: [https://github.com/iamraaaey/Ngoding-Lok](https://github.com/iamraaaey/Ngoding-Lok)
+
+The canonical repository is currently private for judging. Grant read access to both `testing@devpost.com` and `build-week-event@openai.com` before submitting. If the repository is switched to public, these private collaborator invitations are no longer required.
+
+### Judge test path
+
+1. Open the live demo and select a learning track.
+2. Complete a short interactive mission and confirm that feedback, XP and completion state respond.
+3. Open Profile and check the responsive achievements layout at desktop and mobile widths.
+4. Open Friends. For referral testing, use two non-personal test accounts and confirm that a successful referral appears in both users’ crews after refresh.
+5. Open an earned Certificate, verify the public credential details, and use the PDF download action.
+
+The product is free to access. If Firebase authentication is required for a flow, use a dedicated non-personal judge/test account rather than sharing a private personal account or password in the public repository.
 
 ## Firebase Authentication setup
 
