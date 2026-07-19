@@ -11,11 +11,11 @@ import '../widgets/mfa_sign_in_dialog.dart';
 import '../widgets/sso_buttons.dart';
 
 /// "Join the Quest" auth card in the terminal noir style. The Google button
-/// performs a real OAuth sign-in via [GoogleAuthService]; when that is
-/// cancelled or unavailable (unsupported platform, unconfigured origin),
-/// the email/password path still signs the student in under the simulated
-/// session, matching the prototype's fake-SSO behavior. "Create an account"
-/// leads to the dedicated [SignUpScreen] route.
+/// performs a real OAuth sign-in via [GoogleAuthService]. Every entry path
+/// REQUIRES a valid Firebase account; there is no guest or simulated session
+/// because progress, streaks, achievements, and performance reports are
+/// account-owned data stored in Firestore. "Create an account" leads to the
+/// dedicated [SignUpScreen] route for email/password registration or OAuth.
 class AuthScreen extends StatefulWidget {
   final void Function(String email, {String? name, String? photoUrl}) onLogin;
   final VoidCallback onBack;
@@ -65,10 +65,10 @@ class _AuthScreenState extends State<AuthScreen>
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    // Empty credentials keep the prototype's quick guest entry (also how the
-    // widget tests tap through the login screen without typing).
     if (email.isEmpty || password.isEmpty) {
-      widget.onLogin(email.isNotEmpty ? email : 'student@school.edu');
+      setState(
+        () => _formError = 'Enter your account email and password to continue.',
+      );
       return;
     }
 
@@ -90,8 +90,10 @@ class _AuthScreenState extends State<AuthScreen>
           photoUrl: result.photoUrl,
         );
       } else {
-        // Firebase unavailable here — fall back to the simulated session.
-        widget.onLogin(email);
+        setState(
+          () => _formError =
+              'Authentication did not complete. Try again or create an account.',
+        );
       }
     } on MfaRequiredException catch (error) {
       if (!mounted) return;

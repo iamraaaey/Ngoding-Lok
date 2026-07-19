@@ -36,6 +36,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Local render previews and other temporary QA artifacts.
+/tmp/
+
 # Firebase (local hosting deploy cache; keep firebase.json and .firebaserc)
 .firebase/
 firebase-debug.log

@@ -125,8 +125,8 @@ class _MfaSignInDialogState extends State<MfaSignInDialog> {
         children: [
           Text(
             phoneHint == null
-                ? 'Firebase requires the SMS code from your enrolled phone.'
-                : 'Firebase will send a code to $phoneHint.',
+                ? 'Enter the SMS code from your enrolled phone.'
+                : 'We will send a code to $phoneHint.',
             style: LandingTokens.mono(
               fontSize: 12,
               color: LandingTokens.textMuted,
@@ -159,4 +159,4 @@ class _MfaSignInDialogState extends State<MfaSignInDialog> {
 
 String _securityMessage(Object error) => error is AccountSecurityException
     ? error.message
-    : 'Firebase could not complete this security action. Try again.';
+    : 'We could not complete this security action. Try again.';

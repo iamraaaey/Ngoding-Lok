@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import '../widgets/landing/landing_button.dart';
 
-/// Column of SSO buttons shared by the login and sign-up cards, styled as
-/// the theme's bracketed hairline boxes. Google is wired to a real OAuth
-/// flow via [GoogleAuthService]; GitHub and LinkedIn have no registered API
-/// credentials or backend yet, so they show the same honest "not
-/// configured" fallback that Google itself falls back to when its popup is
-/// cancelled or unavailable — no fake logins.
+/// Column of social sign-in buttons shared by the login and sign-up cards,
+/// styled as the theme's bracketed hairline boxes. Both available providers
+/// use the same real account flow; no simulated sign-ins are offered here.
 class SsoButtons extends StatelessWidget {
   final String actionVerb;
   final bool googleBusy;

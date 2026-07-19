@@ -16,6 +16,7 @@ import 'package:ngecode_juh/presentation/screens/home_dashboard_screen.dart';
 import 'package:ngecode_juh/presentation/screens/league_map_screen.dart';
 import 'package:ngecode_juh/presentation/screens/landing_screen.dart';
 import 'package:ngecode_juh/presentation/screens/profile_screen.dart';
+import 'package:ngecode_juh/presentation/screens/performance_report_screen.dart';
 import 'package:ngecode_juh/presentation/screens/rocket_game_screen.dart';
 import 'package:ngecode_juh/presentation/screens/settings_screen.dart';
 import 'package:ngecode_juh/presentation/screens/signup_screen.dart';
@@ -79,6 +80,12 @@ void main() {
       repository: UserRepository(),
       onLogout: () {},
       onLaunchModule: (_) {},
+      onBack: () {},
+    ),
+    'performance report': () => PerformanceReportScreen(
+      user: _user,
+      uid: null,
+      repository: UserRepository(),
       onBack: () {},
     ),
     'league map': () =>

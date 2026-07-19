@@ -14,8 +14,8 @@ const _errorRed = Color(0xFFFF4D5E);
 /// "Create Your Account" registration card in the terminal noir style.
 /// Validates name, email format, password length, and password confirmation
 /// before registering; Google sign-up reuses the real OAuth flow from
-/// [GoogleAuthService]. Accounts live in the in-memory session only (no
-/// persistence), per the FYP scope.
+/// [GoogleAuthService]. The resulting Firebase identity is required before
+/// the player can enter the learning hub.
 class SignUpScreen extends StatefulWidget {
   final void Function(String email, {String? name, String? photoUrl})
   onRegister;
@@ -115,8 +115,10 @@ class _SignUpScreenState extends State<SignUpScreen>
           photoUrl: result.photoUrl,
         );
       } else {
-        // Firebase unavailable here — fall back to the simulated session.
-        widget.onRegister(email, name: name);
+        setState(
+          () => _submitError =
+              'Account creation did not complete. Check your connection and try again.',
+        );
       }
     } on EmailAuthException catch (error) {
       if (!mounted) return;
@@ -258,7 +260,9 @@ class _SignUpScreenState extends State<SignUpScreen>
               ),
               const SizedBox(height: 24),
               GradientButton(
-                label: _submitBusy ? 'Creating account...' : 'Create My Account',
+                label: _submitBusy
+                    ? 'Creating account...'
+                    : 'Create My Account',
                 onPressed: _submitBusy ? null : _submit,
                 compact: dense,
               ),

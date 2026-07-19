@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/session/google_auth_service.dart';
 import '../../core/session/progression.dart';
 import '../../core/session/user_session.dart';
 import '../../core/social/achievement.dart';
@@ -660,30 +661,84 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _LinkGitHubButton extends StatelessWidget {
+class _LinkGitHubButton extends StatefulWidget {
   final NoirSkin skin;
 
   const _LinkGitHubButton({required this.skin});
 
   @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("GitHub linking isn't configured yet — coming soon."),
+  State<_LinkGitHubButton> createState() => _LinkGitHubButtonState();
+}
+
+class _LinkGitHubButtonState extends State<_LinkGitHubButton> {
+  bool _linking = false;
+  late bool _linked;
+
+  NoirSkin get skin => widget.skin;
+
+  @override
+  void initState() {
+    super.initState();
+    _linked = GitHubAuthService.isLinked;
+  }
+
+  Future<void> _connect() async {
+    if (_linking || _linked) return;
+    setState(() => _linking = true);
+    try {
+      await GitHubAuthService.linkCurrentUser();
+      if (!mounted) return;
+      final linked = GitHubAuthService.isLinked;
+      setState(() {
+        _linking = false;
+        _linked = linked;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            linked
+                ? 'GitHub is now connected to your player account.'
+                : 'GitHub connection was cancelled.',
           ),
         ),
+      );
+    } on SocialAuthException catch (error) {
+      if (!mounted) return;
+      setState(() => _linking = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _linking
+        ? 'CONNECTING...'
+        : _linked
+        ? 'LINKED'
+        : 'NOT LINKED · LINK';
+    final accent = _linked ? LandingTokens.signal : skin.sub;
+    return MouseRegion(
+      cursor: _linked ? MouseCursor.defer : SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: _connect,
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             borderRadius: LandingTokens.smallRadius,
-            border: Border.all(color: skin.borderStrong),
+            border: Border.all(
+              color: _linked
+                  ? LandingTokens.signal.withValues(alpha: 0.65)
+                  : skin.borderStrong,
+            ),
+            color: _linked
+                ? LandingTokens.signal.withValues(alpha: 0.08)
+                : null,
           ),
           child: Text(
-            'NOT LINKED · LINK',
-            style: LandingTokens.label(fontSize: 9, color: skin.sub),
+            label,
+            style: LandingTokens.label(fontSize: 9, color: accent),
           ),
         ),
       ),

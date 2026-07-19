@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ngecode_juh/core/social/certificate_link.dart';
 import 'package:ngecode_juh/core/session/user_session.dart';
 import 'package:ngecode_juh/data/models/module_certificate.dart';
 import 'package:ngecode_juh/data/repositories/user_repository.dart';
+import 'package:ngecode_juh/presentation/screens/certificate_display_enhanced.dart';
 import 'package:ngecode_juh/presentation/screens/certificates_screen.dart';
 
 void main() {
@@ -50,7 +52,12 @@ void main() {
     );
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    for (final size in const [Size(360, 800), Size(1440, 900)]) {
+    for (final size in const [
+      Size(320, 640),
+      Size(360, 800),
+      Size(768, 1024),
+      Size(1440, 900),
+    ]) {
       await tester.binding.setSurfaceSize(size);
       await tester.pumpWidget(
         MaterialApp(
@@ -74,6 +81,17 @@ void main() {
             .getSize(find.byKey(const Key('certificate-artwork-canvas')))
             .width,
         size.width,
+      );
+      final qr = tester.widget<CertificateVerificationQr>(
+        find.byType(CertificateVerificationQr),
+      );
+      expect(
+        qr.verificationUrl,
+        CertificateLink.certificateUrl(certificate.certificateId),
+      );
+      expect(
+        find.bySemanticsLabel('Certificate verification QR code'),
+        findsOneWidget,
       );
       expect(tester.takeException(), isNull);
     }

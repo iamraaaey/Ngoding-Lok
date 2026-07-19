@@ -27,6 +27,7 @@ class HomeDashboardScreen extends StatefulWidget {
   final VoidCallback onOpenProfile;
   final VoidCallback? onOpenFriends;
   final VoidCallback? onOpenCertificates;
+  final VoidCallback? onOpenReport;
   final VoidCallback onOpenSettings;
   final VoidCallback onLogout;
 
@@ -40,6 +41,7 @@ class HomeDashboardScreen extends StatefulWidget {
     required this.onOpenProfile,
     this.onOpenFriends,
     this.onOpenCertificates,
+    this.onOpenReport,
     required this.onOpenSettings,
     required this.onLogout,
   });
@@ -122,6 +124,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
   Widget build(BuildContext context) {
     final skin = _Skin.of(context);
     final dark = Theme.of(context).brightness == Brightness.dark;
+    final compactLayout = MediaQuery.sizeOf(context).width < 480;
     final progression = Progression(widget.user.xp);
 
     final appBar = _FadeSlide(
@@ -174,6 +177,7 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
         onOpenProfile: widget.onOpenProfile,
         onOpenFriends: widget.onOpenFriends,
         onOpenCertificates: widget.onOpenCertificates,
+        onOpenReport: widget.onOpenReport,
         onOpenSettings: widget.onOpenSettings,
       ),
     );
@@ -188,35 +192,54 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1800),
+                constraints: const BoxConstraints(maxWidth: 1920),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(8),
+                  padding: EdgeInsets.fromLTRB(
+                    MediaQuery.sizeOf(context).width < 480 ? 6 : 8,
+                    MediaQuery.sizeOf(context).width < 480 ? 6 : 8,
+                    MediaQuery.sizeOf(context).width < 480 ? 6 : 8,
+                    MediaQuery.sizeOf(context).width < 480 ? 12 : 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       appBar,
-                      const SizedBox(height: 8),
+                      SizedBox(height: compactLayout ? 6 : 8),
                       if (verifyBanner != null) ...[
                         verifyBanner,
-                        const SizedBox(height: 8),
+                        SizedBox(height: compactLayout ? 6 : 8),
                       ],
                       LayoutBuilder(
                         builder: (context, constraints) {
                           // Wide screens: hero + league share the top row, nav
                           // fills a full-width grid below — no dead side margins.
-                          if (constraints.maxWidth > 900) {
+                          if (constraints.maxWidth >= 720) {
+                            final panelHeight = constraints.maxWidth < 1280
+                                ? 230.0
+                                : 184.0;
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(flex: 3, child: hero),
-                                    const SizedBox(width: 8),
-                                    Expanded(flex: 2, child: league),
+                                    Expanded(
+                                      flex: 3,
+                                      child: SizedBox(
+                                        height: panelHeight,
+                                        child: hero,
+                                      ),
+                                    ),
+                                    SizedBox(width: compactLayout ? 6 : 8),
+                                    Expanded(
+                                      flex: 2,
+                                      child: SizedBox(
+                                        height: panelHeight,
+                                        child: league,
+                                      ),
+                                    ),
                                   ],
                                 ),
-                                const SizedBox(height: 8),
+                                SizedBox(height: compactLayout ? 6 : 8),
                                 nav,
                               ],
                             );
@@ -225,9 +248,9 @@ class _HomeDashboardScreenState extends State<HomeDashboardScreen>
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               hero,
-                              const SizedBox(height: 8),
+                              SizedBox(height: compactLayout ? 6 : 8),
                               league,
-                              const SizedBox(height: 8),
+                              SizedBox(height: compactLayout ? 6 : 8),
                               nav,
                             ],
                           );
@@ -322,16 +345,20 @@ class _TopAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = MediaQuery.sizeOf(context).width < 390;
     return _Panel(
       skin: skin,
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(compact ? 6 : 8),
       child: Row(
         children: [
           MouseRegion(
             cursor: SystemMouseCursors.click,
-            child: GestureDetector(onTap: onAvatarTap, child: _avatar()),
+            child: GestureDetector(
+              onTap: onAvatarTap,
+              child: _avatar(size: compact ? 38 : 42),
+            ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: compact ? 6 : 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,21 +383,25 @@ class _TopAppBar extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          _StreakChip(streak: user.streak, skin: skin),
-          const SizedBox(width: 8),
+          SizedBox(width: compact ? 6 : 8),
+          _StreakChip(streak: user.streak, skin: skin, compact: compact),
+          SizedBox(width: compact ? 6 : 8),
           MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
               onTap: onLogout,
               child: Container(
-                width: 40,
-                height: 40,
+                width: compact ? 36 : 40,
+                height: compact ? 36 : 40,
                 decoration: BoxDecoration(
                   borderRadius: LandingTokens.smallRadius,
                   border: Border.all(color: skin.borderStrong),
                 ),
-                child: Icon(Icons.logout, color: skin.sub, size: 18),
+                child: Icon(
+                  Icons.logout,
+                  color: skin.sub,
+                  size: compact ? 17 : 18,
+                ),
               ),
             ),
           ),
@@ -379,11 +410,11 @@ class _TopAppBar extends StatelessWidget {
     );
   }
 
-  Widget _avatar() {
+  Widget _avatar({required double size}) {
     if (user.photoUrl != null) {
       return Container(
-        width: 46,
-        height: 46,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           borderRadius: LandingTokens.smallRadius,
           border: Border.all(color: skin.borderStrong),
@@ -395,13 +426,17 @@ class _TopAppBar extends StatelessWidget {
       );
     }
     return Container(
-      width: 46,
-      height: 46,
+      width: size,
+      height: size,
       decoration: const BoxDecoration(
         color: LandingTokens.ember,
         borderRadius: LandingTokens.smallRadius,
       ),
-      child: const Icon(Icons.person, color: Color(0xFF0A0500), size: 24),
+      child: Icon(
+        Icons.person,
+        color: const Color(0xFF0A0500),
+        size: size * 0.52,
+      ),
     );
   }
 }
@@ -409,13 +444,21 @@ class _TopAppBar extends StatelessWidget {
 class _StreakChip extends StatelessWidget {
   final int streak;
   final _Skin skin;
+  final bool compact;
 
-  const _StreakChip({required this.streak, required this.skin});
+  const _StreakChip({
+    required this.streak,
+    required this.skin,
+    required this.compact,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 8 : 10,
+        vertical: compact ? 8 : 9,
+      ),
       decoration: BoxDecoration(
         borderRadius: LandingTokens.smallRadius,
         border: Border.all(color: LandingTokens.ember.withValues(alpha: 0.55)),
@@ -424,16 +467,16 @@ class _StreakChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.local_fire_department,
-            size: 16,
+            size: compact ? 15 : 16,
             color: LandingTokens.ember,
           ),
-          const SizedBox(width: 5),
+          SizedBox(width: compact ? 4 : 5),
           Text(
             'x$streak',
             style: LandingTokens.mono(
-              fontSize: 12,
+              fontSize: compact ? 11 : 12,
               color: LandingTokens.ember,
               fontWeight: FontWeight.w700,
             ),
@@ -464,6 +507,7 @@ class _HeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final next = nextModule;
+    final compact = MediaQuery.sizeOf(context).width < 480;
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -481,16 +525,14 @@ class _HeroSection extends StatelessWidget {
             child: AnimatedIridescence(borderRadius: BorderRadius.zero),
           ),
           Padding(
-            padding: EdgeInsets.all(
-              MediaQuery.sizeOf(context).width < 400 ? 16 : 22,
-            ),
+            padding: EdgeInsets.all(compact ? 14 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     const PulsingDot(color: LandingTokens.ember, size: 5),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 7),
                     Expanded(
                       child: Text(
                         next == null
@@ -506,24 +548,33 @@ class _HeroSection extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: compact ? 10 : 12),
                 Text(
                   next == null ? "You've cleared every level!" : next.title,
-                  style: LandingTokens.display(fontSize: 24, color: skin.text),
+                  style: LandingTokens.display(
+                    fontSize: compact ? 21 : 23,
+                    color: skin.text,
+                  ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: compact ? 7 : 8),
                 Text(
                   next == null
                       ? 'Replay any level from the map to push your efficiency score higher.'
                       : next.description,
-                  style: LandingTokens.body(fontSize: 14, color: skin.sub),
+                  maxLines: compact ? 3 : 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: LandingTokens.body(
+                    fontSize: compact ? 13 : 14,
+                    color: skin.sub,
+                  ),
                 ),
-                const SizedBox(height: 20),
-                Align(
-                  alignment: Alignment.centerLeft,
+                SizedBox(height: compact ? 14 : 16),
+                SizedBox(
+                  width: double.infinity,
                   child: GradientButton(
                     label: next == null ? 'Open Level Map' : 'Resume Playing',
                     icon: next == null ? Icons.map : Icons.play_arrow,
+                    compact: true,
                     onPressed: next == null ? onOpenMap : () => onResume(next),
                   ),
                 ),
@@ -549,25 +600,32 @@ class _LeagueTracker extends StatelessWidget {
     final tier = progression.tier;
     final next = progression.nextTier;
     final toNext = progression.xpToNextTier;
+    final compact = MediaQuery.sizeOf(context).width < 480;
 
     return _Panel(
       skin: skin,
+      padding: EdgeInsets.all(compact ? 8 : 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: compact ? 40 : 44,
+                height: compact ? 40 : 44,
                 decoration: BoxDecoration(
                   color: tier.color.withValues(alpha: 0.12),
                   borderRadius: LandingTokens.smallRadius,
                   border: Border.all(color: tier.color.withValues(alpha: 0.55)),
                 ),
-                child: Icon(tier.icon, color: tier.color, size: 22),
+                child: Icon(
+                  tier.icon,
+                  color: tier.color,
+                  size: compact ? 20 : 22,
+                ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: compact ? 8 : 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -579,11 +637,11 @@ class _LeagueTracker extends StatelessWidget {
                         color: skin.faint,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
                       '${tier.label.toUpperCase()} TIER',
                       style: LandingTokens.display(
-                        fontSize: 18,
+                        fontSize: compact ? 16 : 18,
                         color: skin.text,
                       ),
                     ),
@@ -592,9 +650,9 @@ class _LeagueTracker extends StatelessWidget {
               ),
               if (next != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 5,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: compact ? 6 : 8,
+                    vertical: compact ? 4 : 5,
                   ),
                   decoration: BoxDecoration(
                     borderRadius: LandingTokens.smallRadius,
@@ -602,12 +660,15 @@ class _LeagueTracker extends StatelessWidget {
                   ),
                   child: Text(
                     'NEXT: ${next.label.toUpperCase()}',
-                    style: LandingTokens.label(fontSize: 9, color: skin.sub),
+                    style: LandingTokens.label(
+                      fontSize: compact ? 8 : 9,
+                      color: skin.sub,
+                    ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: compact ? 14 : 16),
           Container(
             height: 6,
             decoration: BoxDecoration(border: Border.all(color: skin.border)),
@@ -627,7 +688,7 @@ class _LeagueTracker extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: compact ? 8 : 10),
           Text(
             toNext == null
                 ? 'TOP TIER REACHED — LEGEND STATUS'
@@ -650,6 +711,7 @@ class _HubNav extends StatelessWidget {
   final VoidCallback onOpenProfile;
   final VoidCallback? onOpenFriends;
   final VoidCallback? onOpenCertificates;
+  final VoidCallback? onOpenReport;
   final VoidCallback onOpenSettings;
 
   const _HubNav({
@@ -659,6 +721,7 @@ class _HubNav extends StatelessWidget {
     required this.onOpenProfile,
     this.onOpenFriends,
     this.onOpenCertificates,
+    this.onOpenReport,
     required this.onOpenSettings,
   });
 
@@ -707,6 +770,15 @@ class _HubNav extends StatelessWidget {
           skin: skin,
           onTap: onOpenCertificates!,
         ),
+      if (onOpenReport != null)
+        _NavTile(
+          icon: Icons.insights,
+          accent: const Color(0xFF9E9CFF),
+          title: 'Performance Report',
+          subtitle: 'Accuracy, pace & progress',
+          skin: skin,
+          onTap: onOpenReport!,
+        ),
       _NavTile(
         icon: Icons.settings,
         accent: Color(0xFF9E9CFF),
@@ -719,24 +791,63 @@ class _HubNav extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        const gap = 16.0;
-        // Scale column count with available width so the tiles always fill the
-        // row rather than leaving a gap on the right.
-        final cols = constraints.maxWidth > 1000
+        const gap = 8.0;
+        final maxColumns = constraints.maxWidth >= 1280
             ? 4
-            : constraints.maxWidth > 520
+            : constraints.maxWidth >= 960
+            ? 3
+            : constraints.maxWidth >= 480
             ? 2
             : 1;
-        final tileWidth = (constraints.maxWidth - gap * (cols - 1)) / cols;
-        return Wrap(
-          spacing: gap,
-          runSpacing: 12,
+        final columns = _preferredColumns(tiles.length, maxColumns);
+        final rows = <List<_NavTile>>[];
+        for (var start = 0; start < tiles.length; start += columns) {
+          final end = start + columns < tiles.length
+              ? start + columns
+              : tiles.length;
+          rows.add(tiles.sublist(start, end));
+        }
+
+        return Column(
           children: [
-            for (final t in tiles) SizedBox(width: tileWidth, child: t),
+            for (var rowIndex = 0; rowIndex < rows.length; rowIndex++) ...[
+              Row(
+                children: [
+                  for (
+                    var tileIndex = 0;
+                    tileIndex < rows[rowIndex].length;
+                    tileIndex++
+                  ) ...[
+                    Expanded(
+                      flex:
+                          rowIndex == rows.length - 1 &&
+                              tileIndex == rows[rowIndex].length - 1
+                          ? columns - rows[rowIndex].length + 1
+                          : 1,
+                      child: rows[rowIndex][tileIndex],
+                    ),
+                    if (tileIndex < rows[rowIndex].length - 1)
+                      const SizedBox(width: gap),
+                  ],
+                ],
+              ),
+              if (rowIndex < rows.length - 1) const SizedBox(height: gap),
+            ],
           ],
         );
       },
     );
+  }
+
+  int _preferredColumns(int itemCount, int maxColumns) {
+    final capped = itemCount < maxColumns ? itemCount : maxColumns;
+    if (capped <= 2) return capped;
+
+    for (var candidate = capped; candidate >= 2; candidate--) {
+      final finalRowCount = itemCount % candidate;
+      if (finalRowCount == 0 || finalRowCount > 1) return candidate;
+    }
+    return capped;
   }
 }
 
@@ -767,6 +878,7 @@ class _NavTileState extends State<_NavTile> {
   @override
   Widget build(BuildContext context) {
     final skin = widget.skin;
+    final compact = MediaQuery.sizeOf(context).width < 390;
     final motion = LandingTokens.motionFor(
       context,
       LandingTokens.motionStandard,
@@ -782,7 +894,7 @@ class _NavTileState extends State<_NavTile> {
           duration: motion,
           curve: Curves.easeOutCubic,
           transform: Matrix4.translationValues(0, _hovered ? -4 : 0, 0),
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(compact ? 7 : 8),
           decoration: BoxDecoration(
             color: skin.panel,
             borderRadius: LandingTokens.mediumRadius,
@@ -796,8 +908,8 @@ class _NavTileState extends State<_NavTile> {
           child: Row(
             children: [
               Container(
-                width: 42,
-                height: 42,
+                width: compact ? 36 : 40,
+                height: compact ? 36 : 40,
                 decoration: BoxDecoration(
                   color: widget.accent.withValues(alpha: 0.1),
                   borderRadius: LandingTokens.smallRadius,
@@ -805,9 +917,13 @@ class _NavTileState extends State<_NavTile> {
                     color: widget.accent.withValues(alpha: 0.5),
                   ),
                 ),
-                child: Icon(widget.icon, color: widget.accent, size: 21),
+                child: Icon(
+                  widget.icon,
+                  color: widget.accent,
+                  size: compact ? 19 : 20,
+                ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: compact ? 9 : 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -817,18 +933,18 @@ class _NavTileState extends State<_NavTile> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: LandingTokens.label(
-                        fontSize: 11,
+                        fontSize: compact ? 10 : 10.5,
                         color: skin.text,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
                       widget.subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: LandingTokens.body(
-                        fontSize: 12,
+                        fontSize: compact ? 11 : 11.5,
                         color: skin.faint,
                       ),
                     ),
@@ -840,7 +956,7 @@ class _NavTileState extends State<_NavTile> {
                 offset: _hovered ? const Offset(0.2, 0) : Offset.zero,
                 child: Icon(
                   Icons.arrow_forward_rounded,
-                  size: 16,
+                  size: compact ? 15 : 16,
                   color: _hovered ? widget.accent : skin.faint,
                 ),
               ),

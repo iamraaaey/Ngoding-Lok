@@ -52,6 +52,6 @@ class ModuleCertificate {
     'learnerName': learnerName,
     'score': score,
     'issuedAt': FieldValue.serverTimestamp(),
-    'verifiedBy': 'Ngoding Lok / Firebase',
+    'verifiedBy': 'Ngoding Lok',
   };
 }

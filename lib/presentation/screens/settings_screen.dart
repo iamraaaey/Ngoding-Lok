@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/session/email_auth_service.dart';
+import '../../core/session/google_auth_service.dart';
 import '../../core/session/user_session.dart';
 import '../theme/landing_tokens.dart';
 import '../theme/noir_skin.dart';
@@ -94,11 +95,11 @@ class SettingsScreen extends StatelessWidget {
         _SettingRow(
           icon: Icons.link,
           label: 'Linked Accounts',
-          subtitle: 'Google, GitHub, LinkedIn',
+          subtitle: 'Manage connected sign-in methods',
           skin: skin,
           onTap: () => showNoirDialog<void>(
             context,
-            builder: (_) => LinkedAccountsDialog(user: user),
+            builder: (_) => const LinkedAccountsDialog(),
           ),
         ),
         _SettingRow(
@@ -540,39 +541,45 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   }
 }
 
-/// Functional "Linked Accounts" dialog. Connection state is held in-memory
-/// for the prototype: connecting or disconnecting a provider updates the row
-/// immediately and confirms with a snackbar.
+/// Shows connections that are actually attached to the active account.
 class LinkedAccountsDialog extends StatefulWidget {
-  final UserSession user;
-
-  const LinkedAccountsDialog({super.key, required this.user});
+  const LinkedAccountsDialog({super.key});
 
   @override
   State<LinkedAccountsDialog> createState() => _LinkedAccountsDialogState();
 }
 
 class _LinkedAccountsDialogState extends State<LinkedAccountsDialog> {
-  late final Map<String, bool> _linked = {
-    'Google': widget.user.photoUrl != null,
-    'GitHub': false,
-    'LinkedIn': false,
-  };
+  bool _githubBusy = false;
+  late bool _githubLinked;
 
-  static const Map<String, IconData> _icons = {
-    'Google': Icons.g_mobiledata_rounded,
-    'GitHub': Icons.code_rounded,
-    'LinkedIn': Icons.business_center_rounded,
-  };
+  @override
+  void initState() {
+    super.initState();
+    _githubLinked = GitHubAuthService.isLinked;
+  }
 
-  void _toggle(String provider) {
-    final nowLinked = !(_linked[provider] ?? false);
-    setState(() => _linked[provider] = nowLinked);
-    showNoirSnack(
-      context,
-      nowLinked ? '$provider connected.' : '$provider disconnected.',
-      success: nowLinked,
-    );
+  Future<void> _connectGitHub() async {
+    if (_githubBusy || _githubLinked) return;
+    setState(() => _githubBusy = true);
+    try {
+      await GitHubAuthService.linkCurrentUser();
+      if (!mounted) return;
+      final linked = GitHubAuthService.isLinked;
+      setState(() {
+        _githubBusy = false;
+        _githubLinked = linked;
+      });
+      showNoirSnack(
+        context,
+        linked ? 'GitHub connected.' : 'GitHub connection was cancelled.',
+        success: linked,
+      );
+    } on SocialAuthException catch (error) {
+      if (!mounted) return;
+      setState(() => _githubBusy = false);
+      showNoirSnack(context, error.message, success: false);
+    }
   }
 
   @override
@@ -588,16 +595,21 @@ class _LinkedAccountsDialogState extends State<LinkedAccountsDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final provider in _linked.keys)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _ProviderRow(
-                  name: provider,
-                  icon: _icons[provider]!,
-                  linked: _linked[provider] ?? false,
-                  onToggle: () => _toggle(provider),
-                ),
+            Text(
+              'Connect GitHub to use it as a sign-in method for this player account.',
+              style: LandingTokens.body(
+                fontSize: 13,
+                color: LandingTokens.textMuted,
               ),
+            ),
+            const SizedBox(height: 14),
+            _ProviderRow(
+              name: 'GitHub',
+              icon: Icons.code_rounded,
+              linked: _githubLinked,
+              busy: _githubBusy,
+              onConnect: _connectGitHub,
+            ),
           ],
         ),
       ),
@@ -609,13 +621,15 @@ class _ProviderRow extends StatelessWidget {
   final String name;
   final IconData icon;
   final bool linked;
-  final VoidCallback onToggle;
+  final bool busy;
+  final VoidCallback onConnect;
 
   const _ProviderRow({
     required this.name,
     required this.icon,
     required this.linked,
-    required this.onToggle,
+    required this.busy,
+    required this.onConnect,
   });
 
   @override
@@ -672,17 +686,12 @@ class _ProviderRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          linked
-              ? CinematicOutlineButton(
-                  label: 'Disconnect',
-                  compact: true,
-                  onPressed: onToggle,
-                )
-              : GradientButton(
-                  label: 'Connect',
-                  compact: true,
-                  onPressed: onToggle,
-                ),
+          if (!linked)
+            GradientButton(
+              label: busy ? 'Connecting...' : 'Connect',
+              compact: true,
+              onPressed: busy ? null : onConnect,
+            ),
         ],
       ),
     );

@@ -42,9 +42,9 @@ class EmailAuthService {
     } on FirebaseAuthException catch (error) {
       throw EmailAuthException(_signUpMessage(error.code), code: error.code);
     } catch (_) {
-      // Firebase unavailable (unsupported platform / plugin-less test VM):
-      // let the caller fall back to the simulated session.
-      return null;
+      throw const EmailAuthException(
+        'Account sign-in is temporarily unavailable. Check your connection and try again.',
+      );
     }
   }
 
@@ -69,7 +69,9 @@ class EmailAuthService {
     } on FirebaseAuthException catch (error) {
       throw EmailAuthException(_signInMessage(error.code), code: error.code);
     } catch (_) {
-      return null;
+      throw const EmailAuthException(
+        'Account sign-in is temporarily unavailable. Check your connection and try again.',
+      );
     }
   }
 
@@ -344,7 +346,7 @@ class EmailAuthService {
     } catch (error) {
       if (error is AccountSecurityException) rethrow;
       throw const AccountSecurityException(
-        'Firebase Authentication is unavailable. Check your connection and try again.',
+        'Account security is temporarily unavailable. Check your connection and try again.',
       );
     }
   }
@@ -357,8 +359,8 @@ class EmailAuthService {
         code: error.code,
       );
     }
-    return const AccountSecurityException(
-      'Firebase Authentication is unavailable. Check your connection and try again.',
+      return const AccountSecurityException(
+        'Account security is temporarily unavailable. Check your connection and try again.',
     );
   }
 
@@ -386,11 +388,11 @@ class EmailAuthService {
       case 'second-factor-already-in-use':
         return 'That phone number is already linked to another account.';
       case 'operation-not-allowed':
-        return 'Enable this Firebase Authentication provider in the console first.';
+        return 'This security method is not enabled for the app yet.';
       case 'unverified-email':
         return 'Verify your email address before enrolling MFA.';
       default:
-        return 'Firebase could not complete this account-security action. Try again.';
+        return 'We could not complete this account-security action. Try again.';
     }
   }
 

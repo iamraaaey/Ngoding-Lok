@@ -97,7 +97,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
     if (uid == null) {
       showNoirSnack(
         context,
-        'Sign in with Firebase to add friends.',
+        'Sign in to add friends.',
         success: false,
       );
       return;

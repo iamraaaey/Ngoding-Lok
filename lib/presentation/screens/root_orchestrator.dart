@@ -31,6 +31,7 @@ import 'home_dashboard_screen.dart';
 import 'landing_screen.dart';
 import 'league_map_screen.dart';
 import 'profile_screen.dart';
+import 'performance_report_screen.dart';
 import 'rocket_game_screen.dart';
 import 'settings_screen.dart';
 import 'signup_screen.dart';
@@ -95,34 +96,44 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
 
   Future<void> _loadPersistedSession() async {
     if (_publicCertificateId != null) return;
-    final session = await SessionPersistence.loadSession();
-    if (session != null && mounted) {
-      UserSession restored = session;
-      final currentUser = _firebaseUser;
-      if (currentUser != null) {
-        restored = await _userRepository.syncUserSession(
-          currentUser.uid,
-          session,
-        );
-        try {
-          restored = await _userRepository.recordActivity(currentUser.uid);
-        } catch (error) {
-          debugPrint('Activity sync failed during restore: $error');
-        }
-        _startUserSync(currentUser.uid);
-      } else {
-        restored = restored.withActivity();
-      }
-      setState(() {
-        _user = restored;
-        _route = AppRoute.home;
-        _splashDone = true;
-      });
-      await SessionPersistence.saveSession(restored);
-      if (currentUser != null) {
-        unawaited(_maybeRedeemPendingReferral(currentUser.uid, restored));
-      }
+    final currentUser = _firebaseUser;
+    final cachedSession = await SessionPersistence.loadSession();
+
+    // A local cache is not an account. Old demo sessions must never reopen the
+    // learning hub without a live Firebase identity.
+    if (currentUser == null) {
+      await SessionPersistence.clearSession();
+      return;
     }
+
+    var restored =
+        cachedSession ??
+        UserSession(
+          email: currentUser.email ?? currentUser.uid,
+          name: currentUser.displayName,
+          photoUrl: currentUser.photoURL,
+        );
+    try {
+      restored = await _userRepository.syncUserSession(
+        currentUser.uid,
+        restored,
+      );
+      restored = await _userRepository.recordActivity(currentUser.uid);
+    } catch (error) {
+      // Keep the authenticated UI usable during a transient Firestore outage;
+      // the real Firebase identity still remains the gate.
+      debugPrint('Firestore restore failed: $error');
+      restored = restored.withActivity();
+    }
+    if (!mounted) return;
+    _startUserSync(currentUser.uid);
+    setState(() {
+      _user = restored;
+      _route = AppRoute.home;
+      _splashDone = true;
+    });
+    await SessionPersistence.saveSession(restored);
+    unawaited(_maybeRedeemPendingReferral(currentUser.uid, restored));
   }
 
   /// Completes an invite-link referral (`?ref=CODE` on the hosted web app)
@@ -203,38 +214,46 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   }
 
   void _login(String email, {String? name, String? photoUrl}) async {
+    final currentUser = _firebaseUser;
+    if (currentUser == null) {
+      if (mounted) {
+        setState(() => _route = AppRoute.auth);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Create or sign in to your account first.'),
+          ),
+        );
+      }
+      return;
+    }
+
     var session = UserSession(
       email: email,
       name: name,
       photoUrl: photoUrl,
     ).withActivity();
 
-    // Sync with Firestore if user is authenticated
-    final currentUser = _firebaseUser;
-    if (currentUser != null) {
+    try {
+      final mergedSession = await _userRepository.syncUserSession(
+        currentUser.uid,
+        session,
+      );
+      UserSession activeSession;
       try {
-        final mergedSession = await _userRepository.syncUserSession(
-          currentUser.uid,
-          session,
-        );
-        UserSession activeSession;
-        try {
-          activeSession = await _userRepository.recordActivity(currentUser.uid);
-        } catch (error) {
-          debugPrint('Activity sync failed during sign-in: $error');
-          activeSession = mergedSession;
-        }
-        _updateUser(activeSession, syncRemote: false);
-        _startUserSync(currentUser.uid);
-        unawaited(_maybeRedeemPendingReferral(currentUser.uid, activeSession));
-      } catch (e) {
-        debugPrint('Firestore sync failed, using local session: $e');
-        _updateUser(session);
+        activeSession = await _userRepository.recordActivity(currentUser.uid);
+      } catch (error) {
+        debugPrint('Activity sync failed during sign-in: $error');
+        activeSession = mergedSession;
       }
-    } else {
-      _updateUser(session);
+      _updateUser(activeSession, syncRemote: false);
+      _startUserSync(currentUser.uid);
+      unawaited(_maybeRedeemPendingReferral(currentUser.uid, activeSession));
+    } catch (error) {
+      debugPrint('Firestore sync failed after authenticated sign-in: $error');
+      _updateUser(session, syncRemote: true);
     }
 
+    if (!mounted) return;
     setState(() {
       _route = AppRoute.home;
     });
@@ -564,6 +583,21 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
   }
 
   Widget _buildRoute(AppRoute route) {
+    final publicRoute =
+        route == AppRoute.landing ||
+        route == AppRoute.auth ||
+        route == AppRoute.signup ||
+        route == AppRoute.forgotPassword ||
+        route == AppRoute.publicCertificate;
+    if (_user == null && !publicRoute) {
+      return AuthScreen(
+        onLogin: _login,
+        onBack: () => setState(() => _route = AppRoute.landing),
+        onCreateAccount: () => setState(() => _route = AppRoute.signup),
+        onForgotPassword: () =>
+            setState(() => _route = AppRoute.forgotPassword),
+      );
+    }
     switch (route) {
       case AppRoute.landing:
         return LandingScreen(
@@ -606,6 +640,8 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           onOpenFriends: () => setState(() => _route = AppRoute.friends),
           onOpenCertificates: () =>
               setState(() => _route = AppRoute.certificates),
+          onOpenReport: () =>
+              setState(() => _route = AppRoute.performanceReport),
           onOpenSettings: () => setState(() => _route = AppRoute.settings),
           onLogout: _logout,
         );
@@ -680,6 +716,14 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           repository: _userRepository,
           onLogout: _logout,
           onLaunchModule: _launchModule,
+          onBack: () => setState(() => _route = AppRoute.home),
+        );
+
+      case AppRoute.performanceReport:
+        return PerformanceReportScreen(
+          user: _user!,
+          uid: _firebaseUser?.uid,
+          repository: _userRepository,
           onBack: () => setState(() => _route = AppRoute.home),
         );
 

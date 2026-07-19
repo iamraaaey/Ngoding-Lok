@@ -13,5 +13,6 @@ enum AppRoute {
   publicCertificate,
   settings,
   dashboard,
+  performanceReport,
   game,
 }

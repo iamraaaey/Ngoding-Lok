@@ -95,7 +95,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
         children: [
           Text(
             EmailAuthService.currentEmail == null
-                ? 'Sign in with Firebase before managing your email address.'
+                ? 'Sign in before managing your email address.'
                 : 'Current address: ${EmailAuthService.currentEmail}',
             style: LandingTokens.mono(
               fontSize: 12,
@@ -112,8 +112,8 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
           const SizedBox(height: 14),
           Text(
             _verified
-                ? 'Your Firebase account can use verified-email features.'
-                : 'Firebase will send the message using the Email address verification template configured in the console.',
+                ? 'Your account can use verified-email features.'
+                : 'We will send a message to verify this email address.',
             style: LandingTokens.mono(
               fontSize: 12,
               color: LandingTokens.textMuted,
@@ -169,7 +169,7 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> {
       setState(() => _busy = false);
       showNoirSnack(
         context,
-        'Check the new address and confirm the Firebase email-change link.',
+        'Check the new address and confirm the email-change link.',
       );
       Navigator.of(context).pop();
     } catch (error) {
@@ -205,7 +205,7 @@ class _ChangeEmailDialogState extends State<ChangeEmailDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Firebase will send a confirmation link to the new address. The change takes effect only after confirmation.',
+            'We will send a confirmation link to the new address. The change takes effect only after confirmation.',
             style: LandingTokens.mono(
               fontSize: 12,
               color: LandingTokens.textMuted,
@@ -379,7 +379,7 @@ class _PhoneLinkDialogState extends State<PhoneLinkDialog> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Firebase can now use this phone number for account security.',
+                  'This phone number is now ready for account security.',
                   style: LandingTokens.mono(
                     fontSize: 12,
                     color: LandingTokens.textMuted,
@@ -392,7 +392,7 @@ class _PhoneLinkDialogState extends State<PhoneLinkDialog> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Enter an international phone number. Firebase sends the SMS and handles web reCAPTCHA when needed.',
+                  'Enter an international phone number. We will send an SMS when needed.',
                   style: LandingTokens.mono(
                     fontSize: 12,
                     color: LandingTokens.textMuted,
@@ -559,7 +559,7 @@ class _MfaEnrollmentDialogState extends State<MfaEnrollmentDialog> {
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  'Firebase sends the multi-factor enrolment notification email automatically after enrollment.',
+                  'A multi-factor enrollment notification email will be sent automatically.',
                   style: LandingTokens.mono(
                     fontSize: 12,
                     color: LandingTokens.textMuted,
@@ -572,7 +572,7 @@ class _MfaEnrollmentDialogState extends State<MfaEnrollmentDialog> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Verify your email first. Then Firebase will send an SMS and register this phone as a second sign-in factor.',
+                  'Verify your email first. Then we will send an SMS to register this phone as a second sign-in factor.',
                   style: LandingTokens.mono(
                     fontSize: 12,
                     color: LandingTokens.textMuted,
@@ -643,4 +643,4 @@ class _FeedbackText extends StatelessWidget {
 
 String accountSecurityMessage(Object error) => error is AccountSecurityException
     ? error.message
-    : 'Firebase could not complete this security action. Try again.';
+    : 'We could not complete this security action. Try again.';

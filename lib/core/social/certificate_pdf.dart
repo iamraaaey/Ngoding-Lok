@@ -7,20 +7,34 @@ import 'package:printing/printing.dart';
 import '../../data/models/module_certificate.dart';
 import 'certificate_link.dart';
 
-/// Builds the portable, printable version of a verified Ngoding Lok
-/// credential. The document is created entirely from the persisted
-/// certificate record, not from widget pixels, so downloaded copies retain
-/// the same identity, issue date, score, and verification URL everywhere.
+/// Builds the portable version of a verified Ngoding Lok credential.
+///
+/// The download mirrors the live certificate rather than using a separate
+/// template: a narrow dark identity rail, an ivory paper field, the award
+/// seal on their seam, and a large rounded paper edge in the upper-right.
+/// Learner data and the QR payload are always derived from the certificate
+/// record so the exported copy remains independently verifiable.
 class CertificatePdf {
   CertificatePdf._();
 
-  static const _ink = PdfColor.fromInt(0xFF263238);
-  static const _muted = PdfColor.fromInt(0xFF667279);
-  static const _teal = PdfColor.fromInt(0xFF087F9D);
-  static const _paleBlue = PdfColor.fromInt(0xFFCDEDF5);
-  static const _orange = PdfColor.fromInt(0xFFFF6B00);
-  static const _red = PdfColor.fromInt(0xFFE5242A);
-  static const _gold = PdfColor.fromInt(0xFFE9A93A);
+  static const _voidBlack = PdfColor.fromInt(0xFF070707);
+  static const _carbon = PdfColor.fromInt(0xFF0C0C0C);
+  static const _paper = PdfColor.fromInt(0xFFF7F5EF);
+  static const _ink = PdfColor.fromInt(0xFF101112);
+  static const _slate = PdfColor.fromInt(0xFF5C5B55);
+  static const _faint = PdfColor.fromInt(0xFFA1A19A);
+  static const _railDivider = PdfColor.fromInt(0xFF30302E);
+  static const _ember = PdfColor.fromInt(0xFFFF5C01);
+  static const _signal = PdfColor.fromInt(0xFF43FFA4);
+  static const _signalInk = PdfColor.fromInt(0xFF087A54);
+  static const _circuit = PdfColor.fromInt(0xFF00E5FF);
+  // Pdf viewers do not consistently preserve low-alpha vector fills. Use a
+  // print-safe warm paper tint so the upper-corner wash stays subtle.
+  static const _emberWash = PdfColor.fromInt(0xFFFFF1E7);
+
+  static const _railWidth = 128.0;
+  static const _paperInsetLeft = 78.0;
+  static const _paperInsetRight = 30.0;
 
   /// A consistent filename makes browser downloads easy to identify.
   static String filenameFor(ModuleCertificate certificate) {
@@ -35,8 +49,8 @@ class CertificatePdf {
     return 'ngoding-lok-$module-$day-certificate.pdf';
   }
 
-  /// Generates a landscape A4 PDF suitable for both browser download and
-  /// native sharing/printing.
+  /// Generates a landscape A4 certificate with its real public verification
+  /// URL embedded in a scanner-ready QR code.
   static Future<Uint8List> build(ModuleCertificate certificate) async {
     final document = pw.Document(
       title: 'Ngoding Lok certificate - ${certificate.moduleTitle}',
@@ -44,131 +58,93 @@ class CertificatePdf {
       subject: 'Verified completion credential',
       creator: 'Ngoding Lok',
     );
-    final certificateUrl = CertificateLink.certificateUrl(
+    final verificationUrl = CertificateLink.certificateUrl(
       certificate.certificateId,
     );
 
     document.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4.landscape,
-        margin: const pw.EdgeInsets.all(24),
-        build: (context) => pw.Container(
-          decoration: pw.BoxDecoration(
-            color: PdfColors.white,
-            border: pw.Border.all(color: PdfColor.fromInt(0xFFD5DCE2)),
-          ),
-          child: pw.Column(
-            children: [
-              _header(certificate),
-              pw.Container(
-                width: double.infinity,
-                color: _orange,
-                padding: const pw.EdgeInsets.symmetric(vertical: 10),
-                child: pw.Text(
-                  'THIS CERTIFICATE IS PRESENTED TO',
-                  textAlign: pw.TextAlign.center,
-                  style: pw.TextStyle(
-                    color: PdfColors.white,
-                    fontSize: 10,
-                    fontWeight: pw.FontWeight.bold,
-                    letterSpacing: 1.1,
+        margin: const pw.EdgeInsets.all(18),
+        build: (_) => pw.SizedBox.expand(
+          child: pw.Container(
+            decoration: pw.BoxDecoration(
+              color: _voidBlack,
+              border: pw.Border.all(color: _ember, width: 1),
+            ),
+            child: pw.Stack(
+              fit: pw.StackFit.expand,
+              children: [
+                pw.Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: pw.SizedBox(
+                    width: _railWidth,
+                    child: _brandRail(certificate),
                   ),
                 ),
-              ),
-              pw.Container(
-                width: double.infinity,
-                color: _teal,
-                padding: const pw.EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 16,
-                ),
-                child: pw.FittedBox(
-                  fit: pw.BoxFit.scaleDown,
-                  child: pw.Text(
-                    certificate.learnerName.toUpperCase(),
-                    textAlign: pw.TextAlign.center,
-                    style: pw.TextStyle(
-                      color: PdfColors.white,
-                      fontSize: 26,
-                      fontWeight: pw.FontWeight.bold,
+                // This is deliberately a shaped paper panel, not a corner
+                // wash. The exposed carbon behind it makes the large upper
+                // curve match the live certificate at a glance.
+                pw.Positioned(
+                  left: _railWidth,
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: pw.Container(
+                    decoration: const pw.BoxDecoration(
+                      color: _paper,
+                      borderRadius: pw.BorderRadius.only(
+                        topRight: pw.Radius.circular(128),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              pw.Expanded(
-                child: pw.Padding(
-                  padding: const pw.EdgeInsets.fromLTRB(36, 20, 36, 16),
-                  child: pw.Column(
+                pw.Positioned(
+                  left: _railWidth,
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: pw.Stack(
+                    fit: pw.StackFit.expand,
                     children: [
-                      pw.Text(
-                        'for completing ${certificate.moduleTitle}',
-                        textAlign: pw.TextAlign.center,
-                        style: pw.TextStyle(
-                          color: _ink,
-                          fontSize: 16,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
-                      ),
-                      pw.SizedBox(height: 7),
-                      pw.Text(
-                        certificate.moduleDescription,
-                        textAlign: pw.TextAlign.center,
-                        style: const pw.TextStyle(
-                          color: _muted,
-                          fontSize: 10,
-                          lineSpacing: 2,
-                        ),
-                      ),
-                      pw.SizedBox(height: 14),
-                      pw.Container(
-                        color: _red,
-                        padding: const pw.EdgeInsets.symmetric(
-                          horizontal: 22,
-                          vertical: 8,
-                        ),
-                        child: pw.Text(
-                          'NGODING LOK - ${certificate.trackLabel.toUpperCase()}',
-                          style: pw.TextStyle(
-                            color: PdfColors.white,
-                            fontSize: 10,
-                            fontWeight: pw.FontWeight.bold,
-                            letterSpacing: 0.5,
+                      pw.Positioned(
+                        right: 36,
+                        top: 22,
+                        child: pw.Container(
+                          width: 92,
+                          height: 92,
+                          decoration: const pw.BoxDecoration(
+                            color: _emberWash,
+                            shape: pw.BoxShape.circle,
                           ),
                         ),
                       ),
-                      pw.Spacer(),
-                      pw.Row(
-                        crossAxisAlignment: pw.CrossAxisAlignment.center,
-                        children: [
-                          pw.Expanded(
-                            child: _meta('ISSUED', _date(certificate.issuedAt)),
-                          ),
-                          pw.Expanded(child: _verifiedSeal()),
-                          pw.Expanded(
-                            child: _meta(
-                              'MODULE SCORE',
-                              '${certificate.score} XP',
-                            ),
-                          ),
-                        ],
+                      pw.Positioned(
+                        right: 29,
+                        top: 28,
+                        child: _paperCircuitMark(),
                       ),
-                      pw.SizedBox(height: 12),
-                      pw.Text(
-                        'Certificate ID: ${certificate.certificateId}',
-                        textAlign: pw.TextAlign.center,
-                        style: const pw.TextStyle(color: _muted, fontSize: 8),
-                      ),
-                      pw.SizedBox(height: 3),
-                      pw.Text(
-                        certificateUrl,
-                        textAlign: pw.TextAlign.center,
-                        style: const pw.TextStyle(color: _teal, fontSize: 8),
+                      pw.Positioned(
+                        left: _paperInsetLeft,
+                        top: 32,
+                        right: _paperInsetRight,
+                        bottom: 25,
+                        child: _credentialContent(certificate, verificationUrl),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+                // The physical-looking seal bridges the two materials just
+                // as it does in the responsive on-screen certificate.
+                pw.Positioned(
+                  left: _railWidth - 43,
+                  top: 150,
+                  child: _AwardSeal(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -184,99 +160,467 @@ class CertificatePdf {
     return Printing.sharePdf(bytes: bytes, filename: filenameFor(certificate));
   }
 
-  static pw.Widget _header(ModuleCertificate certificate) {
-    return pw.SizedBox(
-      height: 154,
-      child: pw.Row(
+  static pw.Widget _brandRail(ModuleCertificate certificate) {
+    return pw.Container(
+      color: _carbon,
+      padding: const pw.EdgeInsets.fromLTRB(20, 25, 17, 22),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Expanded(child: pw.Container(color: PdfColors.white)),
+          _railBrand(),
+          pw.Spacer(),
+          _railCredentialCopy(),
+          pw.Spacer(),
           pw.Container(
-            width: 250,
-            color: _paleBlue,
-            padding: const pw.EdgeInsets.fromLTRB(18, 15, 18, 13),
-            child: pw.Column(
-              children: [
-                pw.Container(
-                  padding: const pw.EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 6,
-                  ),
-                  decoration: pw.BoxDecoration(
-                    color: PdfColors.white,
-                    border: pw.Border.all(color: PdfColor.fromInt(0xFFB7DCE7)),
-                    borderRadius: pw.BorderRadius.circular(16),
-                  ),
-                  child: pw.Text(
-                    'NGODING LOK - LEARN BY BUILDING',
-                    style: pw.TextStyle(
-                      color: _teal,
-                      fontSize: 8,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                ),
-                pw.Spacer(),
-                pw.Text(
-                  'CERTIFIED',
-                  style: pw.TextStyle(
-                    color: _teal,
-                    fontSize: 28,
-                    fontWeight: pw.FontWeight.normal,
-                    letterSpacing: 3,
-                  ),
-                ),
-                pw.Container(width: 135, height: 1.5, color: _orange),
-                pw.SizedBox(height: 6),
-                pw.Text(
-                  certificate.trackLabel.toUpperCase(),
-                  style: pw.TextStyle(
-                    color: PdfColor.fromInt(0xFF3F6875),
-                    fontSize: 9,
-                    fontWeight: pw.FontWeight.bold,
-                    letterSpacing: 1,
-                  ),
-                ),
-                pw.SizedBox(height: 3),
-                pw.FittedBox(
-                  fit: pw.BoxFit.scaleDown,
-                  child: pw.Text(
-                    certificate.moduleTitle,
-                    style: pw.TextStyle(
-                      color: PdfColor.fromInt(0xFF245766),
-                      fontSize: 10,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+            width: double.infinity,
+            height: 0.8,
+            color: _railDivider,
+          ),
+          pw.SizedBox(height: 13),
+          pw.Text(
+            certificate.trackLabel.toUpperCase(),
+            maxLines: 2,
+            overflow: pw.TextOverflow.clip,
+            style: pw.TextStyle(
+              color: _circuit,
+              fontSize: 7.2,
+              fontWeight: pw.FontWeight.bold,
+              letterSpacing: 0.45,
+              lineSpacing: 1.15,
             ),
           ),
-          pw.Expanded(child: pw.Container(color: PdfColors.white)),
+          pw.SizedBox(height: 7),
+          pw.Text(
+            'PUBLIC CREDENTIAL // 01',
+            style: pw.TextStyle(
+              color: _faint,
+              fontSize: 5.7,
+              fontWeight: pw.FontWeight.bold,
+              letterSpacing: 0.35,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  static pw.Widget _meta(String label, String value) {
+  static pw.Widget _railBrand() {
     return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Container(
+          width: 31,
+          height: 31,
+          alignment: pw.Alignment.center,
+          decoration: pw.BoxDecoration(
+            color: _ember,
+            borderRadius: pw.BorderRadius.circular(2),
+          ),
+          child: pw.Text(
+            '>_',
+            style: pw.TextStyle(
+              color: _ink,
+              fontSize: 11,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+        ),
+        pw.SizedBox(height: 20),
+        pw.Text(
+          'NGODING',
+          style: pw.TextStyle(
+            color: PdfColors.white,
+            fontSize: 18,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
+        ),
+        pw.Text(
+          'LOK',
+          style: pw.TextStyle(
+            color: PdfColors.white,
+            fontSize: 18,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
+        ),
+        pw.SizedBox(height: 7),
+        pw.Text(
+          'LEARN // BUILD // SHIP',
+          style: pw.TextStyle(
+            color: _signal,
+            fontSize: 5.3,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: 0.55,
+          ),
+        ),
+      ],
+    );
+  }
+
+  static pw.Widget _railCredentialCopy() {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Container(width: 36, height: 2.4, color: _ember),
+        pw.SizedBox(height: 13),
+        pw.Text(
+          'COMPLETION',
+          style: pw.TextStyle(
+            color: PdfColors.white,
+            fontSize: 6.6,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: 0.55,
+          ),
+        ),
+        pw.Text(
+          'CREDENTIAL',
+          style: pw.TextStyle(
+            color: _signal,
+            fontSize: 6.6,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: 0.55,
+          ),
+        ),
+        pw.SizedBox(height: 15),
+        pw.Text(
+          'A verifiable record of focused practice, issued from the Ngoding Lok learning floor.',
+          maxLines: 4,
+          overflow: pw.TextOverflow.clip,
+          style: pw.TextStyle(color: _faint, fontSize: 6.8, lineSpacing: 1.45),
+        ),
+      ],
+    );
+  }
+
+  static pw.Widget _paperCircuitMark() {
+    return pw.SizedBox(
+      width: 72,
+      height: 38,
+      child: pw.Stack(
+        children: [
+          pw.Positioned(
+            left: 0,
+            top: 0,
+            child: pw.SizedBox(
+              width: 61,
+              height: 0.9,
+              child: pw.Container(color: _circuit),
+            ),
+          ),
+          pw.Positioned(
+            right: 0,
+            top: 0,
+            child: pw.SizedBox(
+              width: 0.9,
+              height: 28,
+              child: pw.Container(color: _ember),
+            ),
+          ),
+          pw.Positioned(
+            right: -1.1,
+            top: 26.2,
+            child: pw.Container(
+              width: 3.2,
+              height: 3.2,
+              decoration: const pw.BoxDecoration(
+                color: _ember,
+                shape: pw.BoxShape.circle,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _credentialContent(
+    ModuleCertificate certificate,
+    String verificationUrl,
+  ) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        _canvasHeader(),
+        pw.SizedBox(height: 26),
+        _heading(certificate),
+        pw.SizedBox(height: 21),
+        pw.Container(width: double.infinity, height: 0.9, color: _faint),
+        pw.SizedBox(height: 19),
+        _recipient(certificate),
+        pw.SizedBox(height: 19),
+        _completionCopy(certificate),
+        pw.Spacer(),
+        _credentialFooter(certificate, verificationUrl),
+      ],
+    );
+  }
+
+  static pw.Widget _canvasHeader() {
+    return pw.Row(
+      children: [
+        pw.Container(width: 32, height: 2.3, color: _ember),
+        pw.SizedBox(width: 9),
+        pw.Expanded(
+          child: pw.Text(
+            'VERIFIED COMPLETION CREDENTIAL',
+            maxLines: 1,
+            overflow: pw.TextOverflow.clip,
+            style: pw.TextStyle(
+              color: _slate,
+              fontSize: 6.6,
+              fontWeight: pw.FontWeight.bold,
+              letterSpacing: 0.85,
+            ),
+          ),
+        ),
+        pw.SizedBox(width: 7),
+        _verificationMark(),
+      ],
+    );
+  }
+
+  static pw.Widget _verificationMark() {
+    return pw.Container(
+      width: 14,
+      height: 14,
+      alignment: pw.Alignment.center,
+      decoration: const pw.BoxDecoration(
+        color: _signal,
+        shape: pw.BoxShape.circle,
+      ),
+      child: pw.Text(
+        '+',
+        style: pw.TextStyle(
+          color: _paper,
+          fontSize: 9,
+          fontWeight: pw.FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  static pw.Widget _heading(ModuleCertificate certificate) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          'Certificate',
+          style: pw.TextStyle(
+            color: _ember,
+            fontSize: 29,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: -0.75,
+          ),
+        ),
+        pw.Text(
+          'of achievement',
+          style: pw.TextStyle(
+            color: _ink,
+            fontSize: 29,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: -0.85,
+          ),
+        ),
+        pw.SizedBox(height: 8),
+        pw.FittedBox(
+          fit: pw.BoxFit.scaleDown,
+          alignment: pw.Alignment.centerLeft,
+          child: pw.Text(
+            certificate.trackLabel,
+            style: pw.TextStyle(
+              color: _ink,
+              fontSize: 13.2,
+              fontWeight: pw.FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static pw.Widget _recipient(ModuleCertificate certificate) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          'THIS CREDENTIAL IS AWARDED TO',
+          style: pw.TextStyle(
+            color: _slate,
+            fontSize: 6.5,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: 0.78,
+          ),
+        ),
+        pw.SizedBox(height: 6),
+        pw.FittedBox(
+          fit: pw.BoxFit.scaleDown,
+          alignment: pw.Alignment.centerLeft,
+          child: pw.Text(
+            certificate.learnerName,
+            style: pw.TextStyle(
+              color: _ink,
+              fontSize: 27,
+              fontWeight: pw.FontWeight.bold,
+              letterSpacing: -0.55,
+            ),
+          ),
+        ),
+        pw.SizedBox(height: 6),
+        pw.Container(width: double.infinity, height: 1, color: _signal),
+      ],
+    );
+  }
+
+  static pw.Widget _completionCopy(ModuleCertificate certificate) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          'FOR SUCCESSFULLY COMPLETING',
+          style: pw.TextStyle(
+            color: _slate,
+            fontSize: 6.5,
+            fontWeight: pw.FontWeight.bold,
+            letterSpacing: 0.78,
+          ),
+        ),
+        pw.SizedBox(height: 6),
+        pw.Text(
+          certificate.moduleTitle,
+          maxLines: 2,
+          overflow: pw.TextOverflow.clip,
+          style: pw.TextStyle(
+            color: _ink,
+            fontSize: 14.5,
+            fontWeight: pw.FontWeight.bold,
+            lineSpacing: 1.08,
+          ),
+        ),
+        if (certificate.moduleDescription.trim().isNotEmpty) ...[
+          pw.SizedBox(height: 5),
+          pw.Text(
+            certificate.moduleDescription,
+            maxLines: 2,
+            overflow: pw.TextOverflow.clip,
+            style: pw.TextStyle(
+              color: _slate,
+              fontSize: 7.8,
+              lineSpacing: 1.35,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  static pw.Widget _credentialFooter(
+    ModuleCertificate certificate,
+    String verificationUrl,
+  ) {
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.end,
+      children: [
+        pw.Expanded(child: _issuerAndFacts(certificate)),
+        pw.SizedBox(width: 18),
+        _verificationQr(verificationUrl),
+      ],
+    );
+  }
+
+  static pw.Widget _issuerAndFacts(ModuleCertificate certificate) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      mainAxisSize: pw.MainAxisSize.min,
+      children: [
+        pw.SizedBox(
+          width: 136,
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'NGODING LOK',
+                style: pw.TextStyle(
+                  color: _ink,
+                  fontSize: 17,
+                  fontWeight: pw.FontWeight.bold,
+                  fontStyle: pw.FontStyle.italic,
+                  letterSpacing: -0.55,
+                ),
+              ),
+              pw.SizedBox(height: 4),
+              pw.Container(width: 112, height: 0.8, color: _slate),
+              pw.SizedBox(height: 4),
+              pw.Text(
+                'ISSUING STUDIO',
+                style: pw.TextStyle(
+                  color: _slate,
+                  fontSize: 5.4,
+                  fontWeight: pw.FontWeight.bold,
+                  letterSpacing: 0.65,
+                ),
+              ),
+            ],
+          ),
+        ),
+        pw.SizedBox(height: 14),
+        pw.Row(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.SizedBox(
+              width: 70,
+              child: _footerFact('ISSUED', _date(certificate.issuedAt)),
+            ),
+            pw.SizedBox(width: 14),
+            pw.SizedBox(
+              width: 76,
+              child: _footerFact(
+                'MODULE SCORE',
+                '${certificate.score} XP',
+                valueColor: _signalInk,
+              ),
+            ),
+            pw.SizedBox(width: 14),
+            pw.Expanded(
+              child: _footerFact(
+                'CREDENTIAL ID',
+                _certificateIdPreview(certificate.certificateId),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  static pw.Widget _footerFact(
+    String label,
+    String value, {
+    PdfColor? valueColor,
+  }) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      mainAxisSize: pw.MainAxisSize.min,
       children: [
         pw.Text(
           label,
-          textAlign: pw.TextAlign.center,
+          maxLines: 1,
+          overflow: pw.TextOverflow.clip,
           style: pw.TextStyle(
-            color: _muted,
-            fontSize: 8,
+            color: _slate,
+            fontSize: 5.2,
             fontWeight: pw.FontWeight.bold,
-            letterSpacing: 0.8,
+            letterSpacing: 0.4,
           ),
         ),
         pw.SizedBox(height: 4),
         pw.Text(
           value,
-          textAlign: pw.TextAlign.center,
+          maxLines: 1,
+          overflow: pw.TextOverflow.clip,
           style: pw.TextStyle(
-            color: _ink,
-            fontSize: 11,
+            color: valueColor ?? _ink,
+            fontSize: 7.6,
             fontWeight: pw.FontWeight.bold,
           ),
         ),
@@ -284,34 +628,37 @@ class CertificatePdf {
     );
   }
 
-  static pw.Widget _verifiedSeal() {
+  static pw.Widget _verificationQr(String verificationUrl) {
     return pw.Column(
+      mainAxisSize: pw.MainAxisSize.min,
       children: [
         pw.Container(
-          width: 48,
-          height: 48,
-          alignment: pw.Alignment.center,
+          width: 104,
+          height: 104,
+          padding: const pw.EdgeInsets.all(7),
           decoration: pw.BoxDecoration(
-            color: PdfColor.fromInt(0xFFFFF3DF),
-            shape: pw.BoxShape.circle,
-            border: pw.Border.all(color: _gold, width: 3),
+            color: PdfColors.white,
+            border: pw.Border.all(color: _ink, width: 1.15),
+            borderRadius: pw.BorderRadius.circular(2),
           ),
-          child: pw.Text(
-            'V',
-            style: pw.TextStyle(
-              color: _teal,
-              fontSize: 23,
-              fontWeight: pw.FontWeight.bold,
-            ),
+          child: pw.BarcodeWidget(
+            barcode: pw.Barcode.qrCode(),
+            data: verificationUrl,
+            width: 90,
+            height: 90,
+            color: PdfColors.black,
+            backgroundColor: PdfColors.white,
+            drawText: false,
           ),
         ),
-        pw.SizedBox(height: 3),
+        pw.SizedBox(height: 5),
         pw.Text(
-          'ONLINE VERIFIED',
+          'SCAN TO VERIFY',
           style: pw.TextStyle(
-            color: _teal,
-            fontSize: 7,
+            color: _slate,
+            fontSize: 5.5,
             fontWeight: pw.FontWeight.bold,
+            letterSpacing: 0.65,
           ),
         ),
       ],
@@ -333,7 +680,66 @@ class CertificatePdf {
       'NOV',
       'DEC',
     ];
-    return '${date.day.toString().padLeft(2, '0')} '
-        '${months[date.month - 1]} ${date.year}';
+    return '${date.day.toString().padLeft(2, '0')}'
+        ' ${months[date.month - 1]} ${date.year}';
+  }
+
+  static String _certificateIdPreview(String certificateId) {
+    if (certificateId.length <= 22) return certificateId;
+    return '${certificateId.substring(0, 13)}...'
+        '${certificateId.substring(certificateId.length - 6)}';
+  }
+}
+
+class _AwardSeal extends pw.StatelessWidget {
+  _AwardSeal();
+
+  @override
+  pw.Widget build(pw.Context context) {
+    return pw.SizedBox(
+      width: 86,
+      height: 101,
+      child: pw.Stack(
+        alignment: pw.Alignment.topCenter,
+        overflow: pw.Overflow.visible,
+        children: [
+          pw.Positioned(
+            top: 53,
+            child: pw.Container(
+              width: 46,
+              height: 36,
+              color: CertificatePdf._ember,
+            ),
+          ),
+          pw.Container(
+            width: 86,
+            height: 86,
+            alignment: pw.Alignment.center,
+            decoration: pw.BoxDecoration(
+              color: CertificatePdf._paper,
+              shape: pw.BoxShape.circle,
+              border: pw.Border.all(color: CertificatePdf._signal, width: 4),
+            ),
+            child: pw.Container(
+              width: 35,
+              height: 27,
+              alignment: pw.Alignment.center,
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: CertificatePdf._ink, width: 2.2),
+                borderRadius: pw.BorderRadius.circular(2),
+              ),
+              child: pw.Text(
+                '>_',
+                style: pw.TextStyle(
+                  color: CertificatePdf._ink,
+                  fontSize: 10,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -54,6 +54,8 @@ dependencies:
   # Generates a portable credential file and exposes browser/native download.
   pdf: ^3.11.3
   printing: ^5.14.2
+  # QR code generation for certificates.
+  qr_flutter: ^4.1.0
 
   # Typed browser DOM APIs for the web-only Wokwi iframe.
   web: ^1.1.1
