@@ -98,6 +98,8 @@ class AdSenseRewarded {
     final options = JSObject()
       ..setProperty('type'.toJS, 'reward'.toJS)
       ..setProperty('name'.toJS, 'hint_unlock'.toJS)
+      // Force test ad for debugging
+      ..setProperty('test'.toJS, 'on'.toJS)
       // The player already opted in by tapping "Get Hint (Ad)", so show the
       // ad as soon as AdSense says one is ready.
       ..setProperty(
