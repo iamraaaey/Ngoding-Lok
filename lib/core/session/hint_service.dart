@@ -24,6 +24,9 @@ class HintService {
     required String moduleType,
     required String levelObjective,
     required String currentCode,
+    String? moduleId,
+    String? moduleTitle,
+    String? moduleContext,
   }) async {
     try {
       final headers = await _requestHeaders();
@@ -33,6 +36,9 @@ class HintService {
             headers: headers,
             body: jsonEncode({
               'moduleType': moduleType,
+              'moduleId': ?moduleId,
+              'moduleTitle': ?moduleTitle,
+              'moduleContext': ?moduleContext,
               'levelObjective': levelObjective,
               'currentCode': currentCode,
             }),

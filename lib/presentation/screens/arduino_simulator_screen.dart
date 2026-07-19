@@ -2,32 +2,91 @@ import 'package:flutter/material.dart';
 
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/module_config.dart';
+import '../../core/session/hint_service.dart';
 import '../theme/landing_tokens.dart';
+import '../widgets/hint_banner.dart';
+import '../widgets/landing/landing_button.dart';
 import '../widgets/wokwi_embed.dart';
 
 /// Hands-on Arduino lesson hosted by Wokwi. The provider's editor and circuit
 /// simulator stay together so learners can change a sketch and immediately
 /// see the hardware response.
-class ArduinoSimulatorScreen extends StatelessWidget {
+class ArduinoSimulatorScreen extends StatefulWidget {
   final CurriculumModule module;
   final VoidCallback onBack;
+  final void Function({
+    required VoidCallback onGranted,
+    VoidCallback? onCancelled,
+  })
+  onRequestHintAd;
 
   const ArduinoSimulatorScreen({
     super.key,
     required this.module,
     required this.onBack,
+    required this.onRequestHintAd,
   });
 
   @override
+  State<ArduinoSimulatorScreen> createState() => _ArduinoSimulatorScreenState();
+}
+
+class _ArduinoSimulatorScreenState extends State<ArduinoSimulatorScreen> {
+  final HintService _hintService = HintService();
+  bool _hasHint = false;
+  bool _isFetchingHint = false;
+  String? _dynamicHintMessage;
+
+  void _onGetHint() {
+    if (_hasHint || _isFetchingHint) return;
+    widget.onRequestHintAd(
+      onGranted: () {
+        if (!mounted) return;
+        setState(() {
+          _hasHint = true;
+          _isFetchingHint = true;
+        });
+        _loadDynamicHint();
+      },
+    );
+  }
+
+  Future<void> _loadDynamicHint() async {
+    final config = widget.module.config as ArduinoSimulatorConfig;
+    final result = await _hintService.fetchSocraticHint(
+      moduleType: 'arduino_simulator',
+      moduleId: widget.module.id,
+      moduleTitle: widget.module.title,
+      levelObjective: widget.module.description,
+      moduleContext:
+          'Lab instruction: ${config.instruction}\n'
+          'The sketch is edited in the embedded Wokwi ESP32 project.',
+      currentCode:
+          'The student has not shared their Wokwi sketch with the app yet. '
+          'They can run the simulation and inspect the serial monitor.',
+    );
+    if (!mounted) return;
+    setState(() {
+      _dynamicHintMessage = result?.hintMessage;
+      _isFetchingHint = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final config = module.config as ArduinoSimulatorConfig;
+    final config = widget.module.config as ArduinoSimulatorConfig;
 
     return Scaffold(
       backgroundColor: LandingTokens.voidBlack,
       body: SafeArea(
         child: Column(
           children: [
-            _LabHeader(title: module.title, onBack: onBack),
+            _LabHeader(title: widget.module.title, onBack: widget.onBack),
+            if (_hasHint)
+              HintBanner(
+                hint: _dynamicHintMessage ?? widget.module.hint,
+                isLoading: _isFetchingHint,
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
               child: Container(
@@ -66,6 +125,19 @@ class ArduinoSimulatorScreen extends StatelessWidget {
                               fontSize: 11,
                               color: LandingTokens.textMuted,
                             ),
+                          ),
+                          const SizedBox(height: 12),
+                          CinematicOutlineButton(
+                            onPressed: _hasHint || _isFetchingHint
+                                ? null
+                                : _onGetHint,
+                            icon: Icons.lightbulb_outline,
+                            label: _isFetchingHint
+                                ? 'Generating hint'
+                                : _hasHint
+                                ? 'Hint unlocked'
+                                : 'Get AI hint (ad)',
+                            compact: true,
                           ),
                         ],
                       ),

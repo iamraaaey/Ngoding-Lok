@@ -145,9 +145,16 @@ class _SqlGameScreenState extends State<SqlGameScreen> {
   }
 
   Future<void> _loadDynamicHint() async {
+    final config = widget.module.config as SqlTerminalConfig;
     final result = await _hintService.fetchSocraticHint(
       moduleType: 'sql_terminal',
+      moduleId: widget.module.id,
+      moduleTitle: widget.module.title,
       levelObjective: widget.module.description,
+      moduleContext:
+          'Query goal: ${config.instruction}\n'
+          'Table: ${config.table}\n'
+          'Schema: ${config.schema.join(', ')}',
       currentCode: _codeController.text,
     );
     if (!mounted) return;
@@ -334,57 +341,57 @@ class _SqlGameScreenState extends State<SqlGameScreen> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) => Column(
-            children: [
-              _SqlHeader(
-                caseFile: _caseFile,
-                module: widget.module,
-                timerController: _timerController,
-                hasHint: _hasHint,
-                isExecuting: _isExecuting,
-                isSyncing: _isSyncing,
-                sideBySide: _sideBySide,
-                onBack: widget.onBack,
-                onGetHint: _hasHint ? null : _onGetHint,
-                onRun: _executeCode,
-                onToggleSideBySide: () {
-                  if (constraints.maxWidth < 900) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Side by Side is available on wider screens.',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
-                  setState(() => _sideBySide = !_sideBySide);
-                },
-              ),
-              if (_hasHint)
-                HintBanner(
-                  hint: _dynamicHintMessage ?? widget.module.hint,
-                  isLoading: _isFetchingHint,
-                ),
-              Expanded(
-                child: _CaseShell(
-                  activeTab: _activeTab,
-                  onTabChanged: (tab) => setState(() => _activeTab = tab),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      constraints.maxWidth >= 900 ? 24 : 16,
-                      16,
-                      constraints.maxWidth >= 900 ? 24 : 16,
-                      24,
-                    ),
-                    child: _isDatabaseLoading
-                        ? const _LoadingState(label: 'Loading database...')
-                        : _buildContent(config, constraints.maxWidth),
+                children: [
+                  _SqlHeader(
+                    caseFile: _caseFile,
+                    module: widget.module,
+                    timerController: _timerController,
+                    hasHint: _hasHint,
+                    isExecuting: _isExecuting,
+                    isSyncing: _isSyncing,
+                    sideBySide: _sideBySide,
+                    onBack: widget.onBack,
+                    onGetHint: _hasHint ? null : _onGetHint,
+                    onRun: _executeCode,
+                    onToggleSideBySide: () {
+                      if (constraints.maxWidth < 900) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Side by Side is available on wider screens.',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      setState(() => _sideBySide = !_sideBySide);
+                    },
                   ),
-                ),
+                  if (_hasHint)
+                    HintBanner(
+                      hint: _dynamicHintMessage ?? widget.module.hint,
+                      isLoading: _isFetchingHint,
+                    ),
+                  Expanded(
+                    child: _CaseShell(
+                      activeTab: _activeTab,
+                      onTabChanged: (tab) => setState(() => _activeTab = tab),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          constraints.maxWidth >= 900 ? 24 : 16,
+                          16,
+                          constraints.maxWidth >= 900 ? 24 : 16,
+                          24,
+                        ),
+                        child: _isDatabaseLoading
+                            ? const _LoadingState(label: 'Loading database...')
+                            : _buildContent(config, constraints.maxWidth),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
           ),
         ],
       ),
@@ -601,8 +608,7 @@ class _SqlGameScreenState extends State<SqlGameScreen> {
                       _SchemaTableCard(
                         table: table,
                         tableNames: tableNames,
-                        expanded:
-                            !_collapsedSchemaTables.contains(table.name),
+                        expanded: !_collapsedSchemaTables.contains(table.name),
                         onToggle: () => setState(() {
                           if (!_collapsedSchemaTables.remove(table.name)) {
                             _collapsedSchemaTables.add(table.name);
@@ -905,9 +911,7 @@ class _CaseShell extends StatelessWidget {
       children: [
         DecoratedBox(
           decoration: const BoxDecoration(
-            border: Border(
-              bottom: BorderSide(color: LandingTokens.hairline),
-            ),
+            border: Border(bottom: BorderSide(color: LandingTokens.hairline)),
           ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -1345,9 +1349,10 @@ class _SchemaGraphView extends StatelessWidget {
         final available = constraints.maxWidth;
         const gapX = 44.0;
         const gapY = 54.0;
-        final cols = ((available + gapX) / (_kNodeWidth + gapX))
-            .floor()
-            .clamp(1, tables.length);
+        final cols = ((available + gapX) / (_kNodeWidth + gapX)).floor().clamp(
+          1,
+          tables.length,
+        );
         final rows = (tables.length / cols).ceil();
         final maxNodeH = tables
             .map((t) => nodeHeight(t.name))
@@ -1392,10 +1397,7 @@ class _SchemaGraphView extends StatelessWidget {
                     left: positions[t.name]!.left,
                     top: positions[t.name]!.top,
                     width: _kNodeWidth,
-                    child: _SchemaNodeCard(
-                      table: t,
-                      columns: parsed[t.name]!,
-                    ),
+                    child: _SchemaNodeCard(table: t, columns: parsed[t.name]!),
                   ),
               ],
             ),
@@ -1434,7 +1436,11 @@ class _SchemaNodeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(9),
         border: Border.all(color: _SqlNoir.border),
         boxShadow: const [
-          BoxShadow(color: Color(0x66000000), blurRadius: 16, offset: Offset(0, 8)),
+          BoxShadow(
+            color: Color(0x66000000),
+            blurRadius: 16,
+            offset: Offset(0, 8),
+          ),
         ],
       ),
       clipBehavior: Clip.antiAlias,
@@ -1678,10 +1684,7 @@ class _HeaderButton extends StatelessWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: LandingTokens.smallRadius,
       ),
-      padding: EdgeInsets.symmetric(
-        horizontal: compact ? 12 : 14,
-        vertical: 9,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 14, vertical: 9),
       textStyle: _SqlNoir.body.copyWith(
         fontSize: compact ? 12 : 13,
         fontWeight: FontWeight.w700,
@@ -1752,11 +1755,7 @@ class _TimerChip extends StatelessWidget {
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
-          Icons.access_time,
-          size: 13,
-          color: LandingTokens.textMuted,
-        ),
+        const Icon(Icons.access_time, size: 13, color: LandingTokens.textMuted),
         const SizedBox(width: 5),
         ValueListenableBuilder<int>(
           valueListenable: timerController.elapsedSeconds,

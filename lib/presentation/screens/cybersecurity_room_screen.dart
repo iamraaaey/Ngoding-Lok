@@ -3,22 +3,45 @@ import 'package:flutter/material.dart';
 import '../../core/curriculum/curriculum_module.dart';
 import '../../core/curriculum/module_config.dart';
 import '../../core/cybersecurity/cyber_room.dart';
+import '../../core/session/hint_service.dart';
 import '../theme/landing_tokens.dart';
 import '../widgets/cyber_training_components.dart';
 import '../widgets/fake_terminal.dart';
+import '../widgets/hint_banner.dart';
 import '../widgets/landing/landing_button.dart';
 
 /// The shell for all five Cybersecurity Track rooms. It owns only shared room
 /// state; each environment is a reusable, config-driven training component.
 class CybersecurityRoomScreen extends StatefulWidget {
   final CurriculumModule module;
-  final Future<void> Function({required int linesUsed, required int executionMs, String? sourceCode}) onWin;
+  final Future<void> Function({
+    required int linesUsed,
+    required int executionMs,
+    String? sourceCode,
+  })
+  onWin;
   final VoidCallback onBack;
+  final void Function({
+    required VoidCallback onGranted,
+    VoidCallback? onCancelled,
+  })
+  onRequestHintAd;
   final CyberRoomProgress? savedProgress;
   final ValueChanged<CyberRoomProgress> onProgressChanged;
   final ValueChanged<String> onBadgeAwarded;
-  const CybersecurityRoomScreen({super.key, required this.module, required this.onWin, required this.onBack, this.savedProgress, required this.onProgressChanged, required this.onBadgeAwarded});
-  @override State<CybersecurityRoomScreen> createState() => _CybersecurityRoomScreenState();
+  const CybersecurityRoomScreen({
+    super.key,
+    required this.module,
+    required this.onWin,
+    required this.onBack,
+    required this.onRequestHintAd,
+    this.savedProgress,
+    required this.onProgressChanged,
+    required this.onBadgeAwarded,
+  });
+  @override
+  State<CybersecurityRoomScreen> createState() =>
+      _CybersecurityRoomScreenState();
 }
 
 class _CybersecurityRoomScreenState extends State<CybersecurityRoomScreen> {
@@ -26,73 +49,333 @@ class _CybersecurityRoomScreenState extends State<CybersecurityRoomScreen> {
   late final Future<CyberRoom> _room;
   final List<TextEditingController> _answers = [];
   final Set<int> _done = {}, _wrong = {}, _hint1 = {}, _hint2 = {};
+  final HintService _hintService = HintService();
   bool _intro = true, _learn = false, _finishing = false;
+  bool _hasAiHint = false, _isFetchingAiHint = false;
+  String? _aiHintMessage;
   int _actionHints = 0;
 
-  @override void initState() {
+  @override
+  void initState() {
     super.initState();
-    _room = CyberRoomLoader.load((widget.module.config as CyberSecurityConfig).roomAsset);
+    _room = CyberRoomLoader.load(
+      (widget.module.config as CyberSecurityConfig).roomAsset,
+    );
     final saved = widget.savedProgress;
-    if (saved != null) { _done.addAll(saved.completedTasks); _hint1.addAll(saved.hintOneTasks); _hint2.addAll(saved.hintTwoTasks); _actionHints = saved.actionHintsUsed; }
+    if (saved != null) {
+      _done.addAll(saved.completedTasks);
+      _hint1.addAll(saved.hintOneTasks);
+      _hint2.addAll(saved.hintTwoTasks);
+      _actionHints = saved.actionHintsUsed;
+    }
   }
-  int get _elapsed => (widget.savedProgress?.elapsedSeconds ?? 0) + DateTime.now().difference(_started).inSeconds;
-  void _save() => widget.onProgressChanged(CyberRoomProgress(completedTasks: _done.toList(), hintOneTasks: _hint1.toList(), hintTwoTasks: _hint2.toList(), elapsedSeconds: _elapsed, actionHintsUsed: _actionHints));
-  @override void dispose() { for (final c in _answers) { c.dispose(); } super.dispose(); }
+
+  int get _elapsed =>
+      (widget.savedProgress?.elapsedSeconds ?? 0) +
+      DateTime.now().difference(_started).inSeconds;
+  void _save() => widget.onProgressChanged(
+    CyberRoomProgress(
+      completedTasks: _done.toList(),
+      hintOneTasks: _hint1.toList(),
+      hintTwoTasks: _hint2.toList(),
+      elapsedSeconds: _elapsed,
+      actionHintsUsed: _actionHints,
+    ),
+  );
+  @override
+  void dispose() {
+    for (final c in _answers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
 
   Future<void> _finish(CyberRoom room) async {
     if (_finishing) return;
-    setState(() { _finishing = true; _learn = true; _done.addAll(List.generate(room.tasks.isEmpty ? 1 : room.tasks.length, (i) => i)); });
-    _save(); widget.onBadgeAwarded(room.badge);
+    setState(() {
+      _finishing = true;
+      _learn = true;
+      _done.addAll(
+        List.generate(room.tasks.isEmpty ? 1 : room.tasks.length, (i) => i),
+      );
+    });
+    _save();
+    widget.onBadgeAwarded(room.badge);
   }
+
   Future<void> _leaveAfterLearn(CyberRoom room) async {
     if (!mounted) return;
-    await showDialog<void>(context: context, barrierDismissible: false, builder: (_) => AlertDialog(
-      backgroundColor: const Color(0xFF0C0C0C), icon: const Icon(Icons.workspace_premium, color: Color(0xFFFF5C01), size: 44),
-      title: const Text('Flag secured!', style: TextStyle(color: Color(0xFFF4F3EF), fontWeight: FontWeight.bold)),
-      content: Text('You earned ${room.points} XP and the ${room.badge} badge.', style: const TextStyle(color: Color(0xFFB9B8B0))),
-      actions: [FilledButton(onPressed: () => Navigator.pop(context), style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF5C01), foregroundColor: const Color(0xFF0A0500)), child: const Text('Continue'))],
-    ));
-    if (mounted) await widget.onWin(linesUsed: _done.length, executionMs: _elapsed * 1000);
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF0C0C0C),
+        icon: const Icon(
+          Icons.workspace_premium,
+          color: Color(0xFFFF5C01),
+          size: 44,
+        ),
+        title: const Text(
+          'Flag secured!',
+          style: TextStyle(
+            color: Color(0xFFF4F3EF),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          'You earned ${room.points} XP and the ${room.badge} badge.',
+          style: const TextStyle(color: Color(0xFFB9B8B0)),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFFF5C01),
+              foregroundColor: const Color(0xFF0A0500),
+            ),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    if (mounted) {
+      await widget.onWin(linesUsed: _done.length, executionMs: _elapsed * 1000);
+    }
   }
+
   void _submit(CyberRoom room, int i) {
     if (_finishing || _done.contains(i)) return;
-    if (!room.tasks[i].accepts(_answers[i].text)) { setState(() => _wrong.add(i)); return; }
-    setState(() { _done.add(i); _wrong.remove(i); }); _save();
+    if (!room.tasks[i].accepts(_answers[i].text)) {
+      setState(() => _wrong.add(i));
+      return;
+    }
+    setState(() {
+      _done.add(i);
+      _wrong.remove(i);
+    });
+    _save();
     if (_done.length == room.tasks.length) _finish(room);
   }
-  void _actionHint(int count) { if (!mounted) return; setState(() => _actionHints = count); _save(); }
 
-  @override Widget build(BuildContext context) => FutureBuilder<CyberRoom>(future: _room, builder: (context, snap) {
-    if (snap.connectionState != ConnectionState.done) return const Scaffold(backgroundColor: Color(0xFF070707), body: Center(child: CircularProgressIndicator(color: Color(0xFFFF5C01))));
-    final room = snap.data ?? CyberRoom.fromJson(const {});
-    if (_answers.isEmpty && room.tasks.isNotEmpty) _answers.addAll(List.generate(room.tasks.length, (_) => TextEditingController()));
-    if (_intro) return Scaffold(backgroundColor: const Color(0xFF070707), body: SafeArea(child: Padding(padding: const EdgeInsets.all(18), child: TopicBriefLearnPanel(learn: false, title: room.topicTitle, body: room.topicBrief, actionLabel: 'Start safe simulation', onAction: () => setState(() => _intro = false)))));
-    if (_learn) return Scaffold(backgroundColor: const Color(0xFF070707), body: SafeArea(child: Padding(padding: const EdgeInsets.all(18), child: TopicBriefLearnPanel(learn: true, title: room.learn.title, body: room.learn.body, actionLabel: 'Claim ${room.badge}', onAction: () => _leaveAfterLearn(room)))));
-    final actionRoom = const {'evidence', 'ladder', 'phish', 'injection', 'capstone', 'malware', 'mitm'}
-        .contains(room.environment);
-    final progress = room.tasks.isEmpty ? 0.0 : _done.length / room.tasks.length;
-    return Scaffold(backgroundColor: const Color(0xFF070707), body: SafeArea(child: Column(children: [
-      _RoomHeader(room: room, progress: progress, onBack: widget.onBack),
-      Expanded(child: LayoutBuilder(builder: (context, size) {
-        final environment = _environment(room);
-        final typed = _TypedTasks(room: room, answers: _answers, done: _done, wrong: _wrong, hint1: _hint1, hint2: _hint2, onHint: (index, two) { setState(() { if (two) { _hint2.add(index); } else { _hint1.add(index); } }); _save(); }, onSubmit: (i) => _submit(room, i));
-        return Padding(padding: const EdgeInsets.all(16), child: actionRoom
-          ? environment
-          : size.maxWidth > 880
-            ? Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [Expanded(flex: 6, child: environment), const SizedBox(width: 16), Expanded(flex: 5, child: typed)])
-            : Column(children: [Expanded(child: environment), const SizedBox(height: 16), Expanded(child: typed)]));
-      }))
-    ])));
-  });
+  void _actionHint(int count) {
+    if (!mounted) return;
+    setState(() => _actionHints = count);
+    _save();
+  }
+
+  void _onGetAiHint(CyberRoom room) {
+    if (_hasAiHint || _isFetchingAiHint) return;
+    widget.onRequestHintAd(
+      onGranted: () {
+        if (!mounted) return;
+        setState(() {
+          _hasAiHint = true;
+          _isFetchingAiHint = true;
+        });
+        _loadAiHint(room);
+      },
+    );
+  }
+
+  Future<void> _loadAiHint(CyberRoom room) async {
+    final currentWork = [
+      for (var i = 0; i < room.tasks.length; i++)
+        'Task ${i + 1}: ${room.tasks[i].prompt}\n'
+            'Student answer: ${i < _answers.length && _answers[i].text.trim().isNotEmpty ? _answers[i].text.trim() : '(not answered)'}',
+      if (room.tasks.isEmpty) 'The student has not entered an answer yet.',
+    ].join('\n\n');
+    final result = await _hintService.fetchSocraticHint(
+      moduleType: 'cybersecurity_room',
+      moduleId: widget.module.id,
+      moduleTitle: widget.module.title,
+      levelObjective:
+          '${widget.module.description}\nScenario: ${room.scenario}',
+      moduleContext:
+          'Safe simulation topic: ${room.topicTitle}\n'
+          'Environment: ${room.environment}\n'
+          'Only provide defensive, high-level guidance for this fictional room.',
+      currentCode: currentWork,
+    );
+    if (!mounted) return;
+    setState(() {
+      _aiHintMessage = result?.hintMessage;
+      _isFetchingAiHint = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<CyberRoom>(
+    future: _room,
+    builder: (context, snap) {
+      if (snap.connectionState != ConnectionState.done) {
+        return const Scaffold(
+          backgroundColor: Color(0xFF070707),
+          body: Center(
+            child: CircularProgressIndicator(color: Color(0xFFFF5C01)),
+          ),
+        );
+      }
+      final room = snap.data ?? CyberRoom.fromJson(const {});
+      if (_answers.isEmpty && room.tasks.isNotEmpty) {
+        _answers.addAll(
+          List.generate(room.tasks.length, (_) => TextEditingController()),
+        );
+      }
+      if (_intro) {
+        return Scaffold(
+          backgroundColor: const Color(0xFF070707),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: TopicBriefLearnPanel(
+                learn: false,
+                title: room.topicTitle,
+                body: room.topicBrief,
+                actionLabel: 'Start safe simulation',
+                onAction: () => setState(() => _intro = false),
+              ),
+            ),
+          ),
+        );
+      }
+      if (_learn) {
+        return Scaffold(
+          backgroundColor: const Color(0xFF070707),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: TopicBriefLearnPanel(
+                learn: true,
+                title: room.learn.title,
+                body: room.learn.body,
+                actionLabel: 'Claim ${room.badge}',
+                onAction: () => _leaveAfterLearn(room),
+              ),
+            ),
+          ),
+        );
+      }
+      final actionRoom = const {
+        'evidence',
+        'ladder',
+        'phish',
+        'injection',
+        'capstone',
+        'malware',
+        'mitm',
+      }.contains(room.environment);
+      final progress = room.tasks.isEmpty
+          ? 0.0
+          : _done.length / room.tasks.length;
+      return Scaffold(
+        backgroundColor: const Color(0xFF070707),
+        body: SafeArea(
+          child: Column(
+            children: [
+              _RoomHeader(
+                room: room,
+                progress: progress,
+                onBack: widget.onBack,
+                hasHint: _hasAiHint,
+                isFetchingHint: _isFetchingAiHint,
+                onGetHint: () => _onGetAiHint(room),
+              ),
+              if (_hasAiHint)
+                HintBanner(
+                  hint: _aiHintMessage ?? widget.module.hint,
+                  isLoading: _isFetchingAiHint,
+                ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, size) {
+                    final environment = _environment(room);
+                    final typed = _TypedTasks(
+                      room: room,
+                      answers: _answers,
+                      done: _done,
+                      wrong: _wrong,
+                      hint1: _hint1,
+                      hint2: _hint2,
+                      onHint: (index, two) {
+                        setState(() {
+                          if (two) {
+                            _hint2.add(index);
+                          } else {
+                            _hint1.add(index);
+                          }
+                        });
+                        _save();
+                      },
+                      onSubmit: (i) => _submit(room, i),
+                    );
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: actionRoom
+                          ? environment
+                          : size.maxWidth > 880
+                          ? Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(flex: 6, child: environment),
+                                const SizedBox(width: 16),
+                                Expanded(flex: 5, child: typed),
+                              ],
+                            )
+                          : Column(
+                              children: [
+                                Expanded(child: environment),
+                                const SizedBox(height: 16),
+                                Expanded(child: typed),
+                              ],
+                            ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
   Widget _environment(CyberRoom room) => switch (room.environment) {
     'browser' => FakeBrowserTraining(data: room.environmentData),
-    'evidence' => EvidenceTrayPanel(data: room.environmentData, malware: room.environmentData['domain'] == 'malware', onHintUsed: _actionHint, onComplete: () => _finish(room)),
-    'ladder' => InvestigatePanel(data: room.environmentData, onHintUsed: _actionHint, onComplete: () => _finish(room)),
-    'phish' => PhishingEmailPanel(data: room.environmentData, onHintUsed: _actionHint, onComplete: () => _finish(room)),
-    'injection' => InjectionBlockPanel(data: room.environmentData, onHintUsed: _actionHint, onComplete: () => _finish(room)),
-    'capstone' => PhishingToBreachPanel(data: room.environmentData, onHintUsed: _actionHint, onComplete: () => _finish(room)),
-    'malware' => MalwareResponsePanel(data: room.environmentData, onHintUsed: _actionHint, onComplete: () => _finish(room)),
-    'mitm' => MitmTrapPanel(data: room.environmentData, onHintUsed: _actionHint, onComplete: () => _finish(room)),
+    'evidence' => EvidenceTrayPanel(
+      data: room.environmentData,
+      malware: room.environmentData['domain'] == 'malware',
+      onHintUsed: _actionHint,
+      onComplete: () => _finish(room),
+    ),
+    'ladder' => InvestigatePanel(
+      data: room.environmentData,
+      onHintUsed: _actionHint,
+      onComplete: () => _finish(room),
+    ),
+    'phish' => PhishingEmailPanel(
+      data: room.environmentData,
+      onHintUsed: _actionHint,
+      onComplete: () => _finish(room),
+    ),
+    'injection' => InjectionBlockPanel(
+      data: room.environmentData,
+      onHintUsed: _actionHint,
+      onComplete: () => _finish(room),
+    ),
+    'capstone' => PhishingToBreachPanel(
+      data: room.environmentData,
+      onHintUsed: _actionHint,
+      onComplete: () => _finish(room),
+    ),
+    'malware' => MalwareResponsePanel(
+      data: room.environmentData,
+      onHintUsed: _actionHint,
+      onComplete: () => _finish(room),
+    ),
+    'mitm' => MitmTrapPanel(
+      data: room.environmentData,
+      onHintUsed: _actionHint,
+      onComplete: () => _finish(room),
+    ),
     _ => FakeTerminal(script: room.terminalScript, hints: room.commandHints),
   };
 }
@@ -101,10 +384,16 @@ class _RoomHeader extends StatelessWidget {
   final CyberRoom room;
   final double progress;
   final VoidCallback onBack;
+  final VoidCallback onGetHint;
+  final bool hasHint;
+  final bool isFetchingHint;
   const _RoomHeader({
     required this.room,
     required this.progress,
     required this.onBack,
+    required this.onGetHint,
+    required this.hasHint,
+    required this.isFetchingHint,
   });
 
   @override
@@ -169,6 +458,17 @@ class _RoomHeader extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(width: 10),
+              CinematicOutlineButton(
+                onPressed: hasHint || isFetchingHint ? null : onGetHint,
+                icon: Icons.lightbulb_outline,
+                label: isFetchingHint
+                    ? 'Thinking'
+                    : hasHint
+                    ? 'Hint Ready'
+                    : 'Get Hint',
+                compact: true,
               ),
               const SizedBox(width: 10),
               Text(

@@ -153,11 +153,13 @@ void main() {
     'Arduino': () => ArduinoSimulatorScreen(
       module: Curriculum.byId('arduino-wokwi-starter'),
       onBack: () {},
+      onRequestHintAd: ({required onGranted, onCancelled}) {},
     ),
     'cybersecurity room': () => CybersecurityRoomScreen(
       module: Curriculum.byId('cyber-warmup'),
       onWin: ({required linesUsed, required executionMs, sourceCode}) async {},
       onBack: () {},
+      onRequestHintAd: ({required onGranted, onCancelled}) {},
       onProgressChanged: (_) {},
       onBadgeAwarded: (_) {},
     ),

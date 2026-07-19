@@ -101,9 +101,16 @@ class _GridGameScreenState extends State<GridGameScreen> {
   }
 
   Future<void> _loadDynamicHint() async {
+    final config = widget.module.config as LogicGridConfig;
     final result = await _hintService.fetchSocraticHint(
       moduleType: 'logic_grid',
+      moduleId: widget.module.id,
+      moduleTitle: widget.module.title,
       levelObjective: widget.module.description,
+      moduleContext:
+          'Grid size: ${config.gridSize}x${config.gridSize}. Start: '
+          '(${config.playerX}, ${config.playerY}). Target: '
+          '(${config.targetX}, ${config.targetY}).',
       currentCode: _codeController.text,
     );
     if (!mounted) return;

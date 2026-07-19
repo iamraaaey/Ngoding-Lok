@@ -92,9 +92,13 @@ class _RocketGameScreenState extends State<RocketGameScreen> {
   }
 
   Future<void> _loadDynamicHint() async {
+    final config = widget.module.config as RocketFlightConfig;
     final result = await _hintService.fetchSocraticHint(
       moduleType: 'rocket_flight',
+      moduleId: widget.module.id,
+      moduleTitle: widget.module.title,
       levelObjective: widget.module.description,
+      moduleContext: 'Target altitude: ${config.targetAltitude}km.',
       currentCode: _codeController.text,
     );
     if (!mounted) return;

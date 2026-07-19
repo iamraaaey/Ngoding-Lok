@@ -586,6 +586,7 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
       case ModuleType.cybersecurityRoom:
         return CybersecurityRoomScreen(
           module: module,
+          onRequestHintAd: _requestHintAd,
           onWin: _handleModuleWin,
           onBack: _returnToHub,
           savedProgress: _user!.cyberRoomProgress[module.id],
@@ -594,7 +595,11 @@ class _RootOrchestratorState extends State<RootOrchestrator> {
           onBadgeAwarded: (badge) => _updateUser(_user!.withBadge(badge)),
         );
       case ModuleType.arduinoSimulator:
-        return ArduinoSimulatorScreen(module: module, onBack: _returnToHub);
+        return ArduinoSimulatorScreen(
+          module: module,
+          onBack: _returnToHub,
+          onRequestHintAd: _requestHintAd,
+        );
     }
   }
 
