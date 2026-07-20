@@ -29,6 +29,10 @@
 </p>
 
 <p align="center">
+  <strong>Android:</strong> <a href="build/app/outputs/flutter-apk/app-release.apk">Download the latest APK</a>
+</p>
+
+<p align="center">
   <strong>A responsive, gamified learning arena for coding fundamentals and safe cybersecurity practice.</strong><br>
   Write code, inspect the outcome, earn XP, and get an optional nudge when you are stuck.
 </p>
